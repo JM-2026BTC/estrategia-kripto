@@ -13,9 +13,27 @@
     padding: 20px;
     line-height: 1.6;
   }
-  .container { max-width: 720px; margin: 0 auto; }
+  .container { max-width: 1100px; margin: 0 auto; }
   h1 { color: #58a6ff; font-size: 24px; margin-bottom: 6px; }
   .sub { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
+
+  /* Layout principal: 1 columna por defecto (celular) */
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* En pantallas grandes: 2 columnas */
+  @media (min-width: 900px) {
+    .layout {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+    .col-formulario { flex: 2; min-width: 0; }
+    .col-paneles { flex: 1; min-width: 300px; max-width: 380px; }
+  }
+
   .card {
     background: #161b22;
     border: 1px solid #30363d;
@@ -99,90 +117,104 @@
   <h1>📊 Estrategia Kripto</h1>
   <p class="sub">Calculadora de promedio, liquidación y riesgo para futuros</p>
 
-  <!-- Panel de Miedo y Codicia -->
-  <div class="card" id="sentiment-panel" style="display:none;">
-    <h2>📊 Sentimiento del Mercado</h2>
-    <div id="sentiment-content"></div>
-  </div>
+  <div class="layout">
 
-  <!-- Panel de Eventos Económicos -->
-  <div class="card" id="eventos-panel" style="display:none;">
-    <h2>📅 Eventos Económicos de Alto Impacto</h2>
-    <div id="eventos-content"></div>
-  </div>
+    <!-- COLUMNA IZQUIERDA: Formulario y resultado -->
+    <div class="col-formulario">
 
-  <!-- FORMULARIO -->
-  <div class="card" id="formulario">
-    <h2>Datos de la operación</h2>
+      <!-- FORMULARIO -->
+      <div class="card" id="formulario">
+        <h2>Datos de la operación</h2>
 
-    <label>Modo de trabajo</label>
-    <select id="modo" onchange="cambiarModo()">
-      <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
-      <option value="H">Híbrido (H) — el sistema sugiere, vos decidís</option>
-    </select>
-
-    <div class="row">
-      <div>
-        <label>Dirección</label>
-        <select id="direccion">
-          <option value="SHORT">SHORT</option>
-          <option value="LONG">LONG</option>
+        <label>Modo de trabajo</label>
+        <select id="modo" onchange="cambiarModo()">
+          <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
+          <option value="H">Híbrido (H) — el sistema sugiere, vos decidís</option>
         </select>
+
+        <div class="row">
+          <div>
+            <label>Dirección</label>
+            <select id="direccion">
+              <option value="SHORT">SHORT</option>
+              <option value="LONG">LONG</option>
+            </select>
+          </div>
+          <div>
+            <label>Apalancamiento</label>
+            <select id="apalancamiento" onchange="actualizarSugeridos()">
+              <option value="10">x10 (liq. 9,5%)</option>
+              <option value="12">x12 (liq. 7,9%)</option>
+              <option value="15">x15 (liq. 6,25%)</option>
+              <option value="20">x20 (liq. 4,5%)</option>
+              <option value="30">x30 (liq. 2,8%)</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Monto total de la operatoria (USD)</label>
+        <input type="number" id="monto" placeholder="270" step="any">
+
+        <label>Precio Entrada 1</label>
+        <input type="number" id="e1" placeholder="83870" step="any" onchange="calcularAuto()">
+
+        <div id="bloqueE2">
+          <label>Precio Entrada 2</label>
+          <input type="number" id="e2" placeholder="85966.75" step="any">
+        </div>
+
+        <div id="bloqueE3">
+          <label>Precio Entrada 3</label>
+          <input type="number" id="e3" placeholder="88115.92" step="any">
+        </div>
+
+        <div class="row">
+          <div>
+            <label>% Entrada 1</label>
+            <input type="number" id="p1" value="20" step="any">
+          </div>
+          <div>
+            <label>% Entrada 2</label>
+            <input type="number" id="p2" value="30" step="any">
+          </div>
+          <div>
+            <label>% Entrada 3</label>
+            <input type="number" id="p3" value="50" step="any">
+          </div>
+        </div>
+
+        <label>Escalonamiento (%)</label>
+        <input type="number" id="escalonamiento" value="2.5" step="any" onchange="calcularAuto()">
+
+        <label>SL manual (% desde el promedio, opcional)</label>
+        <input type="number" id="sl" placeholder="2" step="any">
+
+        <button onclick="calcular()">Calcular plan</button>
       </div>
-      <div>
-        <label>Apalancamiento</label>
-        <select id="apalancamiento" onchange="actualizarSugeridos()">
-          <option value="10">x10 (liq. 9,5%)</option>
-          <option value="12">x12 (liq. 7,9%)</option>
-          <option value="15">x15 (liq. 6,25%)</option>
-          <option value="20">x20 (liq. 4,5%)</option>
-          <option value="30">x30 (liq. 2,8%)</option>
-        </select>
-      </div>
+
+      <!-- RESULTADO -->
+      <div id="resultado" class="resultado"></div>
+
     </div>
 
-    <label>Monto total de la operatoria (USD)</label>
-    <input type="number" id="monto" placeholder="270" step="any">
+    <!-- COLUMNA DERECHA: Paneles -->
+    <div class="col-paneles">
 
-    <label>Precio Entrada 1</label>
-    <input type="number" id="e1" placeholder="83870" step="any" onchange="calcularAuto()">
+      <!-- Panel de Miedo y Codicia -->
+      <div class="card" id="sentiment-panel" style="display:none;">
+        <h2>📊 Sentimiento del Mercado</h2>
+        <div id="sentiment-content"></div>
+      </div>
 
-    <div id="bloqueE2">
-      <label>Precio Entrada 2</label>
-      <input type="number" id="e2" placeholder="85966.75" step="any">
+      <!-- Panel de Eventos Económicos -->
+      <div class="card" id="eventos-panel" style="display:none;">
+        <h2>📅 Eventos Económicos</h2>
+        <div id="eventos-content"></div>
+      </div>
+
     </div>
 
-    <div id="bloqueE3">
-      <label>Precio Entrada 3</label>
-      <input type="number" id="e3" placeholder="88115.92" step="any">
-    </div>
-
-    <div class="row">
-      <div>
-        <label>% Entrada 1</label>
-        <input type="number" id="p1" value="20" step="any">
-      </div>
-      <div>
-        <label>% Entrada 2</label>
-        <input type="number" id="p2" value="30" step="any">
-      </div>
-      <div>
-        <label>% Entrada 3</label>
-        <input type="number" id="p3" value="50" step="any">
-      </div>
-    </div>
-
-    <label>Escalonamiento (%)</label>
-    <input type="number" id="escalonamiento" value="2.5" step="any" onchange="calcularAuto()">
-
-    <label>SL manual (% desde el promedio, opcional)</label>
-    <input type="number" id="sl" placeholder="2" step="any">
-
-    <button onclick="calcular()">Calcular plan</button>
   </div>
-
-  <!-- RESULTADO -->
-  <div id="resultado" class="resultado"></div>
 
   <p class="footer">Herramienta educativa. No es recomendación financiera.</p>
 </div>
@@ -406,7 +438,7 @@ async function cargarSentimiento() {
       else color = '#3fb950';
 
       let interpretacion = '';
-      if (valor <= 24) interpretacion = 'Miedo extremo — posible oportunidad de compra';
+      if (valor <= 24) interpretacion = 'Miedo extremo — posible oportunidad';
       else if (valor <= 49) interpretacion = 'Miedo — cautela en el mercado';
       else if (valor <= 74) interpretacion = 'Codicia — confianza en aumento';
       else interpretacion = 'Codicia extrema — posible corrección';
@@ -422,7 +454,7 @@ async function cargarSentimiento() {
           </div>
         </div>
         <div style="margin-top:12px; font-size:11px; color:#484f58;">
-          Fuente: Alternative.me | Actualizado: ${new Date(parseInt(fng.timestamp) * 1000).toLocaleString('es-AR')}
+          Fuente: Alternative.me | ${new Date(parseInt(fng.timestamp) * 1000).toLocaleString('es-AR')}
         </div>
       `;
       panel.style.display = 'block';
@@ -438,18 +470,13 @@ async function cargarEventos() {
   const content = document.getElementById('eventos-content');
 
   try {
-    // Biquote: API pública, sin key, CORS abierto [citation:1][citation:20]
     const response = await fetch('https://biquote.io/api/calendar?importance=high&countries=US');
     const data = await response.json();
 
     let eventos = [];
-    if (Array.isArray(data)) {
-      eventos = data;
-    } else if (data.events) {
-      eventos = data.events;
-    } else if (data.data) {
-      eventos = data.data;
-    }
+    if (Array.isArray(data)) eventos = data;
+    else if (data.events) eventos = data.events;
+    else if (data.data) eventos = data.data;
 
     if (eventos.length === 0) {
       content.innerHTML = '<div class="info">No hay eventos de alto impacto esta semana.</div>';
@@ -463,7 +490,6 @@ async function cargarEventos() {
       let fechaStr = 'Fecha no disponible';
       if (fechaRaw) {
         const d = new Date(fechaRaw);
-        // Argentina: UTC-3 todo el año [citation:8]
         fechaStr = d.toLocaleString('es-AR', {
           timeZone: 'America/Argentina/Buenos_Aires',
           weekday: 'short',
@@ -481,21 +507,20 @@ async function cargarEventos() {
         <div class="evento">
           <div class="evento-fecha">${fechaStr} ARG</div>
           <div class="evento-nombre">🔴 ${nombre} (${pais})</div>
-          <div class="evento-impacto" style="color:#f85149;">Alto impacto</div>
         </div>
       `;
     });
 
     content.innerHTML = html + `
       <div style="margin-top:12px; font-size:11px; color:#484f58;">
-        Fuente: Biquote | Actualizado: ${new Date().toLocaleString('es-AR')}
+        Fuente: Biquote | ${new Date().toLocaleString('es-AR')}
       </div>
     `;
     panel.style.display = 'block';
 
   } catch (error) {
     console.log('Error cargando eventos:', error);
-    content.innerHTML = '<div class="info">No se pudieron cargar los eventos económicos. Intentá recargar la página.</div>';
+    content.innerHTML = '<div class="info">No se pudieron cargar los eventos. Recargá la página.</div>';
     panel.style.display = 'block';
   }
 }
