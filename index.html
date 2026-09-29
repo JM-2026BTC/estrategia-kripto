@@ -94,6 +94,12 @@
   <h1>📊 Estrategia Kripto</h1>
   <p class="sub">Calculadora de promedio, liquidación y riesgo para futuros</p>
 
+  <!-- Panel de Miedo y Codicia -->
+  <div class="card" id="sentiment-panel" style="display:none;">
+    <h2>📊 Sentimiento del Mercado</h2>
+    <div id="sentiment-content"></div>
+  </div>
+
   <!-- FORMULARIO -->
   <div class="card" id="formulario">
     <h2>Datos de la operación</h2>
@@ -241,7 +247,7 @@ function calcular() {
   if (e2 && p2) entradas.push({ precio: e2, pct: p2, nombre: 'Entrada 2' });
   if (e3 && p3) entradas.push({ precio: e3, pct: p3, nombre: 'Entrada 3' });
 
-  // ✅ NUEVO: Validar que cada % sea > 0 y <= 100
+  // Validar que cada % sea > 0 y <= 100
   for (let i = 0; i < entradas.length; i++) {
     const pct = entradas[i].pct;
     if (isNaN(pct) || pct <= 0 || pct > 100) {
@@ -377,8 +383,62 @@ function calcular() {
   res.scrollIntoView({ behavior: 'smooth' });
 }
 
+// ====== NUEVO: Panel de Miedo y Codicia ======
+async function cargarSentimiento() {
+  const panel = document.getElementById('sentiment-panel');
+  const content = document.getElementById('sentiment-content');
+
+  try {
+    // API pública de Alternative.me — sin API key [citation:7][citation:17]
+    const response = await fetch('https://api.alternative.me/fng/?limit=1');
+    const data = await response.json();
+
+    if (data && data.data && data.data[0]) {
+      const fng = data.data[0];
+      const valor = parseInt(fng.value);
+      const clasificacion = fng.value_classification;
+
+      // Color según el valor
+      let color = '#d29922'; // neutral
+      if (valor <= 24) color = '#f85149';      // miedo extremo
+      else if (valor <= 49) color = '#d29922';  // miedo
+      else if (valor <= 74) color = '#3fb950';  // codicia
+      else color = '#3fb950';                    // codicia extrema
+
+      // Interpretación en español
+      let interpretacion = '';
+      if (valor <= 24) interpretacion = 'Miedo extremo — posible oportunidad de compra';
+      else if (valor <= 49) interpretacion = 'Miedo — cautela en el mercado';
+      else if (valor <= 74) interpretacion = 'Codicia — confianza en aumento';
+      else interpretacion = 'Codicia extrema — posible corrección';
+
+      content.innerHTML = `
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div style="font-size:36px; font-weight:700; color:${color}; min-width:70px;">${valor}</div>
+          <div>
+            <div style="font-size:16px; font-weight:600; color:${color};">${clasificacion}</div>
+            <div style="font-size:12px; color:#8b949e; margin-top:4px;">
+              ${interpretacion}
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:11px; color:#484f58;">
+          Fuente: Alternative.me | Actualizado: ${new Date(parseInt(fng.timestamp) * 1000).toLocaleString('es-AR')}
+        </div>
+      `;
+      panel.style.display = 'block';
+    }
+  } catch (error) {
+    console.log('Error cargando sentimiento:', error);
+    // Si falla, no mostramos el panel (no rompe la página)
+  }
+}
+
 // Inicializar
 cambiarModo();
+cargarSentimiento();
+// Actualizar cada 5 minutos
+setInterval(cargarSentimiento, 300000);
 </script>
 </body>
 </html>
