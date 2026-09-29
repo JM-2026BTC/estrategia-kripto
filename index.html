@@ -86,6 +86,11 @@
     margin-top: 12px;
   }
   .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 30px; }
+  .evento { padding: 8px 0; border-bottom: 1px solid #21262d; }
+  .evento:last-child { border-bottom: none; }
+  .evento-fecha { color: #8b949e; font-size: 12px; }
+  .evento-nombre { color: #c9d1d9; font-size: 13px; margin-top: 2px; }
+  .evento-impacto { font-size: 11px; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -98,6 +103,12 @@
   <div class="card" id="sentiment-panel" style="display:none;">
     <h2>📊 Sentimiento del Mercado</h2>
     <div id="sentiment-content"></div>
+  </div>
+
+  <!-- Panel de Eventos Económicos -->
+  <div class="card" id="eventos-panel" style="display:none;">
+    <h2>📅 Eventos Económicos de Alto Impacto</h2>
+    <div id="eventos-content"></div>
   </div>
 
   <!-- FORMULARIO -->
@@ -237,7 +248,6 @@ function calcular() {
   const p3 = parseFloat(document.getElementById('p3').value);
   const slInput = document.getElementById('sl').value;
 
-  // Validaciones básicas
   if (!monto || monto <= 0) return alert('Monto total inválido');
   if (!e1 || e1 <= 0) return alert('Precio Entrada 1 inválido');
   if ((e2 && !p2) || (!e2 && p2)) return alert('Entrada 2 incoherente: precio y % deben ir juntos');
@@ -247,7 +257,6 @@ function calcular() {
   if (e2 && p2) entradas.push({ precio: e2, pct: p2, nombre: 'Entrada 2' });
   if (e3 && p3) entradas.push({ precio: e3, pct: p3, nombre: 'Entrada 3' });
 
-  // Validar que cada % sea > 0 y <= 100
   for (let i = 0; i < entradas.length; i++) {
     const pct = entradas[i].pct;
     if (isNaN(pct) || pct <= 0 || pct > 100) {
@@ -255,7 +264,6 @@ function calcular() {
     }
   }
 
-  // Validar que sumen 100%
   const totalPct = entradas.reduce((s, e) => s + e.pct, 0);
   if (Math.abs(totalPct - 100) > 0.01) {
     return alert(`⚠️ Los % de entrada deben sumar 100%.\nSuma actual: ${totalPct}%`);
@@ -306,7 +314,6 @@ function calcular() {
 
   let html = '';
 
-  // Modo info
   html += `<div class="card"><h2>⚙️ Modo de trabajo</h2>`;
   if (modo === 'A') {
     html += `<div class="info">Modo <strong>Automático (A)</strong>: E2 y E3 calculadas por el sistema con escalonamiento ${fmt(parseFloat(document.getElementById('escalonamiento').value))}%.</div>`;
@@ -315,7 +322,6 @@ function calcular() {
   }
   html += `</div>`;
 
-  // Tabla de entradas
   html += `<div class="card"><h2>🧮 Entradas</h2><table>
     <tr><th>Entrada</th><th>%</th><th>Monto real</th><th>Nominal</th><th>Precio</th></tr>`;
   entradas.forEach((e, i) => {
@@ -335,7 +341,6 @@ function calcular() {
     <td>—</td>
   </tr></table></div>`;
 
-  // Niveles clave
   html += `<div class="card"><h2>➡️ Niveles clave</h2><table>
     <tr><th>Concepto</th><th class="num">Valor</th></tr>
     <tr><td>Precio promedio</td><td class="num destacado">${fmt(promedio)}</td></tr>
@@ -345,7 +350,6 @@ function calcular() {
   }
   html += `</table></div>`;
 
-  // Distancias
   html += `<div class="card"><h2>📏 Distancias</h2><table>
     <tr><th>Distancia</th><th class="num">Valor</th></tr>
     <tr><td>Última entrada → promedio</td><td class="num">${distUltimaProm >= 0 ? '+' : ''}${fmt(distUltimaProm)}%</td></tr>
@@ -354,7 +358,6 @@ function calcular() {
     <tr><td>Promedio vs. última recompra</td><td class="num">${fmt(distUltimaProm)}%</td></tr>
   </table></div>`;
 
-  // Riesgo
   html += `<div class="card"><h2>💀 Riesgo</h2><table>
     <tr><th>Escenario</th><th class="num">Pérdida</th><th class="num">% monto</th></tr>
     <tr><td>Liquidación (${fmt(liquidacion)})</td><td class="num rojo">-$${fmt(perdidaLiq)}</td><td class="num rojo">-${fmt(perdidaLiqPct)}%</td></tr>`;
@@ -363,7 +366,6 @@ function calcular() {
   }
   html += `</table></div>`;
 
-  // Observaciones
   html += `<div class="card"><h2>⚠️ Observaciones</h2>`;
   if (sl && !slCoherente) {
     html += `<div class="alerta">El SL (${fmt(sl)}) queda ${dir === 'SHORT' ? 'por debajo' : 'por encima'} de la última entrada (${fmt(ultima.precio)}). El SL se tocaría antes de ejecutar la última entrada.</div>`;
@@ -383,13 +385,12 @@ function calcular() {
   res.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ====== NUEVO: Panel de Miedo y Codicia ======
+// ====== Panel de Miedo y Codicia ======
 async function cargarSentimiento() {
   const panel = document.getElementById('sentiment-panel');
   const content = document.getElementById('sentiment-content');
 
   try {
-    // API pública de Alternative.me — sin API key [citation:7][citation:17]
     const response = await fetch('https://api.alternative.me/fng/?limit=1');
     const data = await response.json();
 
@@ -398,14 +399,12 @@ async function cargarSentimiento() {
       const valor = parseInt(fng.value);
       const clasificacion = fng.value_classification;
 
-      // Color según el valor
-      let color = '#d29922'; // neutral
-      if (valor <= 24) color = '#f85149';      // miedo extremo
-      else if (valor <= 49) color = '#d29922';  // miedo
-      else if (valor <= 74) color = '#3fb950';  // codicia
-      else color = '#3fb950';                    // codicia extrema
+      let color = '#d29922';
+      if (valor <= 24) color = '#f85149';
+      else if (valor <= 49) color = '#d29922';
+      else if (valor <= 74) color = '#3fb950';
+      else color = '#3fb950';
 
-      // Interpretación en español
       let interpretacion = '';
       if (valor <= 24) interpretacion = 'Miedo extremo — posible oportunidad de compra';
       else if (valor <= 49) interpretacion = 'Miedo — cautela en el mercado';
@@ -430,15 +429,83 @@ async function cargarSentimiento() {
     }
   } catch (error) {
     console.log('Error cargando sentimiento:', error);
-    // Si falla, no mostramos el panel (no rompe la página)
+  }
+}
+
+// ====== Panel de Eventos Económicos (Biquote) ======
+async function cargarEventos() {
+  const panel = document.getElementById('eventos-panel');
+  const content = document.getElementById('eventos-content');
+
+  try {
+    // Biquote: API pública, sin key, CORS abierto [citation:1][citation:20]
+    const response = await fetch('https://biquote.io/api/calendar?importance=high&countries=US');
+    const data = await response.json();
+
+    let eventos = [];
+    if (Array.isArray(data)) {
+      eventos = data;
+    } else if (data.events) {
+      eventos = data.events;
+    } else if (data.data) {
+      eventos = data.data;
+    }
+
+    if (eventos.length === 0) {
+      content.innerHTML = '<div class="info">No hay eventos de alto impacto esta semana.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    let html = '';
+    eventos.slice(0, 6).forEach(ev => {
+      const fechaRaw = ev.date || ev.time || ev.datetime;
+      let fechaStr = 'Fecha no disponible';
+      if (fechaRaw) {
+        const d = new Date(fechaRaw);
+        // Argentina: UTC-3 todo el año [citation:8]
+        fechaStr = d.toLocaleString('es-AR', {
+          timeZone: 'America/Argentina/Buenos_Aires',
+          weekday: 'short',
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      const nombre = ev.name || ev.title || ev.event || 'Evento';
+      const pais = ev.country || ev.currency || 'US';
+
+      html += `
+        <div class="evento">
+          <div class="evento-fecha">${fechaStr} ARG</div>
+          <div class="evento-nombre">🔴 ${nombre} (${pais})</div>
+          <div class="evento-impacto" style="color:#f85149;">Alto impacto</div>
+        </div>
+      `;
+    });
+
+    content.innerHTML = html + `
+      <div style="margin-top:12px; font-size:11px; color:#484f58;">
+        Fuente: Biquote | Actualizado: ${new Date().toLocaleString('es-AR')}
+      </div>
+    `;
+    panel.style.display = 'block';
+
+  } catch (error) {
+    console.log('Error cargando eventos:', error);
+    content.innerHTML = '<div class="info">No se pudieron cargar los eventos económicos. Intentá recargar la página.</div>';
+    panel.style.display = 'block';
   }
 }
 
 // Inicializar
 cambiarModo();
 cargarSentimiento();
-// Actualizar cada 5 minutos
+cargarEventos();
 setInterval(cargarSentimiento, 300000);
+setInterval(cargarEventos, 600000);
 </script>
 </body>
 </html>
