@@ -51,8 +51,6 @@
     margin-top: 18px;
   }
   button:hover { background: #2ea043; }
-  button.secundario { background: #21262d; border: 1px solid #30363d; }
-  button.secundario:hover { background: #30363d; }
   .resultado { display: none; }
   .resultado.activo { display: block; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -88,7 +86,6 @@
     margin-top: 12px;
   }
   .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 30px; }
-  .oculto { display: none; }
 </style>
 </head>
 <body>
@@ -101,7 +98,6 @@
   <div class="card" id="formulario">
     <h2>Datos de la operación</h2>
 
-    <!-- PASO 0: MODO -->
     <label>Modo de trabajo</label>
     <select id="modo" onchange="cambiarModo()">
       <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
@@ -235,17 +231,29 @@ function calcular() {
   const p3 = parseFloat(document.getElementById('p3').value);
   const slInput = document.getElementById('sl').value;
 
+  // Validaciones básicas
   if (!monto || monto <= 0) return alert('Monto total inválido');
   if (!e1 || e1 <= 0) return alert('Precio Entrada 1 inválido');
   if ((e2 && !p2) || (!e2 && p2)) return alert('Entrada 2 incoherente: precio y % deben ir juntos');
   if ((e3 && !p3) || (!e3 && p3)) return alert('Entrada 3 incoherente: precio y % deben ir juntos');
 
-  const entradas = [{ precio: e1, pct: p1 }];
-  if (e2 && p2) entradas.push({ precio: e2, pct: p2 });
-  if (e3 && p3) entradas.push({ precio: e3, pct: p3 });
+  const entradas = [{ precio: e1, pct: p1, nombre: 'Entrada 1' }];
+  if (e2 && p2) entradas.push({ precio: e2, pct: p2, nombre: 'Entrada 2' });
+  if (e3 && p3) entradas.push({ precio: e3, pct: p3, nombre: 'Entrada 3' });
 
+  // ✅ NUEVO: Validar que cada % sea > 0 y <= 100
+  for (let i = 0; i < entradas.length; i++) {
+    const pct = entradas[i].pct;
+    if (isNaN(pct) || pct <= 0 || pct > 100) {
+      return alert(`⚠️ ${entradas[i].nombre}: el % debe ser mayor a 0 y menor o igual a 100.\nValor actual: ${pct}%`);
+    }
+  }
+
+  // Validar que sumen 100%
   const totalPct = entradas.reduce((s, e) => s + e.pct, 0);
-  if (Math.abs(totalPct - 100) > 0.01) return alert('Los % de entrada deben sumar 100%. Actual: ' + totalPct + '%');
+  if (Math.abs(totalPct - 100) > 0.01) {
+    return alert(`⚠️ Los % de entrada deben sumar 100%.\nSuma actual: ${totalPct}%`);
+  }
 
   const nominalTotal = monto * apal;
   entradas.forEach(e => {
