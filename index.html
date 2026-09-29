@@ -35,6 +35,7 @@
     font-size: 14px;
   }
   input:focus, select:focus { outline: none; border-color: #58a6ff; }
+  input:disabled { opacity: 0.5; cursor: not-allowed; }
   .row { display: flex; gap: 12px; }
   .row > div { flex: 1; }
   button {
@@ -50,6 +51,8 @@
     margin-top: 18px;
   }
   button:hover { background: #2ea043; }
+  button.secundario { background: #21262d; border: 1px solid #30363d; }
+  button.secundario:hover { background: #30363d; }
   .resultado { display: none; }
   .resultado.activo { display: block; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -76,7 +79,16 @@
     font-size: 13px;
     margin-top: 12px;
   }
+  .info {
+    background: #1b2530;
+    border-left: 3px solid #58a6ff;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 12px;
+  }
   .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 30px; }
+  .oculto { display: none; }
 </style>
 </head>
 <body>
@@ -89,6 +101,13 @@
   <div class="card" id="formulario">
     <h2>Datos de la operación</h2>
 
+    <!-- PASO 0: MODO -->
+    <label>Modo de trabajo</label>
+    <select id="modo" onchange="cambiarModo()">
+      <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
+      <option value="H">Híbrido (H) — el sistema sugiere, vos decidís</option>
+    </select>
+
     <div class="row">
       <div>
         <label>Dirección</label>
@@ -99,7 +118,7 @@
       </div>
       <div>
         <label>Apalancamiento</label>
-        <select id="apalancamiento">
+        <select id="apalancamiento" onchange="actualizarSugeridos()">
           <option value="10">x10 (liq. 9,5%)</option>
           <option value="12">x12 (liq. 7,9%)</option>
           <option value="15">x15 (liq. 6,25%)</option>
@@ -113,13 +132,17 @@
     <input type="number" id="monto" placeholder="270" step="any">
 
     <label>Precio Entrada 1</label>
-    <input type="number" id="e1" placeholder="83870" step="any">
+    <input type="number" id="e1" placeholder="83870" step="any" onchange="calcularAuto()">
 
-    <label>Precio Entrada 2 (dejar vacío si no aplica)</label>
-    <input type="number" id="e2" placeholder="85966.75" step="any">
+    <div id="bloqueE2">
+      <label>Precio Entrada 2</label>
+      <input type="number" id="e2" placeholder="85966.75" step="any">
+    </div>
 
-    <label>Precio Entrada 3 (dejar vacío si no aplica)</label>
-    <input type="number" id="e3" placeholder="88115.92" step="any">
+    <div id="bloqueE3">
+      <label>Precio Entrada 3</label>
+      <input type="number" id="e3" placeholder="88115.92" step="any">
+    </div>
 
     <div class="row">
       <div>
@@ -136,6 +159,9 @@
       </div>
     </div>
 
+    <label>Escalonamiento (%)</label>
+    <input type="number" id="escalonamiento" value="2.5" step="any" onchange="calcularAuto()">
+
     <label>SL manual (% desde el promedio, opcional)</label>
     <input type="number" id="sl" placeholder="2" step="any">
 
@@ -150,12 +176,54 @@
 
 <script>
 const LIQ = { 10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8 };
+const ESC_SUGERIDO = { 10: 2.5, 12: 2.0, 15: 1.5, 20: 1.0, 30: 0.6 };
 
 function fmt(n, dec = 2) {
   return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
+function cambiarModo() {
+  const modo = document.getElementById('modo').value;
+  const e2 = document.getElementById('e2');
+  const e3 = document.getElementById('e3');
+  if (modo === 'A') {
+    e2.disabled = true;
+    e3.disabled = true;
+    e2.value = '';
+    e3.value = '';
+    calcularAuto();
+  } else {
+    e2.disabled = false;
+    e3.disabled = false;
+  }
+}
+
+function actualizarSugeridos() {
+  const apal = parseInt(document.getElementById('apalancamiento').value);
+  document.getElementById('escalonamiento').value = ESC_SUGERIDO[apal];
+  calcularAuto();
+}
+
+function calcularAuto() {
+  const modo = document.getElementById('modo').value;
+  if (modo !== 'A') return;
+
+  const dir = document.getElementById('direccion').value;
+  const e1 = parseFloat(document.getElementById('e1').value);
+  const esc = parseFloat(document.getElementById('escalonamiento').value) || 2.5;
+
+  if (!e1 || e1 <= 0) return;
+
+  const factor = dir === 'SHORT' ? (1 + esc / 100) : (1 - esc / 100);
+  const e2 = e1 * factor;
+  const e3 = e2 * factor;
+
+  document.getElementById('e2').value = e2.toFixed(2);
+  document.getElementById('e3').value = e3.toFixed(2);
+}
+
 function calcular() {
+  const modo = document.getElementById('modo').value;
   const dir = document.getElementById('direccion').value;
   const apal = parseInt(document.getElementById('apalancamiento').value);
   const monto = parseFloat(document.getElementById('monto').value);
@@ -167,13 +235,11 @@ function calcular() {
   const p3 = parseFloat(document.getElementById('p3').value);
   const slInput = document.getElementById('sl').value;
 
-  // Validaciones
   if (!monto || monto <= 0) return alert('Monto total inválido');
   if (!e1 || e1 <= 0) return alert('Precio Entrada 1 inválido');
   if ((e2 && !p2) || (!e2 && p2)) return alert('Entrada 2 incoherente: precio y % deben ir juntos');
   if ((e3 && !p3) || (!e3 && p3)) return alert('Entrada 3 incoherente: precio y % deben ir juntos');
 
-  // Entradas activas
   const entradas = [{ precio: e1, pct: p1 }];
   if (e2 && p2) entradas.push({ precio: e2, pct: p2 });
   if (e3 && p3) entradas.push({ precio: e3, pct: p3 });
@@ -181,25 +247,21 @@ function calcular() {
   const totalPct = entradas.reduce((s, e) => s + e.pct, 0);
   if (Math.abs(totalPct - 100) > 0.01) return alert('Los % de entrada deben sumar 100%. Actual: ' + totalPct + '%');
 
-  // Nominal total y por entrada
   const nominalTotal = monto * apal;
   entradas.forEach(e => {
     e.montoReal = monto * (e.pct / 100);
     e.nominal = e.montoReal * apal;
   });
 
-  // Precio promedio ponderado
   let suma = 0, pesos = 0;
   entradas.forEach(e => { suma += e.precio * e.nominal; pesos += e.nominal; });
   const promedio = suma / pesos;
 
-  // Liquidación
   const liqPct = LIQ[apal];
   const liquidacion = dir === 'SHORT'
     ? promedio * (1 + liqPct / 100)
     : promedio * (1 - liqPct / 100);
 
-  // SL manual
   let sl = null;
   if (slInput && parseFloat(slInput) !== 0) {
     const slPct = Math.abs(parseFloat(slInput));
@@ -208,32 +270,36 @@ function calcular() {
       : promedio * (1 - slPct / 100);
   }
 
-  // Pérdida en liquidación
   const perdidaLiq = Math.abs(liquidacion - promedio) / promedio * nominalTotal;
   const perdidaLiqPct = (perdidaLiq / monto) * 100;
 
-  // Pérdida en SL
   let perdidaSL = null, perdidaSLPct = null;
   if (sl) {
     perdidaSL = Math.abs(sl - promedio) / promedio * nominalTotal;
     perdidaSLPct = (perdidaSL / monto) * 100;
   }
 
-  // Última entrada
   const ultima = entradas[entradas.length - 1];
   const distUltimaProm = (promedio - ultima.precio) / ultima.precio * 100;
   const distUltimaLiq = (liquidacion - ultima.precio) / ultima.precio * 100;
   const distPrimeraLiq = (liquidacion - entradas[0].precio) / entradas[0].precio * 100;
 
-  // Verificación SL vs última entrada
   let slCoherente = true;
   if (sl) {
     if (dir === 'SHORT' && sl < ultima.precio) slCoherente = false;
     if (dir === 'LONG' && sl > ultima.precio) slCoherente = false;
   }
 
-  // Render
   let html = '';
+
+  // Modo info
+  html += `<div class="card"><h2>⚙️ Modo de trabajo</h2>`;
+  if (modo === 'A') {
+    html += `<div class="info">Modo <strong>Automático (A)</strong>: E2 y E3 calculadas por el sistema con escalonamiento ${fmt(parseFloat(document.getElementById('escalonamiento').value))}%.</div>`;
+  } else {
+    html += `<div class="info">Modo <strong>Híbrido (H)</strong>: E2 y E3 cargadas manualmente.</div>`;
+  }
+  html += `</div>`;
 
   // Tabla de entradas
   html += `<div class="card"><h2>🧮 Entradas</h2><table>
@@ -286,7 +352,7 @@ function calcular() {
   // Observaciones
   html += `<div class="card"><h2>⚠️ Observaciones</h2>`;
   if (sl && !slCoherente) {
-    html += `<div class="alerta">El SL (${fmt(sl)}) queda ${dir === 'SHORT' ? 'por debajo' : 'por encima'} de la última entrada (${fmt(ultima.precio)}). El SL se tocaría antes de ejecutar la última entrada. Ampliá el SL o reducí las entradas.</div>`;
+    html += `<div class="alerta">El SL (${fmt(sl)}) queda ${dir === 'SHORT' ? 'por debajo' : 'por encima'} de la última entrada (${fmt(ultima.precio)}). El SL se tocaría antes de ejecutar la última entrada.</div>`;
   } else if (sl && slCoherente) {
     html += `<div class="ok">El SL (${fmt(sl)}) es coherente con la última entrada (${fmt(ultima.precio)}).</div>`;
   }
@@ -302,6 +368,9 @@ function calcular() {
   res.classList.add('activo');
   res.scrollIntoView({ behavior: 'smooth' });
 }
+
+// Inicializar
+cambiarModo();
 </script>
 </body>
 </html>
