@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 # Configuración
-CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', '1000PEPE/USDT']
+CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
 TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 RSI_PERIODO = 14
 
@@ -38,7 +38,7 @@ def calcular_rsi_par(exchange, symbol, timeframe):
         return None
 
 def main():
-    exchange = ccxt.bybit()
+    exchange = ccxt.okx()
     
     resultado = {
         'last_update': pd.Timestamp.now(tz='UTC').isoformat(),
