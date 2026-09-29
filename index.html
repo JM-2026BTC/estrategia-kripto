@@ -107,13 +107,17 @@
   .evento-fecha { color: #8b949e; font-size: 12px; }
   .evento-nombre { color: #c9d1d9; font-size: 13px; margin-top: 2px; }
   .evento-impacto { font-size: 11px; margin-top: 2px; }
+  .rsi-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #21262d; }
+  .rsi-row:last-child { border-bottom: none; }
+  .rsi-tf { color: #8b949e; font-size: 13px; }
+  .rsi-val { font-weight: 600; font-size: 14px; }
 </style>
 </head>
 <body>
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v1.0</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v2.0</p>
 
   <div class="layout">
 
@@ -128,6 +132,14 @@
         <select id="modo" onchange="cambiarModo()">
           <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
           <option value="H">Híbrido (H) — el sistema sugiere, vos decidís</option>
+        </select>
+
+        <label>Cripto a analizar (para RSI)</label>
+        <select id="cripto" onchange="cargarRSI()">
+          <option value="BTCUSDT">BTC — Bitcoin</option>
+          <option value="HYPEUSDT">HYPE — Hyperliquid</option>
+          <option value="DOGEUSDT">DOGE — Dogecoin</option>
+          <option value="PEPEUSDT">PEPE — Pepe</option>
         </select>
 
         <div class="row">
@@ -198,6 +210,12 @@
     <!-- COLUMNA DERECHA: Paneles -->
     <div class="col-paneles">
 
+      <!-- Panel de RSI -->
+      <div class="card" id="rsi-panel" style="display:none;">
+        <h2>📈 RSI — <span id="rsi-cripto-nombre">BTC</span></h2>
+        <div id="rsi-content"></div>
+      </div>
+
       <!-- Panel de Miedo y Codicia -->
       <div class="card" id="sentiment-panel" style="display:none;">
         <h2>📊 Sentimiento del Mercado</h2>
@@ -214,15 +232,32 @@
 
   </div>
 
-  <p class="footer">GENISYS v1.0 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v2.0 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
 const LIQ = { 10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8 };
 const ESC_SUGERIDO = { 10: 2.5, 12: 2.0, 15: 1.5, 20: 1.0, 30: 0.6 };
+const NOMBRES = { BTCUSDT: 'BTC', HYPEUSDT: 'HYPE', DOGEUSDT: 'DOGE', PEPEUSDT: 'PEPE' };
+
+let rsiDataGlobal = null;
 
 function fmt(n, dec = 2) {
   return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function colorRSI(valor) {
+  if (valor === null || valor === undefined) return '#8b949e';
+  if (valor >= 70) return '#f85149'; // sobrecompra
+  if (valor <= 30) return '#3fb950'; // sobreventa
+  return '#d29922'; // neutral
+}
+
+function etiquetaRSI(valor) {
+  if (valor === null || valor === undefined) return '';
+  if (valor >= 70) return 'Sobrecompra';
+  if (valor <= 30) return 'Sobreventa';
+  return 'Neutral';
 }
 
 function cambiarModo() {
@@ -415,6 +450,67 @@ function calcular() {
   res.scrollIntoView({ behavior: 'smooth' });
 }
 
+// ====== Panel de RSI ======
+async function cargarRSI() {
+  const cripto = document.getElementById('cripto').value;
+  const panel = document.getElementById('rsi-panel');
+  const content = document.getElementById('rsi-content');
+  const nombre = document.getElementById('rsi-cripto-nombre');
+
+  nombre.textContent = NOMBRES[cripto] || cripto;
+
+  try {
+    // Si ya tenemos los datos cargados, los usamos
+    if (!rsiDataGlobal) {
+      const response = await fetch('rsi_data.json?t=' + Date.now());
+      rsiDataGlobal = await response.json();
+    }
+
+    const data = rsiDataGlobal.data[cripto];
+
+    if (!data) {
+      content.innerHTML = '<div class="info">No hay datos de RSI para esta cripto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    const tfs = ['1h', '4h', '1d', '1w'];
+    let html = '';
+
+    tfs.forEach(tf => {
+      const valor = data[tf];
+      const color = colorRSI(valor);
+      const etiqueta = etiquetaRSI(valor);
+      const valorStr = (valor === null || valor === undefined) ? '—' : fmt(valor);
+      html += `
+        <div class="rsi-row">
+          <span class="rsi-tf">${tf.toUpperCase()}</span>
+          <span class="rsi-val" style="color:${color};">${valorStr} <span style="font-size:11px;font-weight:400;">${etiqueta}</span></span>
+        </div>
+      `;
+    });
+
+    // Fecha de actualización
+    const fecha = rsiDataGlobal.last_update
+      ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+      : 'Desconocida';
+
+    html += `
+      <div style="margin-top:12px; font-size:11px; color:#484f58;">
+        Última actualización: ${fecha}
+      </div>
+    `;
+
+    content.innerHTML = html;
+    panel.style.display = 'block';
+
+  } catch (error) {
+    console.log('Error cargando RSI:', error);
+    content.innerHTML = '<div class="info">No se pudieron cargar los datos de RSI.</div>';
+    panel.style.display = 'block';
+  }
+}
+
 // ====== Panel de Miedo y Codicia ======
 async function cargarSentimiento() {
   const panel = document.getElementById('sentiment-panel');
@@ -525,10 +621,12 @@ async function cargarEventos() {
 
 // Inicializar
 cambiarModo();
+cargarRSI();
 cargarSentimiento();
 cargarEventos();
-setInterval(cargarSentimiento, 300000);
-setInterval(cargarEventos, 600000);
+setInterval(cargarRSI, 600000);        // RSI cada 10 min
+setInterval(cargarSentimiento, 300000); // Sentimiento cada 5 min
+setInterval(cargarEventos, 600000);    // Eventos cada 10 min
 </script>
 </body>
 </html>
