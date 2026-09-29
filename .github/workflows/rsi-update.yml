@@ -1,0 +1,34 @@
+name: Update RSI Data
+
+on:
+  schedule:
+    # Se ejecuta cada 1 hora (en el minuto 0)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente para probar
+
+jobs:
+  update-rsi:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permiso para hacer commit en el repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install ccxt pandas pandas-ta
+
+      - name: Run RSI script
+        run: python rsi.py
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Actualizar RSI data [skip ci]"
+          file_pattern: rsi_data.json
