@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estrategia Kripto — Calculadora</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { color: #58a6ff; font-size: 24px; margin-bottom: 6px; }
+  .sub { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 16px; color: #58a6ff; margin-bottom: 14px; }
+  label { display: block; font-size: 13px; color: #8b949e; margin-bottom: 5px; margin-top: 12px; }
+  input, select {
+    width: 100%;
+    padding: 9px 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
+    font-size: 14px;
+  }
+  input:focus, select:focus { outline: none; border-color: #58a6ff; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #238636;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 18px;
+  }
+  button:hover { background: #2ea043; }
+  .resultado { display: none; }
+  .resultado.activo { display: block; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #21262d; }
+  th { color: #8b949e; font-weight: 500; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .destacado { color: #58a6ff; font-weight: 600; }
+  .verde { color: #3fb950; }
+  .rojo { color: #f85149; }
+  .amarillo { color: #d29922; }
+  .alerta {
+    background: #2d1b1b;
+    border-left: 3px solid #f85149;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+  .ok {
+    background: #1b2d1b;
+    border-left: 3px solid #3fb950;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+  .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>📊 Estrategia Kripto</h1>
+  <p class="sub">Calculadora de promedio, liquidación y riesgo para futuros</p>
+
+  <!-- FORMULARIO -->
+  <div class="card" id="formulario">
+    <h2>Datos de la operación</h2>
+
+    <div class="row">
+      <div>
+        <label>Dirección</label>
+        <select id="direccion">
+          <option value="SHORT">SHORT</option>
+          <option value="LONG">LONG</option>
+        </select>
+      </div>
+      <div>
+        <label>Apalancamiento</label>
+        <select id="apalancamiento">
+          <option value="10">x10 (liq. 9,5%)</option>
+          <option value="12">x12 (liq. 7,9%)</option>
+          <option value="15">x15 (liq. 6,25%)</option>
+          <option value="20">x20 (liq. 4,5%)</option>
+          <option value="30">x30 (liq. 2,8%)</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Monto total de la operatoria (USD)</label>
+    <input type="number" id="monto" placeholder="270" step="any">
+
+    <label>Precio Entrada 1</label>
+    <input type="number" id="e1" placeholder="83870" step="any">
+
+    <label>Precio Entrada 2 (dejar vacío si no aplica)</label>
+    <input type="number" id="e2" placeholder="85966.75" step="any">
+
+    <label>Precio Entrada 3 (dejar vacío si no aplica)</label>
+    <input type="number" id="e3" placeholder="88115.92" step="any">
+
+    <div class="row">
+      <div>
+        <label>% Entrada 1</label>
+        <input type="number" id="p1" value="20" step="any">
+      </div>
+      <div>
+        <label>% Entrada 2</label>
+        <input type="number" id="p2" value="30" step="any">
+      </div>
+      <div>
+        <label>% Entrada 3</label>
+        <input type="number" id="p3" value="50" step="any">
+      </div>
+    </div>
+
+    <label>SL manual (% desde el promedio, opcional)</label>
+    <input type="number" id="sl" placeholder="2" step="any">
+
+    <button onclick="calcular()">Calcular plan</button>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="resultado" class="resultado"></div>
+
+  <p class="footer">Herramienta educativa. No es recomendación financiera.</p>
+</div>
+
+<script>
+const LIQ = { 10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8 };
+
+function fmt(n, dec = 2) {
+  return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function calcular() {
+  const dir = document.getElementById('direccion').value;
+  const apal = parseInt(document.getElementById('apalancamiento').value);
+  const monto = parseFloat(document.getElementById('monto').value);
+  const e1 = parseFloat(document.getElementById('e1').value);
+  const e2 = parseFloat(document.getElementById('e2').value);
+  const e3 = parseFloat(document.getElementById('e3').value);
+  const p1 = parseFloat(document.getElementById('p1').value);
+  const p2 = parseFloat(document.getElementById('p2').value);
+  const p3 = parseFloat(document.getElementById('p3').value);
+  const slInput = document.getElementById('sl').value;
+
+  // Validaciones
+  if (!monto || monto <= 0) return alert('Monto total inválido');
+  if (!e1 || e1 <= 0) return alert('Precio Entrada 1 inválido');
+  if ((e2 && !p2) || (!e2 && p2)) return alert('Entrada 2 incoherente: precio y % deben ir juntos');
+  if ((e3 && !p3) || (!e3 && p3)) return alert('Entrada 3 incoherente: precio y % deben ir juntos');
+
+  // Entradas activas
+  const entradas = [{ precio: e1, pct: p1 }];
+  if (e2 && p2) entradas.push({ precio: e2, pct: p2 });
+  if (e3 && p3) entradas.push({ precio: e3, pct: p3 });
+
+  const totalPct = entradas.reduce((s, e) => s + e.pct, 0);
+  if (Math.abs(totalPct - 100) > 0.01) return alert('Los % de entrada deben sumar 100%. Actual: ' + totalPct + '%');
+
+  // Nominal total y por entrada
+  const nominalTotal = monto * apal;
+  entradas.forEach(e => {
+    e.montoReal = monto * (e.pct / 100);
+    e.nominal = e.montoReal * apal;
+  });
+
+  // Precio promedio ponderado
+  let suma = 0, pesos = 0;
+  entradas.forEach(e => { suma += e.precio * e.nominal; pesos += e.nominal; });
+  const promedio = suma / pesos;
+
+  // Liquidación
+  const liqPct = LIQ[apal];
+  const liquidacion = dir === 'SHORT'
+    ? promedio * (1 + liqPct / 100)
+    : promedio * (1 - liqPct / 100);
+
+  // SL manual
+  let sl = null;
+  if (slInput && parseFloat(slInput) !== 0) {
+    const slPct = Math.abs(parseFloat(slInput));
+    sl = dir === 'SHORT'
+      ? promedio * (1 + slPct / 100)
+      : promedio * (1 - slPct / 100);
+  }
+
+  // Pérdida en liquidación
+  const perdidaLiq = Math.abs(liquidacion - promedio) / promedio * nominalTotal;
+  const perdidaLiqPct = (perdidaLiq / monto) * 100;
+
+  // Pérdida en SL
+  let perdidaSL = null, perdidaSLPct = null;
+  if (sl) {
+    perdidaSL = Math.abs(sl - promedio) / promedio * nominalTotal;
+    perdidaSLPct = (perdidaSL / monto) * 100;
+  }
+
+  // Última entrada
+  const ultima = entradas[entradas.length - 1];
+  const distUltimaProm = (promedio - ultima.precio) / ultima.precio * 100;
+  const distUltimaLiq = (liquidacion - ultima.precio) / ultima.precio * 100;
+  const distPrimeraLiq = (liquidacion - entradas[0].precio) / entradas[0].precio * 100;
+
+  // Verificación SL vs última entrada
+  let slCoherente = true;
+  if (sl) {
+    if (dir === 'SHORT' && sl < ultima.precio) slCoherente = false;
+    if (dir === 'LONG' && sl > ultima.precio) slCoherente = false;
+  }
+
+  // Render
+  let html = '';
+
+  // Tabla de entradas
+  html += `<div class="card"><h2>🧮 Entradas</h2><table>
+    <tr><th>Entrada</th><th>%</th><th>Monto real</th><th>Nominal</th><th>Precio</th></tr>`;
+  entradas.forEach((e, i) => {
+    html += `<tr>
+      <td>${i + 1}</td>
+      <td class="num">${e.pct}%</td>
+      <td class="num">$${fmt(e.montoReal)}</td>
+      <td class="num">$${fmt(e.nominal, 0)}</td>
+      <td class="num">${fmt(e.precio)}</td>
+    </tr>`;
+  });
+  html += `<tr style="font-weight:600;color:#58a6ff">
+    <td>Total</td>
+    <td class="num">100%</td>
+    <td class="num">$${fmt(monto)}</td>
+    <td class="num">$${fmt(nominalTotal, 0)}</td>
+    <td>—</td>
+  </tr></table></div>`;
+
+  // Niveles clave
+  html += `<div class="card"><h2>➡️ Niveles clave</h2><table>
+    <tr><th>Concepto</th><th class="num">Valor</th></tr>
+    <tr><td>Precio promedio</td><td class="num destacado">${fmt(promedio)}</td></tr>
+    <tr><td>Liquidación (${liqPct}%)</td><td class="num rojo">${fmt(liquidacion)}</td></tr>`;
+  if (sl) {
+    html += `<tr><td>SL manual</td><td class="num amarillo">${fmt(sl)}</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // Distancias
+  html += `<div class="card"><h2>📏 Distancias</h2><table>
+    <tr><th>Distancia</th><th class="num">Valor</th></tr>
+    <tr><td>Última entrada → promedio</td><td class="num">${distUltimaProm >= 0 ? '+' : ''}${fmt(distUltimaProm)}%</td></tr>
+    <tr><td>Última entrada → liquidación</td><td class="num">${distUltimaLiq >= 0 ? '+' : ''}${fmt(distUltimaLiq)}%</td></tr>
+    <tr><td>Primera entrada → liquidación</td><td class="num">${distPrimeraLiq >= 0 ? '+' : ''}${fmt(distPrimeraLiq)}%</td></tr>
+    <tr><td>Promedio vs. última recompra</td><td class="num">${fmt(distUltimaProm)}%</td></tr>
+  </table></div>`;
+
+  // Riesgo
+  html += `<div class="card"><h2>💀 Riesgo</h2><table>
+    <tr><th>Escenario</th><th class="num">Pérdida</th><th class="num">% monto</th></tr>
+    <tr><td>Liquidación (${fmt(liquidacion)})</td><td class="num rojo">-$${fmt(perdidaLiq)}</td><td class="num rojo">-${fmt(perdidaLiqPct)}%</td></tr>`;
+  if (sl) {
+    html += `<tr><td>SL manual (${fmt(sl)})</td><td class="num amarillo">-$${fmt(perdidaSL)}</td><td class="num amarillo">-${fmt(perdidaSLPct)}%</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // Observaciones
+  html += `<div class="card"><h2>⚠️ Observaciones</h2>`;
+  if (sl && !slCoherente) {
+    html += `<div class="alerta">El SL (${fmt(sl)}) queda ${dir === 'SHORT' ? 'por debajo' : 'por encima'} de la última entrada (${fmt(ultima.precio)}). El SL se tocaría antes de ejecutar la última entrada. Ampliá el SL o reducí las entradas.</div>`;
+  } else if (sl && slCoherente) {
+    html += `<div class="ok">El SL (${fmt(sl)}) es coherente con la última entrada (${fmt(ultima.precio)}).</div>`;
+  }
+  if (distUltimaLiq > 0 && distUltimaLiq < 3) {
+    html += `<div class="alerta">La liquidación está a solo ${fmt(distUltimaLiq)}% de la última entrada. Margen muy ajustado.</div>`;
+  } else if (distUltimaLiq > 0) {
+    html += `<div class="ok">Margen hasta liquidación desde la última entrada: ${fmt(distUltimaLiq)}%.</div>`;
+  }
+  html += `</div>`;
+
+  const res = document.getElementById('resultado');
+  res.innerHTML = html;
+  res.classList.add('activo');
+  res.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
