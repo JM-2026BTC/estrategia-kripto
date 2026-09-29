@@ -38,7 +38,7 @@ def calcular_rsi_par(exchange, symbol, timeframe):
         return None
 
 def main():
-    exchange = ccxt.binanceusdm()
+    exchange = ccxt.bybit()
     
     resultado = {
         'last_update': pd.Timestamp.now(tz='UTC').isoformat(),
