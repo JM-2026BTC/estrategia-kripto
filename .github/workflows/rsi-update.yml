@@ -22,7 +22,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install ccxt pandas pandas-ta
+        run: pip install ccxt pandas numpy
 
       - name: Run RSI script
         run: python rsi.py
