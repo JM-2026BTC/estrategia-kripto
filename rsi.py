@@ -8,20 +8,35 @@ CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
 TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 RSI_PERIODO = 14
 FVG_TEMPORALIDADES = ['1h', '4h', '1d']
-FVG_MIN_TAMANO_PCT = 0.15  # Bajado de 0.2 a 0.15
-FVG_MAX_DISTANCIA_PCT = 5.0
+
+# Configuración por temporalidad
+VELAS_POR_TF = {
+    '1h': 100,
+    '4h': 100,
+    '1d': 300,
+    '1w': 200
+}
+
+FVG_MAX_DISTANCIA_PCT = {
+    '1h': 5.0,
+    '4h': 5.0,
+    '1d': 15.0,
+    '1w': 25.0
+}
+
+FVG_MIN_TAMANO_PCT = 0.15
 
 
 def redondear(valor, precio_actual):
     """Redondea según la magnitud del precio."""
     if precio_actual >= 1000:
-        return round(valor, 2)      # BTC: 2 decimales
+        return round(valor, 2)
     elif precio_actual >= 1:
-        return round(valor, 4)      # HYPE, DOGE: 4 decimales
+        return round(valor, 4)
     elif precio_actual >= 0.001:
-        return round(valor, 6)      # PEPE: 6 decimales
+        return round(valor, 6)
     else:
-        return round(valor, 8)      # PEPE muy chico: 8 decimales
+        return round(valor, 8)
 
 
 def calcular_rsi(close, periodo=14):
@@ -39,11 +54,7 @@ def calcular_rsi(close, periodo=14):
 
 
 def detectar_fvg(df):
-    """Detecta FVG y marca si están mitigados o activos.
-    
-    Lógica: un FVG se considera mitigado solo si el precio
-    CRUZA COMPLETAMENTE la zona.
-    """
+    """Detecta FVG y marca si están mitigados o activos."""
     fvgs = []
     precio_actual = float(df['close'].iloc[-1])
 
@@ -90,9 +101,11 @@ def detectar_fvg(df):
     return fvgs
 
 
-def filtrar_fvgs(fvgs, precio_actual):
-    """Filtra solo los FVG activos (no mitigados) y relevantes."""
+def filtrar_fvgs(fvgs, precio_actual, timeframe):
+    """Filtra solo los FVG activos y relevantes."""
     filtrados = []
+    distancia_max = FVG_MAX_DISTANCIA_PCT.get(timeframe, 5.0)
+
     for fvg in fvgs:
         if fvg.get('mitigado', False):
             continue
@@ -100,14 +113,15 @@ def filtrar_fvgs(fvgs, precio_actual):
         desde = fvg['desde']
         hasta = fvg['hasta']
         tamano = abs(hasta - desde)
-        tamano_pct = (tamano / precio_actual) * 100
+        tamano_pct = (tamano / precio_actual) * 100 if precio_actual > 0 else 0
 
         if tamano_pct < FVG_MIN_TAMANO_PCT:
             continue
 
         distancia = min(abs(precio_actual - desde), abs(precio_actual - hasta))
-        distancia_pct = (distancia / precio_actual) * 100
-        if distancia_pct > FVG_MAX_DISTANCIA_PCT:
+        distancia_pct = (distancia / precio_actual) * 100 if precio_actual > 0 else 0
+
+        if distancia_pct > distancia_max:
             continue
 
         filtrados.append(fvg)
@@ -118,7 +132,8 @@ def filtrar_fvgs(fvgs, precio_actual):
 def calcular_rsi_par(exchange, symbol, timeframe):
     """Calcula el RSI para un par y temporalidad específicos."""
     try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=100)
+        limit = VELAS_POR_TF.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['close'] = df['close'].astype(float)
         df['high'] = df['high'].astype(float)
@@ -136,7 +151,8 @@ def calcular_rsi_par(exchange, symbol, timeframe):
 def calcular_fvgs_par(exchange, symbol, timeframe):
     """Calcula los FVG activos para un par y temporalidad específicos."""
     try:
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=100)
+        limit = VELAS_POR_TF.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['close'] = df['close'].astype(float)
         df['high'] = df['high'].astype(float)
@@ -144,7 +160,7 @@ def calcular_fvgs_par(exchange, symbol, timeframe):
 
         precio_actual = float(df['close'].iloc[-1])
         fvgs = detectar_fvg(df)
-        fvgs_filtrados = filtrar_fvgs(fvgs, precio_actual)
+        fvgs_filtrados = filtrar_fvgs(fvgs, precio_actual, timeframe)
         return fvgs_filtrados
 
     except Exception as e:
