@@ -27,7 +27,11 @@ def calcular_rsi(close, periodo=14):
 
 
 def detectar_fvg(df):
-    """Detecta Fair Value Gaps en un DataFrame de velas."""
+    """Detecta FVG y marca si están mitigados o activos.
+    
+    Un FVG se considera mitigado si el precio volvió a tocar la zona
+    después de que se formó.
+    """
     fvgs = []
     for k in range(2, len(df)):
         high_2 = float(df['high'].iloc[k-2])
@@ -35,19 +39,37 @@ def detectar_fvg(df):
         high_0 = float(df['high'].iloc[k])
         low_0 = float(df['low'].iloc[k])
 
+        # FVG Alcista
         if low_0 > high_2:
+            desde = high_2
+            hasta = low_0
+            mitigado = False
+            for j in range(k+1, len(df)):
+                if float(df['low'].iloc[j]) <= hasta:
+                    mitigado = True
+                    break
             fvgs.append({
                 'tipo': 'alcista',
-                'desde': round(high_2, 2),
-                'hasta': round(low_0, 2),
+                'desde': round(desde, 2),
+                'hasta': round(hasta, 2),
+                'mitigado': mitigado,
                 'timestamp': int(df.index[k]) if hasattr(df.index[k], '__int__') else str(df.index[k])
             })
 
+        # FVG Bajista
         if high_0 < low_2:
+            desde = high_0
+            hasta = low_2
+            mitigado = False
+            for j in range(k+1, len(df)):
+                if float(df['high'].iloc[j]) >= desde:
+                    mitigado = True
+                    break
             fvgs.append({
                 'tipo': 'bajista',
-                'desde': round(high_0, 2),
-                'hasta': round(low_2, 2),
+                'desde': round(desde, 2),
+                'hasta': round(hasta, 2),
+                'mitigado': mitigado,
                 'timestamp': int(df.index[k]) if hasattr(df.index[k], '__int__') else str(df.index[k])
             })
 
@@ -55,9 +77,13 @@ def detectar_fvg(df):
 
 
 def filtrar_fvgs(fvgs, precio_actual):
-    """Filtra los FVG relevantes."""
+    """Filtra solo los FVG activos (no mitigados) y relevantes."""
     filtrados = []
     for fvg in fvgs:
+        # Descartar mitigados
+        if fvg.get('mitigado', False):
+            continue
+
         desde = fvg['desde']
         hasta = fvg['hasta']
         tamano = abs(hasta - desde)
@@ -69,11 +95,6 @@ def filtrar_fvgs(fvgs, precio_actual):
         distancia = min(abs(precio_actual - desde), abs(precio_actual - hasta))
         distancia_pct = (distancia / precio_actual) * 100
         if distancia_pct > FVG_MAX_DISTANCIA_PCT:
-            continue
-
-        if fvg['tipo'] == 'alcista' and precio_actual < desde:
-            continue
-        if fvg['tipo'] == 'bajista' and precio_actual > hasta:
             continue
 
         filtrados.append(fvg)
@@ -100,7 +121,7 @@ def calcular_rsi_par(exchange, symbol, timeframe):
 
 
 def calcular_fvgs_par(exchange, symbol, timeframe):
-    """Calcula los FVG para un par y temporalidad específicos."""
+    """Calcula los FVG activos para un par y temporalidad específicos."""
     try:
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=100)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
@@ -144,7 +165,7 @@ def main():
         for tf in FVG_TEMPORALIDADES:
             fvgs = calcular_fvgs_par(exchange, cripto, tf)
             fvg_resultado['data'][symbol][tf] = fvgs
-            print(f"{symbol} en {tf}: {len(fvgs)} FVG detectados")
+            print(f"{symbol} en {tf}: {len(fvgs)} FVG activos detectados")
 
     with open('rsi_data.json', 'w') as f:
         json.dump(rsi_resultado, f, indent=2)
