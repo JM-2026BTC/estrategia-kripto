@@ -27,23 +27,42 @@ FVG_MAX_DISTANCIA_PCT = {
 
 FVG_MIN_TAMANO_PCT = 0.15
 
-# Configuración de S/R
-SR_SWING_STRENGTH = 3
-SR_CLUSTER_PCT = 0.5
+# Configuración de S/R (parámetros automáticos)
+SWING_STRENGTH = {
+    '1h': 3,
+    '4h': 3,
+    '1d': 4,
+    '1w': 5
+}
 SR_MIN_TOQUES = 2
 SR_MAX_ZONAS = 4
 
 
 def redondear(valor, precio_actual):
-    """Redondea según la magnitud del precio."""
+    """Redondea según la magnitud del precio (automático)."""
     if precio_actual >= 1000:
         return round(valor, 2)
     elif precio_actual >= 1:
-        return round(valor, 4)
-    elif precio_actual >= 0.001:
-        return round(valor, 6)
-    else:
+        return round(valor, 3)
+    elif precio_actual >= 0.01:
+        return round(valor, 5)
+    elif precio_actual >= 0.0001:
         return round(valor, 8)
+    else:
+        return round(valor, 10)
+
+
+def calcular_cluster_pct(df):
+    """Calcula el cluster automáticamente según el ATR."""
+    try:
+        # ATR simplificado: rango promedio de las últimas 14 velas
+        rango = (df['high'] - df['low']).tail(14).mean()
+        precio = df['close'].iloc[-1]
+        atr_pct = (rango / precio) * 100
+        # Cluster = 20% del ATR, mínimo 0.3%
+        return max(atr_pct * 0.2, 0.3)
+    except:
+        return 0.5
 
 
 def calcular_rsi(close, periodo=14):
@@ -122,7 +141,7 @@ def filtrar_fvgs(fvgs, precio_actual, timeframe):
     return filtrados
 
 
-def detectar_pivotes(df, strength=3):
+def detectar_pivotes(df, strength):
     """Detecta swing highs y swing lows."""
     pivotes_altos = []
     pivotes_bajos = []
@@ -130,7 +149,6 @@ def detectar_pivotes(df, strength=3):
     lows = df['low'].values
 
     for i in range(strength, len(df) - strength):
-        # Swing high
         es_alto = True
         for j in range(1, strength + 1):
             if highs[i] <= highs[i - j] or highs[i] <= highs[i + j]:
@@ -139,7 +157,6 @@ def detectar_pivotes(df, strength=3):
         if es_alto:
             pivotes_altos.append({'precio': float(highs[i]), 'indice': i})
 
-        # Swing low
         es_bajo = True
         for j in range(1, strength + 1):
             if lows[i] >= lows[i - j] or lows[i] >= lows[i + j]:
@@ -151,14 +168,12 @@ def detectar_pivotes(df, strength=3):
     return pivotes_altos, pivotes_bajos
 
 
-def agrupar_pivotes(pivotes, precio_actual):
+def agrupar_pivotes(pivotes, precio_actual, cluster_pct):
     """Agrupa pivotes cercanos en zonas."""
     if not pivotes:
         return []
     
-    # Ordenar por precio
     pivotes_ord = sorted(pivotes, key=lambda x: x['precio'])
-    
     zonas = []
     grupo_actual = [pivotes_ord[0]]
     
@@ -168,10 +183,9 @@ def agrupar_pivotes(pivotes, precio_actual):
         
         distancia_pct = abs(precio_actual_pivote - precio_ultimo_grupo) / precio_ultimo_grupo * 100
         
-        if distancia_pct <= SR_CLUSTER_PCT:
+        if distancia_pct <= cluster_pct:
             grupo_actual.append(pivotes_ord[i])
         else:
-            # Cerrar grupo anterior
             if len(grupo_actual) >= SR_MIN_TOQUES:
                 precios = [p['precio'] for p in grupo_actual]
                 zonas.append({
@@ -180,7 +194,6 @@ def agrupar_pivotes(pivotes, precio_actual):
                 })
             grupo_actual = [pivotes_ord[i]]
     
-    # Cerrar último grupo
     if len(grupo_actual) >= SR_MIN_TOQUES:
         precios = [p['precio'] for p in grupo_actual]
         zonas.append({
@@ -192,7 +205,7 @@ def agrupar_pivotes(pivotes, precio_actual):
 
 
 def calcular_sr_par(exchange, symbol, timeframe):
-    """Calcula S/R para un par y temporalidad."""
+    """Calcula S/R con parámetros automáticos."""
     try:
         limit = VELAS_POR_TF.get(timeframe, 100)
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
@@ -202,21 +215,25 @@ def calcular_sr_par(exchange, symbol, timeframe):
         df['low'] = df['low'].astype(float)
 
         precio_actual = float(df['close'].iloc[-1])
+        strength = SWING_STRENGTH.get(timeframe, 3)
+        cluster_pct = calcular_cluster_pct(df)
         
-        pivotes_altos, pivotes_bajos = detectar_pivotes(df, SR_SWING_STRENGTH)
+        pivotes_altos, pivotes_bajos = detectar_pivotes(df, strength)
         
-        # Resistencias: pivotes altos por encima del precio actual
+        # Resistencias
         altos_arriba = [p for p in pivotes_altos if p['precio'] > precio_actual]
-        resistencias = agrupar_pivotes(altos_arriba, precio_actual)
+        resistencias = agrupar_pivotes(altos_arriba, precio_actual, cluster_pct)
         resistencias = sorted(resistencias, key=lambda x: x['precio'])[:SR_MAX_ZONAS]
         
-        # Soportes: pivotes bajos por debajo del precio actual
+        # Soportes
         bajos_abajo = [p for p in pivotes_bajos if p['precio'] < precio_actual]
-        soportes = agrupar_pivotes(bajos_abajo, precio_actual)
+        soportes = agrupar_pivotes(bajos_abajo, precio_actual, cluster_pct)
         soportes = sorted(soportes, key=lambda x: x['precio'], reverse=True)[:SR_MAX_ZONAS]
         
         return {
             'precio_actual': redondear(precio_actual, precio_actual),
+            'cluster_usado': round(cluster_pct, 2),
+            'strength_usado': strength,
             'resistencias': resistencias,
             'soportes': soportes
         }
@@ -280,7 +297,7 @@ def main():
         for tf in SR_TEMPORALIDADES:
             sr = calcular_sr_par(exchange, cripto, tf)
             sr_resultado['data'][symbol][tf] = sr
-            print(f"{symbol} en {tf}: {len(sr['resistencias'])} R / {len(sr['soportes'])} S")
+            print(f"{symbol} en {tf}: {len(sr['resistencias'])} R / {len(sr['soportes'])} S (cluster: {sr.get('cluster_usado', '?')}%)")
 
     with open('rsi_data.json', 'w') as f:
         json.dump(rsi_resultado, f, indent=2)
