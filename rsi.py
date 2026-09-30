@@ -8,8 +8,20 @@ CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
 TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 RSI_PERIODO = 14
 FVG_TEMPORALIDADES = ['1h', '4h', '1d']
-FVG_MIN_TAMANO_PCT = 0.2
+FVG_MIN_TAMANO_PCT = 0.15  # Bajado de 0.2 a 0.15
 FVG_MAX_DISTANCIA_PCT = 5.0
+
+
+def redondear(valor, precio_actual):
+    """Redondea según la magnitud del precio."""
+    if precio_actual >= 1000:
+        return round(valor, 2)      # BTC: 2 decimales
+    elif precio_actual >= 1:
+        return round(valor, 4)      # HYPE, DOGE: 4 decimales
+    elif precio_actual >= 0.001:
+        return round(valor, 6)      # PEPE: 6 decimales
+    else:
+        return round(valor, 8)      # PEPE muy chico: 8 decimales
 
 
 def calcular_rsi(close, periodo=14):
@@ -29,48 +41,48 @@ def calcular_rsi(close, periodo=14):
 def detectar_fvg(df):
     """Detecta FVG y marca si están mitigados o activos.
     
-    Lógica corregida: un FVG se considera mitigado solo si el precio
-    CRUZA COMPLETAMENTE la zona (no solo si la toca).
+    Lógica: un FVG se considera mitigado solo si el precio
+    CRUZA COMPLETAMENTE la zona.
     """
     fvgs = []
+    precio_actual = float(df['close'].iloc[-1])
+
     for k in range(2, len(df)):
         high_2 = float(df['high'].iloc[k-2])
         low_2 = float(df['low'].iloc[k-2])
         high_0 = float(df['high'].iloc[k])
         low_0 = float(df['low'].iloc[k])
 
-        # FVG Alcista (el precio sube rápido)
+        # FVG Alcista
         if low_0 > high_2:
-            desde = high_2  # borde inferior
-            hasta = low_0   # borde superior
+            desde = high_2
+            hasta = low_0
             mitigado = False
             for j in range(k+1, len(df)):
-                # Se mitiga si el precio baja TODO el FVG (llega al borde inferior)
                 if float(df['low'].iloc[j]) <= desde:
                     mitigado = True
                     break
             fvgs.append({
                 'tipo': 'alcista',
-                'desde': round(desde, 2),
-                'hasta': round(hasta, 2),
+                'desde': redondear(desde, precio_actual),
+                'hasta': redondear(hasta, precio_actual),
                 'mitigado': mitigado,
                 'timestamp': int(df.index[k]) if hasattr(df.index[k], '__int__') else str(df.index[k])
             })
 
-        # FVG Bajista (el precio baja rápido)
+        # FVG Bajista
         if high_0 < low_2:
-            desde = high_0  # borde inferior
-            hasta = low_2   # borde superior
+            desde = high_0
+            hasta = low_2
             mitigado = False
             for j in range(k+1, len(df)):
-                # Se mitiga si el precio sube TODO el FVG (llega al borde superior)
                 if float(df['high'].iloc[j]) >= hasta:
                     mitigado = True
                     break
             fvgs.append({
                 'tipo': 'bajista',
-                'desde': round(desde, 2),
-                'hasta': round(hasta, 2),
+                'desde': redondear(desde, precio_actual),
+                'hasta': redondear(hasta, precio_actual),
                 'mitigado': mitigado,
                 'timestamp': int(df.index[k]) if hasattr(df.index[k], '__int__') else str(df.index[k])
             })
@@ -82,7 +94,6 @@ def filtrar_fvgs(fvgs, precio_actual):
     """Filtra solo los FVG activos (no mitigados) y relevantes."""
     filtrados = []
     for fvg in fvgs:
-        # Descartar mitigados
         if fvg.get('mitigado', False):
             continue
 
