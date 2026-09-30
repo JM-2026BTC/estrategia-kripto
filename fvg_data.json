@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-30T18:16:15.194062+00:00",
+  "last_update": "2026-09-30T19:15:15.102669+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [
@@ -8,7 +8,7 @@
           "desde": 83348.2,
           "hasta": 83633.2,
           "mitigado": false,
-          "timestamp": 91
+          "timestamp": 90
         }
       ],
       "4h": [
@@ -90,24 +90,31 @@
       "1h": [
         {
           "tipo": "bajista",
+          "desde": 92.909,
+          "hasta": 93.05,
+          "mitigado": false,
+          "timestamp": 21
+        },
+        {
+          "tipo": "bajista",
           "desde": 92.594,
           "hasta": 92.893,
           "mitigado": false,
-          "timestamp": 23
+          "timestamp": 22
         },
         {
           "tipo": "alcista",
           "desde": 86.511,
           "hasta": 87.672,
           "mitigado": false,
-          "timestamp": 97
+          "timestamp": 96
         },
         {
           "tipo": "alcista",
           "desde": 87.763,
           "hasta": 88.866,
           "mitigado": false,
-          "timestamp": 98
+          "timestamp": 97
         }
       ],
       "4h": [
@@ -146,18 +153,11 @@
     "DOGEUSDT": {
       "1h": [
         {
-          "tipo": "alcista",
-          "desde": 0.09384,
-          "hasta": 0.09423,
-          "mitigado": false,
-          "timestamp": 91
-        },
-        {
           "tipo": "bajista",
           "desde": 0.09458,
           "hasta": 0.09488,
           "mitigado": false,
-          "timestamp": 99
+          "timestamp": 98
         }
       ],
       "4h": [
@@ -201,7 +201,15 @@
       ]
     },
     "PEPEUSDT": {
-      "1h": [],
+      "1h": [
+        {
+          "tipo": "bajista",
+          "desde": 4.29e-06,
+          "hasta": 4.32e-06,
+          "mitigado": false,
+          "timestamp": 99
+        }
+      ],
       "4h": [
         {
           "tipo": "alcista",
