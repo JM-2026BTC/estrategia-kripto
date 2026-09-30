@@ -172,7 +172,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v4.1</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v4.2</p>
 
   <div class="layout">
 
@@ -205,7 +205,7 @@
           </div>
           <div>
             <label>Apalancamiento</label>
-            <select id="apalancamiento" onchange="calcularParcial()">
+            <select id="apalancamiento" onchange="alCambiarApalancamiento()">
               <option value="10">x10 (liq. 9,5%)</option>
               <option value="12">x12 (liq. 7,9%)</option>
               <option value="15">x15 (liq. 6,25%)</option>
@@ -216,13 +216,13 @@
         </div>
 
         <label>Monto total de la operatoria (USD)</label>
-        <input type="number" id="monto" placeholder="270" step="any" oninput="calcularParcial()">
+        <input type="number" id="monto" placeholder="270" step="any" oninput="alCambiarMonto()">
 
         <label>Precios de entrada</label>
 
         <div class="entrada-row">
           <label>E1:</label>
-          <input type="number" id="e1" class="input-chico" placeholder="83870" step="any" oninput="calcularParcial()">
+          <input type="number" id="e1" class="input-chico" placeholder="83870" step="any" oninput="alCambiarE1()">
           <span id="e1-resumen" class="resumen-entrada"></span>
         </div>
 
@@ -294,7 +294,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v4.1 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v4.2 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -344,12 +344,10 @@ function cambiarModo() {
     e2.disabled = true;
     e3.disabled = true;
 
-    // Solo calcular si ya hay E1 y monto
     const e1 = parseFloat(document.getElementById('e1').value);
     const monto = parseFloat(document.getElementById('monto').value);
 
     if (!e1 || !monto || e1 <= 0 || monto <= 0) {
-      // No calcular nada, esperar a que cargue los datos
       e2.value = '';
       e3.value = '';
       calcularParcial();
@@ -362,6 +360,33 @@ function cambiarModo() {
     e3.disabled = false;
   }
   calcularParcial();
+}
+
+// ====== Nuevas funciones de cambio ======
+function alCambiarE1() {
+  calcularParcial();
+  const modo = document.getElementById('modo').value;
+  if (modo === 'A') {
+    calcularAuto();
+  }
+}
+
+function alCambiarMonto() {
+  calcularParcial();
+  const modo = document.getElementById('modo').value;
+  if (modo === 'A') {
+    calcularAuto();
+  }
+}
+
+function alCambiarApalancamiento() {
+  const apal = parseInt(document.getElementById('apalancamiento').value);
+  document.getElementById('escalonamiento').value = ESC_SUGERIDO[apal];
+  calcularParcial();
+  const modo = document.getElementById('modo').value;
+  if (modo === 'A') {
+    calcularAuto();
+  }
 }
 
 function actualizarSugeridos() {
