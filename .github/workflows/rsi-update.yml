@@ -31,4 +31,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Actualizar RSI data [skip ci]"
-          file_pattern: rsi_data.json
+         file_pattern: rsi_data.json fvg_data.json
