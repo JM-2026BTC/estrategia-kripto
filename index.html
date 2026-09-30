@@ -57,6 +57,42 @@
     margin-top: 18px;
   }
   button:hover { background: #2ea043; }
+
+  /* Entradas con resumen al lado */
+  .entrada-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .entrada-row label {
+    margin: 0;
+    min-width: 30px;
+    font-size: 13px;
+    color: #8b949e;
+  }
+  .input-chico {
+    width: 130px !important;
+    flex-shrink: 0;
+  }
+  .resumen-entrada {
+    font-size: 11px;
+    color: #8b949e;
+    margin-left: auto;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .resumen-entrada .prom { color: #58a6ff; }
+  .resumen-entrada .liq { color: #f85149; }
+  .resumen-total {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #21262d;
+    font-size: 13px;
+    color: #8b949e;
+  }
+  .resumen-total strong { color: #58a6ff; }
+
   .resultado { display: none; }
   .resultado.activo { display: block; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -137,7 +173,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v3.0</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v4.0</p>
 
   <div class="layout">
 
@@ -170,7 +206,7 @@
           </div>
           <div>
             <label>Apalancamiento</label>
-            <select id="apalancamiento" onchange="actualizarSugeridos()">
+            <select id="apalancamiento" onchange="calcularParcial()">
               <option value="10">x10 (liq. 9,5%)</option>
               <option value="12">x12 (liq. 7,9%)</option>
               <option value="15">x15 (liq. 6,25%)</option>
@@ -181,33 +217,40 @@
         </div>
 
         <label>Monto total de la operatoria (USD)</label>
-        <input type="number" id="monto" placeholder="270" step="any">
+        <input type="number" id="monto" placeholder="270" step="any" oninput="calcularParcial()">
 
-        <label>Precio Entrada 1</label>
-        <input type="number" id="e1" placeholder="83870" step="any" onchange="calcularAuto()">
+        <label>Precios de entrada</label>
 
-        <div id="bloqueE2">
-          <label>Precio Entrada 2</label>
-          <input type="number" id="e2" placeholder="85966.75" step="any">
+        <div class="entrada-row">
+          <label>E1:</label>
+          <input type="number" id="e1" class="input-chico" placeholder="83870" step="any" oninput="calcularParcial()">
+          <span id="e1-resumen" class="resumen-entrada"></span>
         </div>
 
-        <div id="bloqueE3">
-          <label>Precio Entrada 3</label>
-          <input type="number" id="e3" placeholder="88115.92" step="any">
+        <div class="entrada-row">
+          <label>E2:</label>
+          <input type="number" id="e2" class="input-chico" placeholder="85966" step="any" oninput="calcularParcial()">
+          <span id="e2-resumen" class="resumen-entrada"></span>
+        </div>
+
+        <div class="entrada-row">
+          <label>E3:</label>
+          <input type="number" id="e3" class="input-chico" placeholder="88116" step="any" oninput="calcularParcial()">
+          <span id="e3-resumen" class="resumen-entrada"></span>
         </div>
 
         <div class="row">
           <div>
             <label>% Entrada 1</label>
-            <input type="number" id="p1" value="20" step="any">
+            <input type="number" id="p1" value="20" step="any" oninput="calcularParcial()">
           </div>
           <div>
             <label>% Entrada 2</label>
-            <input type="number" id="p2" value="30" step="any">
+            <input type="number" id="p2" value="30" step="any" oninput="calcularParcial()">
           </div>
           <div>
             <label>% Entrada 3</label>
-            <input type="number" id="p3" value="50" step="any">
+            <input type="number" id="p3" value="50" step="any" oninput="calcularParcial()">
           </div>
         </div>
 
@@ -217,7 +260,9 @@
         <label>SL manual (% desde el promedio, opcional)</label>
         <input type="number" id="sl" placeholder="2" step="any">
 
-        <button onclick="calcular()">Calcular plan</button>
+        <div id="resumen-total" class="resumen-total"></div>
+
+        <button onclick="calcular()">Calcular plan completo</button>
       </div>
 
       <div id="resultado" class="resultado"></div>
@@ -250,7 +295,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v3.0 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v4.0 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -263,6 +308,7 @@ let rsiDataGlobal = null;
 let fvgDataGlobal = null;
 
 function fmt(n, dec = 2) {
+  if (isNaN(n) || n === null || n === undefined) return '—';
   return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
@@ -304,6 +350,7 @@ function cambiarModo() {
     e2.disabled = false;
     e3.disabled = false;
   }
+  calcularParcial();
 }
 
 function actualizarSugeridos() {
@@ -324,6 +371,78 @@ function calcularAuto() {
   const e3 = e2 * factor;
   document.getElementById('e2').value = e2.toFixed(2);
   document.getElementById('e3').value = e3.toFixed(2);
+  calcularParcial();
+}
+
+// ====== Cálculo parcial (al lado de cada campo) ======
+function calcularParcial() {
+  const dir = document.getElementById('direccion').value;
+  const apal = parseInt(document.getElementById('apalancamiento').value);
+  const monto = parseFloat(document.getElementById('monto').value) || 0;
+  const liqPct = LIQ[apal] || 9.5;
+
+  const e1 = parseFloat(document.getElementById('e1').value);
+  const e2 = parseFloat(document.getElementById('e2').value);
+  const e3 = parseFloat(document.getElementById('e3').value);
+  const p1 = parseFloat(document.getElementById('p1').value) || 0;
+  const p2 = parseFloat(document.getElementById('p2').value) || 0;
+  const p3 = parseFloat(document.getElementById('p3').value) || 0;
+
+  // Resumen E1
+  const res1 = document.getElementById('e1-resumen');
+  if (e1 && e1 > 0) {
+    const liq1 = dir === 'SHORT' ? e1 * (1 + liqPct / 100) : e1 * (1 - liqPct / 100);
+    res1.innerHTML = `<span class="prom">Prom ${fmt(e1)}</span> | <span class="liq">Liq ${fmt(liq1)}</span>`;
+  } else {
+    res1.innerHTML = '';
+  }
+
+  // Resumen E2 (si hay E1 + E2)
+  const res2 = document.getElementById('e2-resumen');
+  if (e1 && e2 && p1 && p2) {
+    const totalPct = p1 + p2;
+    const prom2 = (e1 * p1 + e2 * p2) / totalPct;
+    const liq2 = dir === 'SHORT' ? prom2 * (1 + liqPct / 100) : prom2 * (1 - liqPct / 100);
+    res2.innerHTML = `<span class="prom">Prom ${fmt(prom2)}</span> | <span class="liq">Liq ${fmt(liq2)}</span>`;
+  } else {
+    res2.innerHTML = '';
+  }
+
+  // Resumen E3 (si hay las 3)
+  const res3 = document.getElementById('e3-resumen');
+  if (e1 && e2 && e3 && p1 && p2 && p3) {
+    const totalPct = p1 + p2 + p3;
+    const prom3 = (e1 * p1 + e2 * p2 + e3 * p3) / totalPct;
+    const liq3 = dir === 'SHORT' ? prom3 * (1 + liqPct / 100) : prom3 * (1 - liqPct / 100);
+    res3.innerHTML = `<span class="prom">Prom ${fmt(prom3)}</span> | <span class="liq">Liq ${fmt(liq3)}</span>`;
+  } else {
+    res3.innerHTML = '';
+  }
+
+  // Resumen total
+  const resumenTotal = document.getElementById('resumen-total');
+  if (monto > 0 && (e1 || e2 || e3)) {
+    let montoInvertido = 0;
+    let nominal = 0;
+    let entradasActivas = 0;
+    let totalPctActivo = 0;
+
+    if (e1 && p1) { totalPctActivo += p1; entradasActivas++; }
+    if (e2 && p2) { totalPctActivo += p2; entradasActivas++; }
+    if (e3 && p3) { totalPctActivo += p3; entradasActivas++; }
+
+    // Calcular monto según los % de las entradas activas
+    if (entradasActivas > 0) {
+      if (e1 && p1) montoInvertido += monto * (p1 / 100);
+      if (e2 && p2) montoInvertido += monto * (p2 / 100);
+      if (e3 && p3) montoInvertido += monto * (p3 / 100);
+      nominal = montoInvertido * apal;
+    }
+
+    resumenTotal.innerHTML = `Monto invertido: <strong>$${fmt(montoInvertido)}</strong> | Nominal: <strong>$${fmt(nominal, 0)}</strong> | Entradas activas: <strong>${entradasActivas}/3</strong>`;
+  } else {
+    resumenTotal.innerHTML = '';
+  }
 }
 
 function calcular() {
