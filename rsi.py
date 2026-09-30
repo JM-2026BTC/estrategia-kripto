@@ -29,8 +29,8 @@ def calcular_rsi(close, periodo=14):
 def detectar_fvg(df):
     """Detecta FVG y marca si están mitigados o activos.
     
-    Un FVG se considera mitigado si el precio volvió a tocar la zona
-    después de que se formó.
+    Lógica corregida: un FVG se considera mitigado solo si el precio
+    CRUZA COMPLETAMENTE la zona (no solo si la toca).
     """
     fvgs = []
     for k in range(2, len(df)):
@@ -39,13 +39,14 @@ def detectar_fvg(df):
         high_0 = float(df['high'].iloc[k])
         low_0 = float(df['low'].iloc[k])
 
-        # FVG Alcista
+        # FVG Alcista (el precio sube rápido)
         if low_0 > high_2:
-            desde = high_2
-            hasta = low_0
+            desde = high_2  # borde inferior
+            hasta = low_0   # borde superior
             mitigado = False
             for j in range(k+1, len(df)):
-                if float(df['low'].iloc[j]) <= hasta:
+                # Se mitiga si el precio baja TODO el FVG (llega al borde inferior)
+                if float(df['low'].iloc[j]) <= desde:
                     mitigado = True
                     break
             fvgs.append({
@@ -56,13 +57,14 @@ def detectar_fvg(df):
                 'timestamp': int(df.index[k]) if hasattr(df.index[k], '__int__') else str(df.index[k])
             })
 
-        # FVG Bajista
+        # FVG Bajista (el precio baja rápido)
         if high_0 < low_2:
-            desde = high_0
-            hasta = low_2
+            desde = high_0  # borde inferior
+            hasta = low_2   # borde superior
             mitigado = False
             for j in range(k+1, len(df)):
-                if float(df['high'].iloc[j]) >= desde:
+                # Se mitiga si el precio sube TODO el FVG (llega al borde superior)
+                if float(df['high'].iloc[j]) >= hasta:
                     mitigado = True
                     break
             fvgs.append({
