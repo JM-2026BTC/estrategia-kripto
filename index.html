@@ -58,7 +58,6 @@
   }
   button:hover { background: #2ea043; }
 
-  /* Entradas con resumen al lado */
   .entrada-row {
     display: flex;
     align-items: center;
@@ -173,7 +172,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v4.0</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v4.1</p>
 
   <div class="layout">
 
@@ -184,8 +183,8 @@
 
         <label>Modo de trabajo</label>
         <select id="modo" onchange="cambiarModo()">
+          <option value="H" selected>Híbrido (H) — el sistema sugiere, vos decidís</option>
           <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
-          <option value="H">Híbrido (H) — el sistema sugiere, vos decidís</option>
         </select>
 
         <label>Cripto a analizar (para RSI y FVG)</label>
@@ -295,7 +294,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v4.0 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v4.1 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -340,11 +339,23 @@ function cambiarModo() {
   const modo = document.getElementById('modo').value;
   const e2 = document.getElementById('e2');
   const e3 = document.getElementById('e3');
+
   if (modo === 'A') {
     e2.disabled = true;
     e3.disabled = true;
-    e2.value = '';
-    e3.value = '';
+
+    // Solo calcular si ya hay E1 y monto
+    const e1 = parseFloat(document.getElementById('e1').value);
+    const monto = parseFloat(document.getElementById('monto').value);
+
+    if (!e1 || !monto || e1 <= 0 || monto <= 0) {
+      // No calcular nada, esperar a que cargue los datos
+      e2.value = '';
+      e3.value = '';
+      calcularParcial();
+      return;
+    }
+
     calcularAuto();
   } else {
     e2.disabled = false;
@@ -365,7 +376,11 @@ function calcularAuto() {
   const dir = document.getElementById('direccion').value;
   const e1 = parseFloat(document.getElementById('e1').value);
   const esc = parseFloat(document.getElementById('escalonamiento').value) || 2.5;
+  const monto = parseFloat(document.getElementById('monto').value);
+
   if (!e1 || e1 <= 0) return;
+  if (!monto || monto <= 0) return;
+
   const factor = dir === 'SHORT' ? (1 + esc / 100) : (1 - esc / 100);
   const e2 = e1 * factor;
   const e3 = e2 * factor;
@@ -374,7 +389,6 @@ function calcularAuto() {
   calcularParcial();
 }
 
-// ====== Cálculo parcial (al lado de cada campo) ======
 function calcularParcial() {
   const dir = document.getElementById('direccion').value;
   const apal = parseInt(document.getElementById('apalancamiento').value);
@@ -388,7 +402,6 @@ function calcularParcial() {
   const p2 = parseFloat(document.getElementById('p2').value) || 0;
   const p3 = parseFloat(document.getElementById('p3').value) || 0;
 
-  // Resumen E1
   const res1 = document.getElementById('e1-resumen');
   if (e1 && e1 > 0) {
     const liq1 = dir === 'SHORT' ? e1 * (1 + liqPct / 100) : e1 * (1 - liqPct / 100);
@@ -397,7 +410,6 @@ function calcularParcial() {
     res1.innerHTML = '';
   }
 
-  // Resumen E2 (si hay E1 + E2)
   const res2 = document.getElementById('e2-resumen');
   if (e1 && e2 && p1 && p2) {
     const totalPct = p1 + p2;
@@ -408,7 +420,6 @@ function calcularParcial() {
     res2.innerHTML = '';
   }
 
-  // Resumen E3 (si hay las 3)
   const res3 = document.getElementById('e3-resumen');
   if (e1 && e2 && e3 && p1 && p2 && p3) {
     const totalPct = p1 + p2 + p3;
@@ -419,25 +430,17 @@ function calcularParcial() {
     res3.innerHTML = '';
   }
 
-  // Resumen total
   const resumenTotal = document.getElementById('resumen-total');
   if (monto > 0 && (e1 || e2 || e3)) {
     let montoInvertido = 0;
     let nominal = 0;
     let entradasActivas = 0;
-    let totalPctActivo = 0;
 
-    if (e1 && p1) { totalPctActivo += p1; entradasActivas++; }
-    if (e2 && p2) { totalPctActivo += p2; entradasActivas++; }
-    if (e3 && p3) { totalPctActivo += p3; entradasActivas++; }
+    if (e1 && p1) { montoInvertido += monto * (p1 / 100); entradasActivas++; }
+    if (e2 && p2) { montoInvertido += monto * (p2 / 100); entradasActivas++; }
+    if (e3 && p3) { montoInvertido += monto * (p3 / 100); entradasActivas++; }
 
-    // Calcular monto según los % de las entradas activas
-    if (entradasActivas > 0) {
-      if (e1 && p1) montoInvertido += monto * (p1 / 100);
-      if (e2 && p2) montoInvertido += monto * (p2 / 100);
-      if (e3 && p3) montoInvertido += monto * (p3 / 100);
-      nominal = montoInvertido * apal;
-    }
+    nominal = montoInvertido * apal;
 
     resumenTotal.innerHTML = `Monto invertido: <strong>$${fmt(montoInvertido)}</strong> | Nominal: <strong>$${fmt(nominal, 0)}</strong> | Entradas activas: <strong>${entradasActivas}/3</strong>`;
   } else {
