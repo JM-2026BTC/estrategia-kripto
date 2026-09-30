@@ -16,22 +16,12 @@
   .container { max-width: 1100px; margin: 0 auto; }
   h1 { color: #58a6ff; font-size: 28px; margin-bottom: 6px; letter-spacing: 1px; }
   .sub { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
-
-  .layout {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
+  .layout { display: flex; flex-direction: column; gap: 16px; }
   @media (min-width: 900px) {
-    .layout {
-      flex-direction: row;
-      align-items: flex-start;
-    }
+    .layout { flex-direction: row; align-items: flex-start; }
     .col-formulario { flex: 2; min-width: 0; }
     .col-paneles { flex: 1; min-width: 300px; max-width: 380px; }
   }
-
   .card {
     background: #161b22;
     border: 1px solid #30363d;
@@ -106,25 +96,53 @@
   .evento:last-child { border-bottom: none; }
   .evento-fecha { color: #8b949e; font-size: 12px; }
   .evento-nombre { color: #c9d1d9; font-size: 13px; margin-top: 2px; }
-  .evento-impacto { font-size: 11px; margin-top: 2px; }
   .rsi-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #21262d; }
   .rsi-row:last-child { border-bottom: none; }
   .rsi-tf { color: #8b949e; font-size: 13px; }
   .rsi-val { font-weight: 600; font-size: 14px; }
+  .fvg-confluencia {
+    background: #1b2530;
+    border-left: 3px solid #d29922;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .fvg-tf-header {
+    color: #58a6ff;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #21262d;
+    padding-bottom: 4px;
+  }
+  .fvg-row {
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .fvg-row:last-child { border-bottom: none; }
+  .fvg-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+  .fvg-tipo.alcista { background: #1b2d1b; color: #3fb950; }
+  .fvg-tipo.bajista { background: #2d1b1b; color: #f85149; }
+  .fvg-zona { color: #8b949e; font-size: 11px; }
+  .fvg-precio { font-weight: 600; color: #c9d1d9; font-size: 13px; }
 </style>
 </head>
 <body>
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v2.0</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v3.0</p>
 
   <div class="layout">
 
-    <!-- COLUMNA IZQUIERDA: Formulario y resultado -->
     <div class="col-formulario">
 
-      <!-- FORMULARIO -->
       <div class="card" id="formulario">
         <h2>Datos de la operación</h2>
 
@@ -134,8 +152,8 @@
           <option value="H">Híbrido (H) — el sistema sugiere, vos decidís</option>
         </select>
 
-        <label>Cripto a analizar (para RSI)</label>
-        <select id="cripto" onchange="cargarRSI()">
+        <label>Cripto a analizar (para RSI y FVG)</label>
+        <select id="cripto" onchange="cambiarCripto()">
           <option value="BTCUSDT">BTC — Bitcoin</option>
           <option value="HYPEUSDT">HYPE — Hyperliquid</option>
           <option value="DOGEUSDT">DOGE — Dogecoin</option>
@@ -202,27 +220,27 @@
         <button onclick="calcular()">Calcular plan</button>
       </div>
 
-      <!-- RESULTADO -->
       <div id="resultado" class="resultado"></div>
 
     </div>
 
-    <!-- COLUMNA DERECHA: Paneles -->
     <div class="col-paneles">
 
-      <!-- Panel de RSI -->
+      <div class="card" id="fvg-panel" style="display:none;">
+        <h2>📊 FVG — <span id="fvg-cripto-nombre">BTC</span></h2>
+        <div id="fvg-content"></div>
+      </div>
+
       <div class="card" id="rsi-panel" style="display:none;">
         <h2>📈 RSI — <span id="rsi-cripto-nombre">BTC</span></h2>
         <div id="rsi-content"></div>
       </div>
 
-      <!-- Panel de Miedo y Codicia -->
       <div class="card" id="sentiment-panel" style="display:none;">
         <h2>📊 Sentimiento del Mercado</h2>
         <div id="sentiment-content"></div>
       </div>
 
-      <!-- Panel de Eventos Económicos -->
       <div class="card" id="eventos-panel" style="display:none;">
         <h2>📅 Eventos Económicos</h2>
         <div id="eventos-content"></div>
@@ -232,25 +250,32 @@
 
   </div>
 
-  <p class="footer">GENISYS v2.0 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v3.0 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
 const LIQ = { 10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8 };
 const ESC_SUGERIDO = { 10: 2.5, 12: 2.0, 15: 1.5, 20: 1.0, 30: 0.6 };
 const NOMBRES = { BTCUSDT: 'BTC', HYPEUSDT: 'HYPE', DOGEUSDT: 'DOGE', PEPEUSDT: 'PEPE' };
+const DECIMALES = { BTCUSDT: 2, HYPEUSDT: 3, DOGEUSDT: 5, PEPEUSDT: 10 };
 
 let rsiDataGlobal = null;
+let fvgDataGlobal = null;
 
 function fmt(n, dec = 2) {
   return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
+function fmtPrecio(precio, cripto) {
+  const dec = DECIMALES[cripto] || 2;
+  return precio.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
 function colorRSI(valor) {
   if (valor === null || valor === undefined) return '#8b949e';
-  if (valor >= 70) return '#f85149'; // sobrecompra
-  if (valor <= 30) return '#3fb950'; // sobreventa
-  return '#d29922'; // neutral
+  if (valor >= 70) return '#f85149';
+  if (valor <= 30) return '#3fb950';
+  return '#d29922';
 }
 
 function etiquetaRSI(valor) {
@@ -258,6 +283,11 @@ function etiquetaRSI(valor) {
   if (valor >= 70) return 'Sobrecompra';
   if (valor <= 30) return 'Sobreventa';
   return 'Neutral';
+}
+
+function cambiarCripto() {
+  cargarRSI();
+  cargarFVG();
 }
 
 function cambiarModo() {
@@ -285,17 +315,13 @@ function actualizarSugeridos() {
 function calcularAuto() {
   const modo = document.getElementById('modo').value;
   if (modo !== 'A') return;
-
   const dir = document.getElementById('direccion').value;
   const e1 = parseFloat(document.getElementById('e1').value);
   const esc = parseFloat(document.getElementById('escalonamiento').value) || 2.5;
-
   if (!e1 || e1 <= 0) return;
-
   const factor = dir === 'SHORT' ? (1 + esc / 100) : (1 - esc / 100);
   const e2 = e1 * factor;
   const e3 = e2 * factor;
-
   document.getElementById('e2').value = e2.toFixed(2);
   document.getElementById('e3').value = e3.toFixed(2);
 }
@@ -345,16 +371,12 @@ function calcular() {
   const promedio = suma / pesos;
 
   const liqPct = LIQ[apal];
-  const liquidacion = dir === 'SHORT'
-    ? promedio * (1 + liqPct / 100)
-    : promedio * (1 - liqPct / 100);
+  const liquidacion = dir === 'SHORT' ? promedio * (1 + liqPct / 100) : promedio * (1 - liqPct / 100);
 
   let sl = null;
   if (slInput && parseFloat(slInput) !== 0) {
     const slPct = Math.abs(parseFloat(slInput));
-    sl = dir === 'SHORT'
-      ? promedio * (1 + slPct / 100)
-      : promedio * (1 - slPct / 100);
+    sl = dir === 'SHORT' ? promedio * (1 + slPct / 100) : promedio * (1 - slPct / 100);
   }
 
   const perdidaLiq = Math.abs(liquidacion - promedio) / promedio * nominalTotal;
@@ -378,7 +400,6 @@ function calcular() {
   }
 
   let html = '';
-
   html += `<div class="card"><h2>⚙️ Modo de trabajo</h2>`;
   if (modo === 'A') {
     html += `<div class="info">Modo <strong>Automático (A)</strong>: E2 y E3 calculadas por el sistema con escalonamiento ${fmt(parseFloat(document.getElementById('escalonamiento').value))}%.</div>`;
@@ -390,29 +411,15 @@ function calcular() {
   html += `<div class="card"><h2>🧮 Entradas</h2><table>
     <tr><th>Entrada</th><th>%</th><th>Monto real</th><th>Nominal</th><th>Precio</th></tr>`;
   entradas.forEach((e, i) => {
-    html += `<tr>
-      <td>${i + 1}</td>
-      <td class="num">${e.pct}%</td>
-      <td class="num">$${fmt(e.montoReal)}</td>
-      <td class="num">$${fmt(e.nominal, 0)}</td>
-      <td class="num">${fmt(e.precio)}</td>
-    </tr>`;
+    html += `<tr><td>${i + 1}</td><td class="num">${e.pct}%</td><td class="num">$${fmt(e.montoReal)}</td><td class="num">$${fmt(e.nominal, 0)}</td><td class="num">${fmt(e.precio)}</td></tr>`;
   });
-  html += `<tr style="font-weight:600;color:#58a6ff">
-    <td>Total</td>
-    <td class="num">100%</td>
-    <td class="num">$${fmt(monto)}</td>
-    <td class="num">$${fmt(nominalTotal, 0)}</td>
-    <td>—</td>
-  </tr></table></div>`;
+  html += `<tr style="font-weight:600;color:#58a6ff"><td>Total</td><td class="num">100%</td><td class="num">$${fmt(monto)}</td><td class="num">$${fmt(nominalTotal, 0)}</td><td>—</td></tr></table></div>`;
 
   html += `<div class="card"><h2>➡️ Niveles clave</h2><table>
     <tr><th>Concepto</th><th class="num">Valor</th></tr>
     <tr><td>Precio promedio</td><td class="num destacado">${fmt(promedio)}</td></tr>
     <tr><td>Liquidación (${liqPct}%)</td><td class="num rojo">${fmt(liquidacion)}</td></tr>`;
-  if (sl) {
-    html += `<tr><td>SL manual</td><td class="num amarillo">${fmt(sl)}</td></tr>`;
-  }
+  if (sl) html += `<tr><td>SL manual</td><td class="num amarillo">${fmt(sl)}</td></tr>`;
   html += `</table></div>`;
 
   html += `<div class="card"><h2>📏 Distancias</h2><table>
@@ -426,9 +433,7 @@ function calcular() {
   html += `<div class="card"><h2>💀 Riesgo</h2><table>
     <tr><th>Escenario</th><th class="num">Pérdida</th><th class="num">% monto</th></tr>
     <tr><td>Liquidación (${fmt(liquidacion)})</td><td class="num rojo">-$${fmt(perdidaLiq)}</td><td class="num rojo">-${fmt(perdidaLiqPct)}%</td></tr>`;
-  if (sl) {
-    html += `<tr><td>SL manual (${fmt(sl)})</td><td class="num amarillo">-$${fmt(perdidaSL)}</td><td class="num amarillo">-${fmt(perdidaSLPct)}%</td></tr>`;
-  }
+  if (sl) html += `<tr><td>SL manual (${fmt(sl)})</td><td class="num amarillo">-$${fmt(perdidaSL)}</td><td class="num amarillo">-${fmt(perdidaSLPct)}%</td></tr>`;
   html += `</table></div>`;
 
   html += `<div class="card"><h2>⚠️ Observaciones</h2>`;
@@ -450,60 +455,37 @@ function calcular() {
   res.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ====== Panel de RSI ======
 async function cargarRSI() {
   const cripto = document.getElementById('cripto').value;
   const panel = document.getElementById('rsi-panel');
   const content = document.getElementById('rsi-content');
   const nombre = document.getElementById('rsi-cripto-nombre');
-
   nombre.textContent = NOMBRES[cripto] || cripto;
 
   try {
-    // Si ya tenemos los datos cargados, los usamos
     if (!rsiDataGlobal) {
       const response = await fetch('rsi_data.json?t=' + Date.now());
       rsiDataGlobal = await response.json();
     }
-
     const data = rsiDataGlobal.data[cripto];
-
     if (!data) {
       content.innerHTML = '<div class="info">No hay datos de RSI para esta cripto.</div>';
       panel.style.display = 'block';
       return;
     }
-
     const tfs = ['1h', '4h', '1d', '1w'];
     let html = '';
-
     tfs.forEach(tf => {
       const valor = data[tf];
       const color = colorRSI(valor);
       const etiqueta = etiquetaRSI(valor);
       const valorStr = (valor === null || valor === undefined) ? '—' : fmt(valor);
-      html += `
-        <div class="rsi-row">
-          <span class="rsi-tf">${tf.toUpperCase()}</span>
-          <span class="rsi-val" style="color:${color};">${valorStr} <span style="font-size:11px;font-weight:400;">${etiqueta}</span></span>
-        </div>
-      `;
+      html += `<div class="rsi-row"><span class="rsi-tf">${tf.toUpperCase()}</span><span class="rsi-val" style="color:${color};">${valorStr} <span style="font-size:11px;font-weight:400;">${etiqueta}</span></span></div>`;
     });
-
-    // Fecha de actualización
-    const fecha = rsiDataGlobal.last_update
-      ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
-      : 'Desconocida';
-
-    html += `
-      <div style="margin-top:12px; font-size:11px; color:#484f58;">
-        Última actualización: ${fecha}
-      </div>
-    `;
-
+    const fecha = rsiDataGlobal.last_update ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    html += `<div style="margin-top:12px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
-
   } catch (error) {
     console.log('Error cargando RSI:', error);
     content.innerHTML = '<div class="info">No se pudieron cargar los datos de RSI.</div>';
@@ -511,46 +493,131 @@ async function cargarRSI() {
   }
 }
 
-// ====== Panel de Miedo y Codicia ======
+async function cargarFVG() {
+  const cripto = document.getElementById('cripto').value;
+  const panel = document.getElementById('fvg-panel');
+  const content = document.getElementById('fvg-content');
+  const nombre = document.getElementById('fvg-cripto-nombre');
+  nombre.textContent = NOMBRES[cripto] || cripto;
+
+  try {
+    if (!fvgDataGlobal) {
+      const response = await fetch('fvg_data.json?t=' + Date.now());
+      fvgDataGlobal = await response.json();
+    }
+    const data = fvgDataGlobal.data[cripto];
+    if (!data) {
+      content.innerHTML = '<div class="info">No hay datos de FVG para esta cripto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+    const todosFVG = [];
+    ['1h', '4h', '1d'].forEach(tf => {
+      const lista = data[tf] || [];
+      lista.forEach(fvg => { todosFVG.push({ ...fvg, tf: tf }); });
+    });
+    if (todosFVG.length === 0) {
+      content.innerHTML = '<div class="info">No hay FVG activos para esta cripto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+    const confluencias = detectarConfluencias(todosFVG);
+    let html = '';
+    if (confluencias.length > 0) {
+      html += `<div style="font-size:12px; color:#d29922; font-weight:600; margin-bottom:8px;">🔥 CONFLUENCIAS:</div>`;
+      confluencias.forEach(c => {
+        const tipoClase = c.tipo === 'alcista' ? 'alcista' : 'bajista';
+        const tfsStr = c.tfs.join(' + ').toUpperCase();
+        html += `<div class="fvg-confluencia">
+          <span class="fvg-tipo ${tipoClase}">${c.tipo.toUpperCase()}</span>
+          <span style="font-size:11px; color:#8b949e; margin-left:6px;">[${tfsStr}]</span>
+          <div style="font-size:11px; color:#8b949e; margin-top:4px;">${fmtPrecio(c.desde, cripto)} – ${fmtPrecio(c.hasta, cripto)}</div>
+          <div class="fvg-precio" style="margin-top:4px;">→ ${fmtPrecio(c.precio, cripto)}</div>
+        </div>`;
+      });
+      html += `<div style="margin-top:12px;"></div>`;
+    }
+    ['1h', '4h', '1d'].forEach(tf => {
+      const lista = data[tf] || [];
+      if (lista.length === 0) return;
+      html += `<div class="fvg-tf-header">── ${tf.toUpperCase()} (${lista.length}) ──</div>`;
+      lista.forEach(fvg => {
+        const tipoClase = fvg.tipo === 'alcista' ? 'alcista' : 'bajista';
+        const precio = (fvg.desde + fvg.hasta) / 2;
+        const confluye = confluencias.some(c => c.tfs.includes(tf) && c.desde <= fvg.hasta && c.hasta >= fvg.desde);
+        const estrella = confluye ? ' ⭐' : '';
+        html += `<div class="fvg-row">
+          <div>
+            <span class="fvg-tipo ${tipoClase}">${fvg.tipo.toUpperCase()}</span>
+            <span class="fvg-zona" style="margin-left:6px;">${fmtPrecio(fvg.desde, cripto)} – ${fmtPrecio(fvg.hasta, cripto)}${estrella}</span>
+          </div>
+          <div class="fvg-precio">${fmtPrecio(precio, cripto)}</div>
+        </div>`;
+      });
+    });
+    const fecha = fvgDataGlobal.last_update ? new Date(fvgDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    html += `<div style="margin-top:12px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
+    content.innerHTML = html;
+    panel.style.display = 'block';
+  } catch (error) {
+    console.log('Error cargando FVG:', error);
+    content.innerHTML = '<div class="info">No se pudieron cargar los datos de FVG.</div>';
+    panel.style.display = 'block';
+  }
+}
+
+function detectarConfluencias(fvgs) {
+  const confluencias = [];
+  for (let i = 0; i < fvgs.length; i++) {
+    for (let j = i + 1; j < fvgs.length; j++) {
+      const a = fvgs[i];
+      const b = fvgs[j];
+      if (a.tf === b.tf) continue;
+      if (a.tipo !== b.tipo) continue;
+      const desde = Math.max(a.desde, b.desde);
+      const hasta = Math.min(a.hasta, b.hasta);
+      if (desde < hasta) {
+        confluencias.push({
+          tipo: a.tipo,
+          desde: desde,
+          hasta: hasta,
+          precio: (desde + hasta) / 2,
+          tfs: [a.tf, b.tf]
+        });
+      }
+    }
+  }
+  return confluencias;
+}
+
 async function cargarSentimiento() {
   const panel = document.getElementById('sentiment-panel');
   const content = document.getElementById('sentiment-content');
-
   try {
     const response = await fetch('https://api.alternative.me/fng/?limit=1');
     const data = await response.json();
-
     if (data && data.data && data.data[0]) {
       const fng = data.data[0];
       const valor = parseInt(fng.value);
       const clasificacion = fng.value_classification;
-
       let color = '#d29922';
       if (valor <= 24) color = '#f85149';
       else if (valor <= 49) color = '#d29922';
       else if (valor <= 74) color = '#3fb950';
       else color = '#3fb950';
-
       let interpretacion = '';
       if (valor <= 24) interpretacion = 'Miedo extremo — posible oportunidad';
       else if (valor <= 49) interpretacion = 'Miedo — cautela en el mercado';
       else if (valor <= 74) interpretacion = 'Codicia — confianza en aumento';
       else interpretacion = 'Codicia extrema — posible corrección';
-
-      content.innerHTML = `
-        <div style="display:flex; align-items:center; gap:16px;">
-          <div style="font-size:36px; font-weight:700; color:${color}; min-width:70px;">${valor}</div>
-          <div>
-            <div style="font-size:16px; font-weight:600; color:${color};">${clasificacion}</div>
-            <div style="font-size:12px; color:#8b949e; margin-top:4px;">
-              ${interpretacion}
-            </div>
-          </div>
+      content.innerHTML = `<div style="display:flex; align-items:center; gap:16px;">
+        <div style="font-size:36px; font-weight:700; color:${color}; min-width:70px;">${valor}</div>
+        <div>
+          <div style="font-size:16px; font-weight:600; color:${color};">${clasificacion}</div>
+          <div style="font-size:12px; color:#8b949e; margin-top:4px;">${interpretacion}</div>
         </div>
-        <div style="margin-top:12px; font-size:11px; color:#484f58;">
-          Fuente: Alternative.me | ${new Date(parseInt(fng.timestamp) * 1000).toLocaleString('es-AR')}
-        </div>
-      `;
+      </div>
+      <div style="margin-top:12px; font-size:11px; color:#484f58;">Fuente: Alternative.me | ${new Date(parseInt(fng.timestamp) * 1000).toLocaleString('es-AR')}</div>`;
       panel.style.display = 'block';
     }
   } catch (error) {
@@ -558,60 +625,35 @@ async function cargarSentimiento() {
   }
 }
 
-// ====== Panel de Eventos Económicos (Biquote) ======
 async function cargarEventos() {
   const panel = document.getElementById('eventos-panel');
   const content = document.getElementById('eventos-content');
-
   try {
     const response = await fetch('https://biquote.io/api/calendar?importance=high&countries=US');
     const data = await response.json();
-
     let eventos = [];
     if (Array.isArray(data)) eventos = data;
     else if (data.events) eventos = data.events;
     else if (data.data) eventos = data.data;
-
     if (eventos.length === 0) {
       content.innerHTML = '<div class="info">No hay eventos de alto impacto esta semana.</div>';
       panel.style.display = 'block';
       return;
     }
-
     let html = '';
     eventos.slice(0, 6).forEach(ev => {
       const fechaRaw = ev.date || ev.time || ev.datetime;
       let fechaStr = 'Fecha no disponible';
       if (fechaRaw) {
         const d = new Date(fechaRaw);
-        fechaStr = d.toLocaleString('es-AR', {
-          timeZone: 'America/Argentina/Buenos_Aires',
-          weekday: 'short',
-          day: '2-digit',
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        fechaStr = d.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       }
-
       const nombre = ev.name || ev.title || ev.event || 'Evento';
       const pais = ev.country || ev.currency || 'US';
-
-      html += `
-        <div class="evento">
-          <div class="evento-fecha">${fechaStr} ARG</div>
-          <div class="evento-nombre">🔴 ${nombre} (${pais})</div>
-        </div>
-      `;
+      html += `<div class="evento"><div class="evento-fecha">${fechaStr} ARG</div><div class="evento-nombre">🔴 ${nombre} (${pais})</div></div>`;
     });
-
-    content.innerHTML = html + `
-      <div style="margin-top:12px; font-size:11px; color:#484f58;">
-        Fuente: Biquote | ${new Date().toLocaleString('es-AR')}
-      </div>
-    `;
+    content.innerHTML = html + `<div style="margin-top:12px; font-size:11px; color:#484f58;">Fuente: Biquote | ${new Date().toLocaleString('es-AR')}</div>`;
     panel.style.display = 'block';
-
   } catch (error) {
     console.log('Error cargando eventos:', error);
     content.innerHTML = '<div class="info">No se pudieron cargar los eventos. Recargá la página.</div>';
@@ -619,14 +661,15 @@ async function cargarEventos() {
   }
 }
 
-// Inicializar
 cambiarModo();
 cargarRSI();
+cargarFVG();
 cargarSentimiento();
 cargarEventos();
-setInterval(cargarRSI, 600000);        // RSI cada 10 min
-setInterval(cargarSentimiento, 300000); // Sentimiento cada 5 min
-setInterval(cargarEventos, 600000);    // Eventos cada 10 min
+setInterval(cargarRSI, 600000);
+setInterval(cargarFVG, 600000);
+setInterval(cargarSentimiento, 300000);
+setInterval(cargarEventos, 600000);
 </script>
 </body>
 </html>
