@@ -2,15 +2,14 @@ name: Update RSI Data
 
 on:
   schedule:
-    # Se ejecuta cada 1 hora (en el minuto 0)
     - cron: '0 * * * *'
-  workflow_dispatch: # Permite ejecutarlo manualmente para probar
+  workflow_dispatch:
 
 jobs:
   update-rsi:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Permiso para hacer commit en el repo
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -31,4 +30,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Actualizar RSI data [skip ci]"
-         file_pattern: rsi_data.json fvg_data.json
+          file_pattern: rsi_data.json fvg_data.json
