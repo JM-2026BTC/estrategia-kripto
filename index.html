@@ -182,6 +182,8 @@
     border-radius: 3px;
     margin-left: 6px;
     vertical-align: middle;
+    white-space: nowrap;
+    display: inline-block;
   }
   .relevancia-max {
     background: #3d1414;
@@ -281,6 +283,30 @@
     }
   }
 
+  /* Responsive Eventos: en celular se apila el nombre + etiqueta */
+  @media (max-width: 600px) {
+    .evento-nombre {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .relevancia-tag {
+      margin-left: 0;
+      margin-top: 2px;
+    }
+    .evento-proximo .evento-nombre {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .evento-proximo .relevancia-tag {
+      margin-left: 0;
+      margin-top: 2px;
+    }
+  }
+
   /* S/R */
   .sr-header {
     color: #58a6ff;
@@ -346,7 +372,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.5</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.6</p>
 
   <div class="layout">
 
@@ -476,7 +502,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v5.5 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v5.6 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
