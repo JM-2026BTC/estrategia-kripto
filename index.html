@@ -58,6 +58,26 @@
   }
   button:hover { background: #2ea043; }
 
+  /* Fila de cripto con precio al lado */
+  .cripto-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .select-chico {
+    width: 180px !important;
+    flex-shrink: 0;
+  }
+  .precio-actual {
+    font-size: 13px;
+    color: #58a6ff;
+    font-weight: 600;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
   .entrada-row {
     display: flex;
     align-items: center;
@@ -204,31 +224,6 @@
     border-radius: 3px;
     font-weight: 600;
   }
-  .sr-card {
-    background: #0d1117;
-    border: 1px solid #21262d;
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    font-size: 12px;
-  }
-  .sr-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-  }
-  .sr-card-precio {
-    font-size: 14px;
-    font-weight: 600;
-    color: #c9d1d9;
-  }
-  .sr-card-info {
-    display: flex;
-    justify-content: space-between;
-    color: #8b949e;
-    font-size: 11px;
-  }
   .sr-leyenda {
     margin-top: 12px;
     padding-top: 10px;
@@ -244,7 +239,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.0</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.1</p>
 
   <div class="layout">
 
@@ -259,13 +254,16 @@
           <option value="A">Automático (A) — el sistema calcula E2 y E3</option>
         </select>
 
-        <label>Cripto a analizar (RSI, FVG y S/R)</label>
-        <select id="cripto" onchange="cambiarCripto()">
-          <option value="BTCUSDT">BTC — Bitcoin</option>
-          <option value="HYPEUSDT">HYPE — Hyperliquid</option>
-          <option value="DOGEUSDT">DOGE — Dogecoin</option>
-          <option value="PEPEUSDT">PEPE — Pepe</option>
-        </select>
+        <label>Cripto a analizar:</label>
+        <div class="cripto-row">
+          <select id="cripto" onchange="cambiarCripto()" class="select-chico">
+            <option value="BTCUSDT">BTC</option>
+            <option value="HYPEUSDT">HYPE</option>
+            <option value="DOGEUSDT">DOGE</option>
+            <option value="PEPEUSDT">PEPE</option>
+          </select>
+          <span id="precio-actual" class="precio-actual"></span>
+        </div>
 
         <div class="row">
           <div>
@@ -371,7 +369,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v5.0 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v5.1 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -394,12 +392,6 @@ function fmtPrecio(precio, cripto) {
   return precio.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
-function fmtPrecioSinDecimales(precio, cripto) {
-  // Para S/R mostramos sin decimales extras
-  const dec = DECIMALES[cripto] || 2;
-  return precio.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-
 function colorRSI(valor) {
   if (valor === null || valor === undefined) return '#8b949e';
   if (valor >= 70) return '#f85149';
@@ -418,20 +410,34 @@ function cambiarCripto() {
   cargarRSI();
   cargarFVG();
   cargarSR();
+  mostrarPrecioActual();
+}
+
+function mostrarPrecioActual() {
+  const cripto = document.getElementById('cripto').value;
+  const span = document.getElementById('precio-actual');
+  if (!srDataGlobal) {
+    span.textContent = '';
+    return;
+  }
+  const data = srDataGlobal.data[cripto];
+  const precio = data?.['1h']?.precio_actual;
+  if (precio) {
+    span.textContent = `Precio: ${fmtPrecio(precio, cripto)}`;
+  } else {
+    span.textContent = '';
+  }
 }
 
 function cambiarModo() {
   const modo = document.getElementById('modo').value;
   const e2 = document.getElementById('e2');
   const e3 = document.getElementById('e3');
-
   if (modo === 'A') {
     e2.disabled = true;
     e3.disabled = true;
-
     const e1 = parseFloat(document.getElementById('e1').value);
     const monto = parseFloat(document.getElementById('monto').value);
-
     if (!e1 || !monto || e1 <= 0 || monto <= 0) {
       e2.value = '';
       e3.value = '';
@@ -487,7 +493,6 @@ function calcularParcial() {
   const apal = parseInt(document.getElementById('apalancamiento').value);
   const monto = parseFloat(document.getElementById('monto').value) || 0;
   const liqPct = LIQ[apal] || 9.5;
-
   const e1 = parseFloat(document.getElementById('e1').value);
   const e2 = parseFloat(document.getElementById('e2').value);
   const e3 = parseFloat(document.getElementById('e3').value);
@@ -791,8 +796,6 @@ async function cargarSR() {
     }
 
     const precioActual = data['1h']?.precio_actual || data['4h']?.precio_actual || 0;
-
-    // Recolectar todas las resistencias y soportes
     const resistencias = [];
     const soportes = [];
     ['1h', '4h', '1d', '1w'].forEach(tf => {
@@ -805,7 +808,6 @@ async function cargarSR() {
       });
     });
 
-    // Ordenar por cercanía
     resistencias.sort((a, b) => Math.abs(a.distancia) - Math.abs(b.distancia));
     soportes.sort((a, b) => Math.abs(a.distancia) - Math.abs(b.distancia));
 
@@ -817,7 +819,6 @@ async function cargarSR() {
 
     let html = '';
 
-    // Resistencias
     if (resistencias.length > 0) {
       html += `<div class="sr-header">🔴 RESISTENCIAS (arriba del precio)</div>`;
       html += `<table class="sr-table">
@@ -826,7 +827,7 @@ async function cargarSR() {
         const signo = r.distancia >= 0 ? '+' : '';
         html += `<tr>
           <td><span class="sr-tf">${r.tf.toUpperCase()}</span></td>
-          <td class="sr-precio">${fmtPrecioSinDecimales(r.precio, cripto)}</td>
+          <td class="sr-precio">${fmtPrecio(r.precio, cripto)}</td>
           <td class="sr-toques">${r.toques}</td>
           <td class="sr-dist" style="text-align:right;">${signo}${r.distancia.toFixed(2)}%</td>
         </tr>`;
@@ -834,7 +835,6 @@ async function cargarSR() {
       html += `</table>`;
     }
 
-    // Soportes
     if (soportes.length > 0) {
       html += `<div class="sr-header" style="margin-top:14px;">🟢 SOPORTES (abajo del precio)</div>`;
       html += `<table class="sr-table">
@@ -843,7 +843,7 @@ async function cargarSR() {
         const signo = s.distancia >= 0 ? '+' : '';
         html += `<tr>
           <td><span class="sr-tf">${s.tf.toUpperCase()}</span></td>
-          <td class="sr-precio">${fmtPrecioSinDecimales(s.precio, cripto)}</td>
+          <td class="sr-precio">${fmtPrecio(s.precio, cripto)}</td>
           <td class="sr-toques">${s.toques}</td>
           <td class="sr-dist" style="text-align:right;">${signo}${s.distancia.toFixed(2)}%</td>
         </tr>`;
@@ -851,7 +851,6 @@ async function cargarSR() {
       html += `</table>`;
     }
 
-    // Leyenda
     html += `<div class="sr-leyenda">
       <div><strong>Precio</strong> = Punto medio de la zona (E1 sugerido)</div>
       <div><strong>Toques</strong> = Veces que el precio respetó la zona</div>
@@ -969,7 +968,7 @@ async function cargarEventos() {
 cambiarModo();
 cargarRSI();
 cargarFVG();
-cargarSR();
+cargarSR().then(() => mostrarPrecioActual());
 cargarSentimiento();
 cargarEventos();
 setInterval(cargarRSI, 600000);
