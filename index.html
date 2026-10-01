@@ -175,6 +175,34 @@
     margin-bottom: 4px;
     letter-spacing: 0.5px;
   }
+  .relevancia-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .relevancia-max {
+    background: #3d1414;
+    color: #f85149;
+    border: 1px solid #f85149;
+  }
+  .relevancia-alto {
+    background: #3d2414;
+    color: #d29922;
+    border: 1px solid #d29922;
+  }
+  .relevancia-medio {
+    background: #2d2d14;
+    color: #d29922;
+    border: 1px solid #6e6e2d;
+  }
+  .relevancia-bajo {
+    background: #1b2d1b;
+    color: #3fb950;
+    border: 1px solid #3fb950;
+  }
 
   /* RSI */
   .rsi-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #21262d; }
@@ -267,7 +295,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.2</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.3</p>
 
   <div class="layout">
 
@@ -397,7 +425,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v5.2 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v5.3 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -432,6 +460,42 @@ function etiquetaRSI(valor) {
   if (valor >= 70) return 'Sobrecompra';
   if (valor <= 30) return 'Sobreventa';
   return 'Neutral';
+}
+
+// ====== RELEVANCIA PARA BTC ======
+function getRelevanciaBTC(nombreEvento) {
+  const nombre = (nombreEvento || '').toLowerCase();
+  
+  // MÁXIMO
+  if (nombre.includes('non-farm') || nombre.includes('nonfarm') || nombre.includes('nfp') || 
+      nombre.includes('payroll')) {
+    return { nivel: 'MÁXIMO', clase: 'relevancia-max' };
+  }
+  
+  // ALTO
+  if (nombre.includes('core pce') || nombre.includes('pce price') ||
+      nombre.includes('cpi') || nombre.includes('consumer price') ||
+      nombre.includes('inflation')) {
+    return { nivel: 'ALTO', clase: 'relevancia-alto' };
+  }
+  
+  // MEDIO
+  if (nombre.includes('fomc') || nombre.includes('fed funds') || 
+      nombre.includes('interest rate') || nombre.includes('rate decision') ||
+      nombre.includes('unemployment') || nombre.includes('jobless') ||
+      nombre.includes('gdp') || nombre.includes('powell') ||
+      nombre.includes('fed ') || nombre.includes('federal reserve')) {
+    return { nivel: 'MEDIO', clase: 'relevancia-medio' };
+  }
+  
+  // BAJO
+  if (nombre.includes('pmi') || nombre.includes('ism') || 
+      nombre.includes('chicago') || nombre.includes('business')) {
+    return { nivel: 'BAJO', clase: 'relevancia-bajo' };
+  }
+  
+  // Por defecto
+  return { nivel: 'MEDIO', clase: 'relevancia-medio' };
 }
 
 function cambiarCripto() {
@@ -922,7 +986,7 @@ function detectarConfluencias(fvgs) {
   return confluencias;
 }
 
-// ====== EVENTOS ECONÓMICOS (MEJORADO) ======
+// ====== EVENTOS ECONÓMICOS (con relevancia BTC) ======
 async function cargarEventos() {
   const panel = document.getElementById('eventos-panel');
   const content = document.getElementById('eventos-content');
@@ -968,11 +1032,14 @@ async function cargarEventos() {
 
     let html = '';
 
-    // Destacar el próximo
+    // Destacar el próximo con su relevancia
+    const nombreProximo = proximo.name || proximo.title || proximo.event || 'Evento';
+    const relProximo = getRelevanciaBTC(nombreProximo);
+
     html += `<div class="evento-proximo">
       <div class="evento-proximo-titulo">🔥 PRÓXIMO ${tiempoRestante}</div>
       <div class="evento-fecha">${fechaProximo.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} ARG</div>
-      <div class="evento-nombre">🔴 ${proximo.name || proximo.title || proximo.event || 'Evento'} (${proximo.country || proximo.currency || 'US'})</div>
+      <div class="evento-nombre">🔴 ${nombreProximo} (${proximo.country || proximo.currency || 'US'}) <span class="relevancia-tag ${relProximo.clase}">BTC: ${relProximo.nivel}</span></div>
     </div>`;
 
     // Agrupar por día
@@ -998,14 +1065,24 @@ async function cargarEventos() {
         const fechaStr = ev.fecha.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit' });
         const nombre = ev.name || ev.title || ev.event || 'Evento';
         const pais = ev.country || ev.currency || 'US';
+        const rel = getRelevanciaBTC(nombre);
         html += `<div class="evento">
           <div class="evento-fecha">${fechaStr} ARG</div>
-          <div class="evento-nombre">🔴 ${nombre} (${pais})</div>
+          <div class="evento-nombre">🔴 ${nombre} (${pais}) <span class="relevancia-tag ${rel.clase}">BTC: ${rel.nivel}</span></div>
         </div>`;
       });
     });
 
-    content.innerHTML = html + `<div style="margin-top:12px; font-size:11px; color:#484f58;">Fuente: Biquote | ${new Date().toLocaleString('es-AR')}</div>`;
+    // Leyenda
+    html += `<div style="margin-top:12px; padding-top:10px; border-top:1px solid #21262d; font-size:10px; color:#484f58; line-height:1.6;">
+      <div><strong>Relevancia para BTC:</strong></div>
+      <div><span class="relevancia-tag relevancia-max">BTC: MÁXIMO</span> Non-Farm Payrolls (NFP)</div>
+      <div><span class="relevancia-tag relevancia-alto">BTC: ALTO</span> Core PCE, CPI, Inflación</div>
+      <div><span class="relevancia-tag relevancia-medio">BTC: MEDIO</span> FOMC, Desempleo, GDP</div>
+      <div><span class="relevancia-tag relevancia-bajo">BTC: BAJO</span> PMI, ISM, Chicago</div>
+    </div>`;
+
+    content.innerHTML = html + `<div style="margin-top:8px; font-size:11px; color:#484f58;">Fuente: Biquote | ${new Date().toLocaleString('es-AR')}</div>`;
     panel.style.display = 'block';
 
   } catch (error) {
