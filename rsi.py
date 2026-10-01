@@ -3,47 +3,34 @@ import ccxt
 import pandas as pd
 import numpy as np
 
-# Configuración
+# ===== CONFIGURACIÓN =====
 CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
 TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 RSI_PERIODO = 14
+
+# ===== CONFIGURACIÓN POR INDICADOR =====
+# Cada indicador usa sus propias velas y parámetros
+
+# RSI
+RSI_VELAS = {'1h': 100, '4h': 100, '1d': 300, '1w': 200}
+
+# FVG
+FVG_VELAS = {'1h': 100, '4h': 100, '1d': 300, '1w': 200}
 FVG_TEMPORALIDADES = ['1h', '4h', '1d']
-SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
-GP_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
-
-# Configuración por temporalidad
-VELAS_POR_TF = {
-    '1h': 300,
-    '4h': 300,
-    '1d': 300,
-    '1w': 200
-}
-
-FVG_MAX_DISTANCIA_PCT = {
-    '1h': 5.0,
-    '4h': 5.0,
-    '1d': 15.0,
-    '1w': 25.0
-}
-
+FVG_MAX_DISTANCIA_PCT = {'1h': 5.0, '4h': 5.0, '1d': 15.0, '1w': 25.0}
 FVG_MIN_TAMANO_PCT = 0.15
 
-# Fuerza de pivote (igual a AutoFib: 5)
-SWING_STRENGTH = {
-    '1h': 5,
-    '4h': 5,
-    '1d': 5,
-    '1w': 5
-}
-
-SR_MIN_TOQUES = {
-    'BTCUSDT': 3,
-    'HYPEUSDT': 2,
-    'DOGEUSDT': 2,
-    'PEPEUSDT': 2
-}
-
+# S/R
+SR_VELAS = {'1h': 100, '4h': 100, '1d': 300, '1w': 200}
+SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
+SR_STRENGTH = {'1h': 3, '4h': 3, '1d': 4, '1w': 5}
+SR_MIN_TOQUES = {'BTCUSDT': 3, 'HYPEUSDT': 2, 'DOGEUSDT': 2, 'PEPEUSDT': 2}
 SR_MAX_ZONAS = 4
+
+# Golden Pocket
+GP_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 200}
+GP_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
+GP_STRENGTH = {'1h': 5, '4h': 5, '1d': 5, '1w': 5}
 
 
 def redondear(valor, precio_actual):
@@ -170,22 +157,17 @@ def detectar_pivotes(df, strength):
 
 
 def encontrar_ultimo_impulso(pivotes_altos, pivotes_bajos):
-    """Encuentra el último par de pivotes consecutivos."""
     todos = []
     for p in pivotes_altos:
         todos.append({'tipo': 'alto', 'precio': p['precio'], 'indice': p['indice']})
     for p in pivotes_bajos:
         todos.append({'tipo': 'bajo', 'precio': p['precio'], 'indice': p['indice']})
-    
     todos.sort(key=lambda x: x['indice'])
-    
-    # Buscar el último par consecutivo
     for i in range(len(todos) - 1, 0, -1):
         actual = todos[i]
         anterior = todos[i - 1]
         if actual['tipo'] != anterior['tipo']:
             return anterior, actual
-    
     return None, None
 
 
@@ -218,9 +200,40 @@ def agrupar_pivotes(pivotes, precio_actual, cluster_pct, min_toques):
     return zonas
 
 
+# ===== FUNCIONES POR INDICADOR =====
+
+def calcular_rsi_par(exchange, symbol, timeframe):
+    try:
+        limit = RSI_VELAS.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        rsi = calcular_rsi(df['close'], RSI_PERIODO)
+        return round(float(rsi.iloc[-1]), 2)
+    except Exception as e:
+        print(f"Error RSI {symbol} {timeframe}: {e}")
+        return None
+
+
+def calcular_fvgs_par(exchange, symbol, timeframe):
+    try:
+        limit = FVG_VELAS.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        df['high'] = df['high'].astype(float)
+        df['low'] = df['low'].astype(float)
+        precio_actual = float(df['close'].iloc[-1])
+        fvgs = detectar_fvg(df)
+        return filtrar_fvgs(fvgs, precio_actual, timeframe)
+    except Exception as e:
+        print(f"Error FVG {symbol} {timeframe}: {e}")
+        return []
+
+
 def calcular_sr_par(exchange, symbol, timeframe):
     try:
-        limit = VELAS_POR_TF.get(timeframe, 100)
+        limit = SR_VELAS.get(timeframe, 100)
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['close'] = df['close'].astype(float)
@@ -229,7 +242,7 @@ def calcular_sr_par(exchange, symbol, timeframe):
 
         precio_actual = float(df['close'].iloc[-1])
         symbol_limpio = symbol.replace('/', '')
-        strength = SWING_STRENGTH.get(timeframe, 5)
+        strength = SR_STRENGTH.get(timeframe, 3)
         cluster_pct = calcular_cluster_pct(df)
         min_toques = SR_MIN_TOQUES.get(symbol_limpio, 2)
 
@@ -252,13 +265,13 @@ def calcular_sr_par(exchange, symbol, timeframe):
             'soportes': soportes
         }
     except Exception as e:
-        print(f"Error calculando S/R para {symbol} en {timeframe}: {e}")
+        print(f"Error S/R {symbol} {timeframe}: {e}")
         return {'precio_actual': None, 'resistencias': [], 'soportes': []}
 
 
 def calcular_golden_pocket_par(exchange, symbol, timeframe):
     try:
-        limit = VELAS_POR_TF.get(timeframe, 100)
+        limit = GP_VELAS.get(timeframe, 100)
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
         df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
         df['close'] = df['close'].astype(float)
@@ -266,22 +279,17 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
         df['low'] = df['low'].astype(float)
 
         precio_actual = float(df['close'].iloc[-1])
-        strength = SWING_STRENGTH.get(timeframe, 5)
+        strength = GP_STRENGTH.get(timeframe, 5)
 
         pivotes_altos, pivotes_bajos = detectar_pivotes(df, strength)
-
         if not pivotes_altos or not pivotes_bajos:
             return None
 
-        # Buscar el último impulso consecutivo
         pivote_inicio, pivote_fin = encontrar_ultimo_impulso(pivotes_altos, pivotes_bajos)
-
         if not pivote_inicio or not pivote_fin:
             return None
 
-        # Determinar tipo según el pivote final
         if pivote_fin['tipo'] == 'alto':
-            # Impulso alcista (terminó en alto)
             tipo = 'alcista'
             swing_low = pivote_inicio['precio']
             swing_high = pivote_fin['precio']
@@ -292,7 +300,6 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
             zona_hasta = max(nivel_05, nivel_0618)
             accion = 'SOPORTE'
         else:
-            # Impulso bajista (terminó en bajo)
             tipo = 'bajista'
             swing_high = pivote_inicio['precio']
             swing_low = pivote_fin['precio']
@@ -317,37 +324,8 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
             'precio_sugerido': redondear(precio_sugerido, precio_actual)
         }
     except Exception as e:
-        print(f"Error calculando Golden Pocket para {symbol} en {timeframe}: {e}")
+        print(f"Error GP {symbol} {timeframe}: {e}")
         return None
-
-
-def calcular_rsi_par(exchange, symbol, timeframe):
-    try:
-        limit = VELAS_POR_TF.get(timeframe, 100)
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['close'] = df['close'].astype(float)
-        rsi = calcular_rsi(df['close'], RSI_PERIODO)
-        return round(float(rsi.iloc[-1]), 2)
-    except Exception as e:
-        print(f"Error calculando RSI para {symbol} en {timeframe}: {e}")
-        return None
-
-
-def calcular_fvgs_par(exchange, symbol, timeframe):
-    try:
-        limit = VELAS_POR_TF.get(timeframe, 100)
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['close'] = df['close'].astype(float)
-        df['high'] = df['high'].astype(float)
-        df['low'] = df['low'].astype(float)
-        precio_actual = float(df['close'].iloc[-1])
-        fvgs = detectar_fvg(df)
-        return filtrar_fvgs(fvgs, precio_actual, timeframe)
-    except Exception as e:
-        print(f"Error calculando FVG para {symbol} en {timeframe}: {e}")
-        return []
 
 
 def main():
@@ -368,25 +346,25 @@ def main():
         for tf in TEMPORALIDADES:
             rsi = calcular_rsi_par(exchange, cripto, tf)
             rsi_resultado['data'][symbol][tf] = rsi
-            print(f"{symbol} en {tf}: RSI = {rsi}")
+            print(f"{symbol} {tf}: RSI = {rsi}")
 
         for tf in FVG_TEMPORALIDADES:
             fvgs = calcular_fvgs_par(exchange, cripto, tf)
             fvg_resultado['data'][symbol][tf] = fvgs
-            print(f"{symbol} en {tf}: {len(fvgs)} FVG activos")
+            print(f"{symbol} {tf}: {len(fvgs)} FVG")
 
         for tf in SR_TEMPORALIDADES:
             sr = calcular_sr_par(exchange, cripto, tf)
             sr_resultado['data'][symbol][tf] = sr
-            print(f"{symbol} en {tf}: {len(sr['resistencias'])} R / {len(sr['soportes'])} S")
+            print(f"{symbol} {tf}: {len(sr['resistencias'])} R / {len(sr['soportes'])} S")
 
         for tf in GP_TEMPORALIDADES:
             gp = calcular_golden_pocket_par(exchange, cripto, tf)
             gp_resultado['data'][symbol][tf] = gp
             if gp:
-                print(f"{symbol} en {tf}: GP {gp['tipo']} ({gp['accion']}) zona {gp['zona_desde']}-{gp['zona_hasta']}")
+                print(f"{symbol} {tf}: GP {gp['tipo']} ({gp['accion']})")
             else:
-                print(f"{symbol} en {tf}: GP sin datos")
+                print(f"{symbol} {tf}: GP sin datos")
 
     with open('rsi_data.json', 'w') as f:
         json.dump(rsi_resultado, f, indent=2)
