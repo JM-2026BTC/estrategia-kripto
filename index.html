@@ -240,6 +240,8 @@
   .fvg-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; }
   .fvg-tipo.alcista { background: #1b2d1b; color: #3fb950; }
   .fvg-tipo.bajista { background: #2d1b1b; color: #f85149; }
+  .fvg-accion-long { color: #3fb950; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .fvg-accion-short { color: #f85149; font-size: 11px; font-weight: 600; margin-left: 6px; }
 
   /* S/R */
   .sr-header {
@@ -289,13 +291,24 @@
     line-height: 1.5;
   }
   .sr-leyenda div { margin-bottom: 2px; }
+  .fvg-leyenda {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #21262d;
+    font-size: 10px;
+    color: #484f58;
+    line-height: 1.6;
+  }
+  .fvg-leyenda div { margin-bottom: 3px; }
+  .fvg-leyenda .verde { color: #3fb950; font-weight: 600; }
+  .fvg-leyenda .rojo { color: #f85149; font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.3</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.4</p>
 
   <div class="layout">
 
@@ -425,7 +438,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v5.3 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v5.4 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -462,39 +475,20 @@ function etiquetaRSI(valor) {
   return 'Neutral';
 }
 
-// ====== RELEVANCIA PARA BTC ======
 function getRelevanciaBTC(nombreEvento) {
   const nombre = (nombreEvento || '').toLowerCase();
-  
-  // MÁXIMO
-  if (nombre.includes('non-farm') || nombre.includes('nonfarm') || nombre.includes('nfp') || 
-      nombre.includes('payroll')) {
+  if (nombre.includes('non-farm') || nombre.includes('nonfarm') || nombre.includes('nfp') || nombre.includes('payroll')) {
     return { nivel: 'MÁXIMO', clase: 'relevancia-max' };
   }
-  
-  // ALTO
-  if (nombre.includes('core pce') || nombre.includes('pce price') ||
-      nombre.includes('cpi') || nombre.includes('consumer price') ||
-      nombre.includes('inflation')) {
+  if (nombre.includes('core pce') || nombre.includes('pce price') || nombre.includes('cpi') || nombre.includes('consumer price') || nombre.includes('inflation')) {
     return { nivel: 'ALTO', clase: 'relevancia-alto' };
   }
-  
-  // MEDIO
-  if (nombre.includes('fomc') || nombre.includes('fed funds') || 
-      nombre.includes('interest rate') || nombre.includes('rate decision') ||
-      nombre.includes('unemployment') || nombre.includes('jobless') ||
-      nombre.includes('gdp') || nombre.includes('powell') ||
-      nombre.includes('fed ') || nombre.includes('federal reserve')) {
+  if (nombre.includes('fomc') || nombre.includes('fed funds') || nombre.includes('interest rate') || nombre.includes('rate decision') || nombre.includes('unemployment') || nombre.includes('jobless') || nombre.includes('gdp') || nombre.includes('powell') || nombre.includes('fed ') || nombre.includes('federal reserve')) {
     return { nivel: 'MEDIO', clase: 'relevancia-medio' };
   }
-  
-  // BAJO
-  if (nombre.includes('pmi') || nombre.includes('ism') || 
-      nombre.includes('chicago') || nombre.includes('business')) {
+  if (nombre.includes('pmi') || nombre.includes('ism') || nombre.includes('chicago') || nombre.includes('business')) {
     return { nivel: 'BAJO', clase: 'relevancia-bajo' };
   }
-  
-  // Por defecto
   return { nivel: 'MEDIO', clase: 'relevancia-medio' };
 }
 
@@ -829,10 +823,12 @@ async function cargarFVG() {
       html += `<div style="font-size:12px; color:#d29922; font-weight:600; margin-bottom:8px;">🔥 CONFLUENCIAS:</div>`;
       confluencias.forEach(c => {
         const tipoClase = c.tipo === 'alcista' ? 'alcista' : 'bajista';
+        const accion = c.tipo === 'alcista' ? '<span class="fvg-accion-long">— Posible LONG</span>' : '<span class="fvg-accion-short">— Posible SHORT</span>';
         const tfsStr = c.tfs.join(' + ').toUpperCase();
         html += `<div class="fvg-confluencia">
           <span class="fvg-tipo ${tipoClase}">${c.tipo.toUpperCase()}</span>
           <span style="font-size:11px; color:#8b949e; margin-left:6px;">[${tfsStr}]</span>
+          ${accion}
           <div style="font-size:11px; color:#8b949e; margin-top:4px;">${fmtPrecio(c.desde, cripto)} – ${fmtPrecio(c.hasta, cripto)}</div>
           <div class="fvg-precio" style="margin-top:4px;">→ ${fmtPrecio(c.precio, cripto)}</div>
         </div>`;
@@ -845,6 +841,7 @@ async function cargarFVG() {
       html += `<div class="fvg-tf-header">── ${tf.toUpperCase()} (${lista.length}) ──</div>`;
       lista.forEach(fvg => {
         const tipoClase = fvg.tipo === 'alcista' ? 'alcista' : 'bajista';
+        const accion = fvg.tipo === 'alcista' ? '<span class="fvg-accion-long">— Posible LONG</span>' : '<span class="fvg-accion-short">— Posible SHORT</span>';
         const precio = (fvg.desde + fvg.hasta) / 2;
         const confluye = confluencias.some(c => c.tfs.includes(tf) && c.desde <= fvg.hasta && c.hasta >= fvg.desde);
         const estrella = confluye ? ' ⭐' : '';
@@ -852,13 +849,23 @@ async function cargarFVG() {
           <div>
             <span class="fvg-tipo ${tipoClase}">${fvg.tipo.toUpperCase()}</span>
             <span class="fvg-zona" style="margin-left:6px;">${fmtPrecio(fvg.desde, cripto)} – ${fmtPrecio(fvg.hasta, cripto)}${estrella}</span>
+            ${accion}
           </div>
           <div class="fvg-precio">${fmtPrecio(precio, cripto)}</div>
         </div>`;
       });
     });
+
+    // Leyenda
+    html += `<div class="fvg-leyenda">
+      <div><span class="verde">🟢 Alcista</span> = Zona de rebote → <span class="verde">Posible LONG</span></div>
+      <div><span class="rojo">🔴 Bajista</span> = Zona de rechazo → <span class="rojo">Posible SHORT</span></div>
+      <div><strong>⭐</strong> = Confluencia (2+ temporalidades)</div>
+      <div><strong>→</strong> = Precio sugerido (E1)</div>
+    </div>`;
+
     const fecha = fvgDataGlobal.last_update ? new Date(fvgDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
-    html += `<div style="margin-top:12px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
+    html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
   } catch (error) {
@@ -986,7 +993,6 @@ function detectarConfluencias(fvgs) {
   return confluencias;
 }
 
-// ====== EVENTOS ECONÓMICOS (con relevancia BTC) ======
 async function cargarEventos() {
   const panel = document.getElementById('eventos-panel');
   const content = document.getElementById('eventos-content');
@@ -998,7 +1004,6 @@ async function cargarEventos() {
     else if (data.events) eventos = data.events;
     else if (data.data) eventos = data.data;
 
-    // 1. Filtrar solo eventos futuros
     const ahora = new Date();
     eventos = eventos.filter(ev => {
       const fechaRaw = ev.date || ev.time || ev.datetime;
@@ -1006,7 +1011,6 @@ async function cargarEventos() {
       return new Date(fechaRaw) >= ahora;
     });
 
-    // 2. Ordenar por fecha (más cercanos primero)
     eventos.sort((a, b) => {
       const fechaA = new Date(a.date || a.time || a.datetime);
       const fechaB = new Date(b.date || b.time || b.datetime);
@@ -1019,7 +1023,6 @@ async function cargarEventos() {
       return;
     }
 
-    // 3. Calcular el próximo evento
     const proximo = eventos[0];
     const fechaProximo = new Date(proximo.date || proximo.time || proximo.datetime);
     const diffMs = fechaProximo - ahora;
@@ -1031,8 +1034,6 @@ async function cargarEventos() {
     else tiempoRestante = 'AHORA';
 
     let html = '';
-
-    // Destacar el próximo con su relevancia
     const nombreProximo = proximo.name || proximo.title || proximo.event || 'Evento';
     const relProximo = getRelevanciaBTC(nombreProximo);
 
@@ -1042,7 +1043,6 @@ async function cargarEventos() {
       <div class="evento-nombre">🔴 ${nombreProximo} (${proximo.country || proximo.currency || 'US'}) <span class="relevancia-tag ${relProximo.clase}">BTC: ${relProximo.nivel}</span></div>
     </div>`;
 
-    // Agrupar por día
     const eventosPorDia = {};
     eventos.slice(1, 10).forEach(ev => {
       const fechaRaw = ev.date || ev.time || ev.datetime;
@@ -1073,13 +1073,12 @@ async function cargarEventos() {
       });
     });
 
-    // Leyenda
     html += `<div style="margin-top:12px; padding-top:10px; border-top:1px solid #21262d; font-size:10px; color:#484f58; line-height:1.6;">
       <div><strong>Relevancia para BTC:</strong></div>
-      <div><span class="relevancia-tag relevancia-max">BTC: MÁXIMO</span> Non-Farm Payrolls (NFP)</div>
-      <div><span class="relevancia-tag relevancia-alto">BTC: ALTO</span> Core PCE, CPI, Inflación</div>
-      <div><span class="relevancia-tag relevancia-medio">BTC: MEDIO</span> FOMC, Desempleo, GDP</div>
-      <div><span class="relevancia-tag relevancia-bajo">BTC: BAJO</span> PMI, ISM, Chicago</div>
+      <div><span class="relevancia-tag relevancia-max">MÁXIMO</span> Non-Farm Payrolls (NFP)</div>
+      <div><span class="relevancia-tag relevancia-alto">ALTO</span> Core PCE, CPI</div>
+      <div><span class="relevancia-tag relevancia-medio">MEDIO</span> FOMC, Desempleo, GDP</div>
+      <div><span class="relevancia-tag relevancia-bajo">BAJO</span> PMI, ISM</div>
     </div>`;
 
     content.innerHTML = html + `<div style="margin-top:8px; font-size:11px; color:#484f58;">Fuente: Biquote | ${new Date().toLocaleString('es-AR')}</div>`;
