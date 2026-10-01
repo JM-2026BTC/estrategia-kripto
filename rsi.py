@@ -9,6 +9,7 @@ TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 RSI_PERIODO = 14
 FVG_TEMPORALIDADES = ['1h', '4h', '1d']
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
+GP_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 
 # Configuración por temporalidad
 VELAS_POR_TF = {
@@ -27,7 +28,7 @@ FVG_MAX_DISTANCIA_PCT = {
 
 FVG_MIN_TAMANO_PCT = 0.15
 
-# Configuración de S/R (parámetros automáticos)
+# Configuración de S/R
 SWING_STRENGTH = {
     '1h': 3,
     '4h': 3,
@@ -46,7 +47,7 @@ SR_MAX_ZONAS = 4
 
 
 def redondear(valor, precio_actual):
-    """Redondea según la magnitud del precio (automático)."""
+    """Redondea según la magnitud del precio."""
     if precio_actual >= 1000:
         return round(valor, 2)
     elif precio_actual >= 1:
@@ -173,17 +174,13 @@ def detectar_pivotes(df, strength):
 def agrupar_pivotes(pivotes, precio_actual, cluster_pct, min_toques):
     if not pivotes:
         return []
-    
     pivotes_ord = sorted(pivotes, key=lambda x: x['precio'])
     zonas = []
     grupo_actual = [pivotes_ord[0]]
-    
     for i in range(1, len(pivotes_ord)):
         precio_actual_pivote = pivotes_ord[i]['precio']
         precio_ultimo_grupo = grupo_actual[-1]['precio']
-        
         distancia_pct = abs(precio_actual_pivote - precio_ultimo_grupo) / precio_ultimo_grupo * 100
-        
         if distancia_pct <= cluster_pct:
             grupo_actual.append(pivotes_ord[i])
         else:
@@ -194,14 +191,12 @@ def agrupar_pivotes(pivotes, precio_actual, cluster_pct, min_toques):
                     'toques': len(grupo_actual)
                 })
             grupo_actual = [pivotes_ord[i]]
-    
     if len(grupo_actual) >= min_toques:
         precios = [p['precio'] for p in grupo_actual]
         zonas.append({
             'precio': redondear(sum(precios) / len(precios), precio_actual),
             'toques': len(grupo_actual)
         })
-    
     return zonas
 
 
@@ -219,17 +214,17 @@ def calcular_sr_par(exchange, symbol, timeframe):
         strength = SWING_STRENGTH.get(timeframe, 3)
         cluster_pct = calcular_cluster_pct(df)
         min_toques = SR_MIN_TOQUES.get(symbol_limpio, 2)
-        
+
         pivotes_altos, pivotes_bajos = detectar_pivotes(df, strength)
-        
+
         altos_arriba = [p for p in pivotes_altos if p['precio'] > precio_actual]
         resistencias = agrupar_pivotes(altos_arriba, precio_actual, cluster_pct, min_toques)
         resistencias = sorted(resistencias, key=lambda x: x['precio'])[:SR_MAX_ZONAS]
-        
+
         bajos_abajo = [p for p in pivotes_bajos if p['precio'] < precio_actual]
         soportes = agrupar_pivotes(bajos_abajo, precio_actual, cluster_pct, min_toques)
         soportes = sorted(soportes, key=lambda x: x['precio'], reverse=True)[:SR_MAX_ZONAS]
-        
+
         return {
             'precio_actual': redondear(precio_actual, precio_actual),
             'cluster_usado': round(cluster_pct, 2),
@@ -241,6 +236,67 @@ def calcular_sr_par(exchange, symbol, timeframe):
     except Exception as e:
         print(f"Error calculando S/R para {symbol} en {timeframe}: {e}")
         return {'precio_actual': None, 'resistencias': [], 'soportes': []}
+
+
+def calcular_golden_pocket_par(exchange, symbol, timeframe):
+    """Calcula el Golden Pocket (0.5 - 0.618) según el último impulso."""
+    try:
+        limit = VELAS_POR_TF.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        df['high'] = df['high'].astype(float)
+        df['low'] = df['low'].astype(float)
+
+        precio_actual = float(df['close'].iloc[-1])
+        strength = SWING_STRENGTH.get(timeframe, 3)
+
+        pivotes_altos, pivotes_bajos = detectar_pivotes(df, strength)
+
+        if not pivotes_altos or not pivotes_bajos:
+            return None
+
+        ultimo_alto = pivotes_altos[-1]
+        ultimo_bajo = pivotes_bajos[-1]
+
+        # Determinar tipo por el más reciente
+        if ultimo_alto['indice'] > ultimo_bajo['indice']:
+            tipo = 'alcista'
+            swing_low = ultimo_bajo['precio']
+            swing_high = ultimo_alto['precio']
+            rango = swing_high - swing_low
+            nivel_05 = swing_low + rango * 0.5
+            nivel_0618 = swing_low + rango * 0.618
+            zona_desde = min(nivel_05, nivel_0618)
+            zona_hasta = max(nivel_05, nivel_0618)
+            accion = 'SOPORTE'
+        else:
+            tipo = 'bajista'
+            swing_high = ultimo_alto['precio']
+            swing_low = ultimo_bajo['precio']
+            rango = swing_high - swing_low
+            nivel_05 = swing_high - rango * 0.5
+            nivel_0618 = swing_high - rango * 0.618
+            zona_desde = min(nivel_05, nivel_0618)
+            zona_hasta = max(nivel_05, nivel_0618)
+            accion = 'RESISTENCIA'
+
+        precio_sugerido = (zona_desde + zona_hasta) / 2
+
+        return {
+            'tipo': tipo,
+            'accion': accion,
+            'swing_low': redondear(swing_low, precio_actual),
+            'swing_high': redondear(swing_high, precio_actual),
+            'nivel_05': redondear(nivel_05, precio_actual),
+            'nivel_0618': redondear(nivel_0618, precio_actual),
+            'zona_desde': redondear(zona_desde, precio_actual),
+            'zona_hasta': redondear(zona_hasta, precio_actual),
+            'precio_sugerido': redondear(precio_sugerido, precio_actual)
+        }
+    except Exception as e:
+        print(f"Error calculando Golden Pocket para {symbol} en {timeframe}: {e}")
+        return None
 
 
 def calcular_rsi_par(exchange, symbol, timeframe):
@@ -278,12 +334,14 @@ def main():
     rsi_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     fvg_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     sr_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
+    gp_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
 
     for cripto in CRIPTOS:
         symbol = cripto.replace('/', '')
         rsi_resultado['data'][symbol] = {}
         fvg_resultado['data'][symbol] = {}
         sr_resultado['data'][symbol] = {}
+        gp_resultado['data'][symbol] = {}
 
         for tf in TEMPORALIDADES:
             rsi = calcular_rsi_par(exchange, cripto, tf)
@@ -298,7 +356,15 @@ def main():
         for tf in SR_TEMPORALIDADES:
             sr = calcular_sr_par(exchange, cripto, tf)
             sr_resultado['data'][symbol][tf] = sr
-            print(f"{symbol} en {tf}: {len(sr['resistencias'])} R / {len(sr['soportes'])} S (cluster: {sr.get('cluster_usado', '?')}%)")
+            print(f"{symbol} en {tf}: {len(sr['resistencias'])} R / {len(sr['soportes'])} S")
+
+        for tf in GP_TEMPORALIDADES:
+            gp = calcular_golden_pocket_par(exchange, cripto, tf)
+            gp_resultado['data'][symbol][tf] = gp
+            if gp:
+                print(f"{symbol} en {tf}: GP {gp['tipo']} ({gp['accion']}) zona {gp['zona_desde']}-{gp['zona_hasta']}")
+            else:
+                print(f"{symbol} en {tf}: GP sin datos")
 
     with open('rsi_data.json', 'w') as f:
         json.dump(rsi_resultado, f, indent=2)
@@ -306,8 +372,10 @@ def main():
         json.dump(fvg_resultado, f, indent=2)
     with open('sr_data.json', 'w') as f:
         json.dump(sr_resultado, f, indent=2)
+    with open('gp_data.json', 'w') as f:
+        json.dump(gp_resultado, f, indent=2)
 
-    print("\n✅ Datos guardados en rsi_data.json, fvg_data.json y sr_data.json")
+    print("\n✅ Datos guardados en rsi_data.json, fvg_data.json, sr_data.json y gp_data.json")
 
 
 if __name__ == '__main__':
