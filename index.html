@@ -185,26 +185,10 @@
     white-space: nowrap;
     display: inline-block;
   }
-  .relevancia-max {
-    background: #3d1414;
-    color: #f85149;
-    border: 1px solid #f85149;
-  }
-  .relevancia-alto {
-    background: #3d2414;
-    color: #d29922;
-    border: 1px solid #d29922;
-  }
-  .relevancia-medio {
-    background: #2d2d14;
-    color: #d29922;
-    border: 1px solid #6e6e2d;
-  }
-  .relevancia-bajo {
-    background: #1b2d1b;
-    color: #3fb950;
-    border: 1px solid #3fb950;
-  }
+  .relevancia-max { background: #3d1414; color: #f85149; border: 1px solid #f85149; }
+  .relevancia-alto { background: #3d2414; color: #d29922; border: 1px solid #d29922; }
+  .relevancia-medio { background: #2d2d14; color: #d29922; border: 1px solid #6e6e2d; }
+  .relevancia-bajo { background: #1b2d1b; color: #3fb950; border: 1px solid #3fb950; }
 
   /* RSI */
   .rsi-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #21262d; }
@@ -212,7 +196,7 @@
   .rsi-tf { color: #8b949e; font-size: 13px; }
   .rsi-val { font-weight: 600; font-size: 14px; }
 
-  /* FVG - Responsive */
+  /* FVG */
   .fvg-confluencia {
     background: #1b2530;
     border-left: 3px solid #d29922;
@@ -263,99 +247,67 @@
     color: #8b949e;
     font-weight: 400;
   }
-
-  /* Responsive FVG: en celular se apila */
   @media (max-width: 600px) {
-    .fvg-row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-    .fvg-info {
-      width: 100%;
-    }
-    .fvg-precio {
-      margin-top: 2px;
-      font-size: 14px;
-    }
-    .fvg-confluencia .fvg-info {
-      flex-wrap: wrap;
-    }
+    .fvg-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .fvg-info { width: 100%; }
+    .fvg-precio { margin-top: 2px; font-size: 14px; }
+    .fvg-confluencia .fvg-info { flex-wrap: wrap; }
   }
 
-  /* Responsive Eventos: en celular se apila el nombre + etiqueta */
-  @media (max-width: 600px) {
-    .evento-nombre {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-    .relevancia-tag {
-      margin-left: 0;
-      margin-top: 2px;
-    }
-    .evento-proximo .evento-nombre {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-    .evento-proximo .relevancia-tag {
-      margin-left: 0;
-      margin-top: 2px;
-    }
+  /* Golden Pocket */
+  .gp-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #21262d;
   }
-
-  /* S/R */
-  .sr-header {
-    color: #58a6ff;
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 12px;
-    margin-bottom: 6px;
+  .gp-row:last-child { border-bottom: none; }
+  .gp-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
   }
-  .sr-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 6px;
-  }
-  .sr-table th {
-    color: #8b949e;
-    font-weight: 500;
+  .gp-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+  .gp-tipo.alcista { background: #1b2d1b; color: #3fb950; }
+  .gp-tipo.bajista { background: #2d1b1b; color: #f85149; }
+  .gp-accion {
     font-size: 11px;
-    padding: 4px 6px;
-    text-align: left;
-    border-bottom: 1px solid #21262d;
+    font-weight: 600;
+    white-space: nowrap;
   }
-  .sr-table td {
-    padding: 5px 6px;
-    border-bottom: 1px solid #21262d;
-    font-size: 12px;
-  }
-  .sr-table tr:last-child td { border-bottom: none; }
-  .sr-precio { font-weight: 600; color: #c9d1d9; font-variant-numeric: tabular-nums; }
-  .sr-dist { color: #8b949e; font-size: 11px; font-variant-numeric: tabular-nums; }
-  .sr-toques { color: #8b949e; font-size: 11px; text-align: center; }
-  .sr-tf {
+  .gp-accion.soporte { color: #3fb950; }
+  .gp-accion.resistencia { color: #f85149; }
+  .gp-tf {
     background: #21262d;
     color: #8b949e;
     font-size: 10px;
     padding: 1px 5px;
     border-radius: 3px;
     font-weight: 600;
+    margin-left: auto;
   }
-  .sr-leyenda {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #21262d;
-    font-size: 10px;
-    color: #484f58;
-    line-height: 1.5;
+  .gp-swing {
+    color: #8b949e;
+    font-size: 11px;
+    margin-bottom: 2px;
   }
-  .sr-leyenda div { margin-bottom: 2px; }
-  .fvg-leyenda {
+  .gp-zona {
+    color: #c9d1d9;
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  .gp-precio {
+    color: #58a6ff;
+    font-weight: 600;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .gp-precio::before {
+    content: "→ ";
+    color: #8b949e;
+    font-weight: 400;
+  }
+  .gp-leyenda {
     margin-top: 12px;
     padding-top: 10px;
     border-top: 1px solid #21262d;
@@ -363,6 +315,23 @@
     color: #484f58;
     line-height: 1.6;
   }
+  .gp-leyenda div { margin-bottom: 3px; }
+  .gp-leyenda .verde { color: #3fb950; font-weight: 600; }
+  .gp-leyenda .rojo { color: #f85149; font-weight: 600; }
+
+  /* S/R */
+  .sr-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
+  .sr-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+  .sr-table th { color: #8b949e; font-weight: 500; font-size: 11px; padding: 4px 6px; text-align: left; border-bottom: 1px solid #21262d; }
+  .sr-table td { padding: 5px 6px; border-bottom: 1px solid #21262d; font-size: 12px; }
+  .sr-table tr:last-child td { border-bottom: none; }
+  .sr-precio { font-weight: 600; color: #c9d1d9; font-variant-numeric: tabular-nums; }
+  .sr-dist { color: #8b949e; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .sr-toques { color: #8b949e; font-size: 11px; text-align: center; }
+  .sr-tf { background: #21262d; color: #8b949e; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+  .sr-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.5; }
+  .sr-leyenda div { margin-bottom: 2px; }
+  .fvg-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
   .fvg-leyenda div { margin-bottom: 3px; }
   .fvg-leyenda .verde { color: #3fb950; font-weight: 600; }
   .fvg-leyenda .rojo { color: #f85149; font-weight: 600; }
@@ -372,7 +341,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.6</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.0</p>
 
   <div class="layout">
 
@@ -473,6 +442,11 @@
 
     <div class="col-paneles">
 
+      <div class="card" id="gp-panel" style="display:none;">
+        <h2>📐 Golden Pocket — <span id="gp-cripto-nombre">BTC</span></h2>
+        <div id="gp-content"></div>
+      </div>
+
       <div class="card" id="fvg-panel" style="display:none;">
         <h2>📊 FVG — <span id="fvg-cripto-nombre">BTC</span></h2>
         <div id="fvg-content"></div>
@@ -502,7 +476,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v5.6 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.0 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -514,6 +488,7 @@ const DECIMALES = { BTCUSDT: 2, HYPEUSDT: 3, DOGEUSDT: 5, PEPEUSDT: 10 };
 let rsiDataGlobal = null;
 let fvgDataGlobal = null;
 let srDataGlobal = null;
+let gpDataGlobal = null;
 
 function fmt(n, dec = 2) {
   if (isNaN(n) || n === null || n === undefined) return '—';
@@ -560,6 +535,7 @@ function cambiarCripto() {
   cargarRSI();
   cargarFVG();
   cargarSR();
+  cargarGP();
   mostrarPrecioActual();
 }
 
@@ -1034,6 +1010,75 @@ async function cargarSR() {
   }
 }
 
+async function cargarGP() {
+  const cripto = document.getElementById('cripto').value;
+  const panel = document.getElementById('gp-panel');
+  const content = document.getElementById('gp-content');
+  const nombre = document.getElementById('gp-cripto-nombre');
+  nombre.textContent = NOMBRES[cripto] || cripto;
+
+  try {
+    if (!gpDataGlobal) {
+      const response = await fetch('gp_data.json?t=' + Date.now());
+      gpDataGlobal = await response.json();
+    }
+    const data = gpDataGlobal.data[cripto];
+    if (!data) {
+      content.innerHTML = '<div class="info">No hay datos de Golden Pocket para esta cripto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    const tfs = ['1h', '4h', '1d', '1w'];
+    let html = '';
+    let hayDatos = false;
+
+    tfs.forEach(tf => {
+      const gp = data[tf];
+      if (!gp) return;
+      hayDatos = true;
+      const tipoClase = gp.tipo === 'alcista' ? 'alcista' : 'bajista';
+      const accionClase = gp.accion === 'SOPORTE' ? 'soporte' : 'resistencia';
+      const accionTexto = gp.accion === 'SOPORTE' ? 'SOPORTE → Posible LONG' : 'RESISTENCIA → Posible SHORT';
+      
+      html += `<div class="gp-row">
+        <div class="gp-header">
+          <span class="gp-tipo ${tipoClase}">${gp.tipo.toUpperCase()}</span>
+          <span class="gp-accion ${accionClase}">${accionTexto}</span>
+          <span class="gp-tf">${tf.toUpperCase()}</span>
+        </div>
+        <div class="gp-swing">Swing: ${fmtPrecio(gp.swing_low, cripto)} → ${fmtPrecio(gp.swing_high, cripto)}</div>
+        <div class="gp-zona">Zona: ${fmtPrecio(gp.zona_desde, cripto)} – ${fmtPrecio(gp.zona_hasta, cripto)}</div>
+        <div class="gp-precio">${fmtPrecio(gp.precio_sugerido, cripto)}</div>
+      </div>`;
+    });
+
+    if (!hayDatos) {
+      content.innerHTML = '<div class="info">No hay datos de Golden Pocket para esta cripto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    html += `<div class="gp-leyenda">
+      <div><span class="verde">🟢 Alcista</span> = SOPORTE → Posible LONG</div>
+      <div><span class="rojo">🔴 Bajista</span> = RESISTENCIA → Posible SHORT</div>
+      <div><strong>Swing:</strong> Inicio → Fin del impulso (0 → 1)</div>
+      <div><strong>Zona:</strong> Golden Pocket (0,5 – 0,618)</div>
+      <div><strong>→</strong> = Precio sugerido (E1)</div>
+    </div>`;
+
+    const fecha = gpDataGlobal.last_update ? new Date(gpDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
+    content.innerHTML = html;
+    panel.style.display = 'block';
+
+  } catch (error) {
+    console.log('Error cargando GP:', error);
+    content.innerHTML = '<div class="info">No se pudieron cargar los datos de Golden Pocket.</div>';
+    panel.style.display = 'block';
+  }
+}
+
 function detectarConfluencias(fvgs) {
   const confluencias = [];
   for (let i = 0; i < fvgs.length; i++) {
@@ -1194,12 +1239,14 @@ async function cargarSentimiento() {
 cambiarModo();
 cargarRSI();
 cargarFVG();
-cargarSR().then(() => mostrarPrecioActual());
+cargarSR();
+cargarGP();
 cargarEventos();
 cargarSentimiento();
 setInterval(cargarRSI, 600000);
 setInterval(cargarFVG, 600000);
 setInterval(cargarSR, 600000);
+setInterval(cargarGP, 600000);
 setInterval(cargarEventos, 600000);
 setInterval(cargarSentimiento, 300000);
 </script>
