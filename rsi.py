@@ -11,10 +11,10 @@ FVG_TEMPORALIDADES = ['1h', '4h', '1d']
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 GP_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 
-# Configuración por temporalidad (AJUSTADA)
+# Configuración por temporalidad
 VELAS_POR_TF = {
-    '1h': 300,   # ← Antes 100
-    '4h': 300,   # ← Antes 200
+    '1h': 300,
+    '4h': 300,
     '1d': 300,
     '1w': 200
 }
@@ -28,11 +28,11 @@ FVG_MAX_DISTANCIA_PCT = {
 
 FVG_MIN_TAMANO_PCT = 0.15
 
-# Configuración de S/R (AJUSTADA)
+# Fuerza de pivote (igual a AutoFib: 5)
 SWING_STRENGTH = {
-    '1h': 2,   # ← Antes 3
-    '4h': 3,   # ← Antes 3 (igual)
-    '1d': 4,
+    '1h': 5,
+    '4h': 5,
+    '1d': 5,
     '1w': 5
 }
 
@@ -169,6 +169,26 @@ def detectar_pivotes(df, strength):
     return pivotes_altos, pivotes_bajos
 
 
+def encontrar_ultimo_impulso(pivotes_altos, pivotes_bajos):
+    """Encuentra el último par de pivotes consecutivos."""
+    todos = []
+    for p in pivotes_altos:
+        todos.append({'tipo': 'alto', 'precio': p['precio'], 'indice': p['indice']})
+    for p in pivotes_bajos:
+        todos.append({'tipo': 'bajo', 'precio': p['precio'], 'indice': p['indice']})
+    
+    todos.sort(key=lambda x: x['indice'])
+    
+    # Buscar el último par consecutivo
+    for i in range(len(todos) - 1, 0, -1):
+        actual = todos[i]
+        anterior = todos[i - 1]
+        if actual['tipo'] != anterior['tipo']:
+            return anterior, actual
+    
+    return None, None
+
+
 def agrupar_pivotes(pivotes, precio_actual, cluster_pct, min_toques):
     if not pivotes:
         return []
@@ -209,7 +229,7 @@ def calcular_sr_par(exchange, symbol, timeframe):
 
         precio_actual = float(df['close'].iloc[-1])
         symbol_limpio = symbol.replace('/', '')
-        strength = SWING_STRENGTH.get(timeframe, 3)
+        strength = SWING_STRENGTH.get(timeframe, 5)
         cluster_pct = calcular_cluster_pct(df)
         min_toques = SR_MIN_TOQUES.get(symbol_limpio, 2)
 
@@ -246,20 +266,25 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
         df['low'] = df['low'].astype(float)
 
         precio_actual = float(df['close'].iloc[-1])
-        strength = SWING_STRENGTH.get(timeframe, 3)
+        strength = SWING_STRENGTH.get(timeframe, 5)
 
         pivotes_altos, pivotes_bajos = detectar_pivotes(df, strength)
 
         if not pivotes_altos or not pivotes_bajos:
             return None
 
-        ultimo_alto = pivotes_altos[-1]
-        ultimo_bajo = pivotes_bajos[-1]
+        # Buscar el último impulso consecutivo
+        pivote_inicio, pivote_fin = encontrar_ultimo_impulso(pivotes_altos, pivotes_bajos)
 
-        if ultimo_alto['indice'] > ultimo_bajo['indice']:
+        if not pivote_inicio or not pivote_fin:
+            return None
+
+        # Determinar tipo según el pivote final
+        if pivote_fin['tipo'] == 'alto':
+            # Impulso alcista (terminó en alto)
             tipo = 'alcista'
-            swing_low = ultimo_bajo['precio']
-            swing_high = ultimo_alto['precio']
+            swing_low = pivote_inicio['precio']
+            swing_high = pivote_fin['precio']
             rango = swing_high - swing_low
             nivel_05 = swing_low + rango * 0.5
             nivel_0618 = swing_low + rango * 0.618
@@ -267,9 +292,10 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
             zona_hasta = max(nivel_05, nivel_0618)
             accion = 'SOPORTE'
         else:
+            # Impulso bajista (terminó en bajo)
             tipo = 'bajista'
-            swing_high = ultimo_alto['precio']
-            swing_low = ultimo_bajo['precio']
+            swing_high = pivote_inicio['precio']
+            swing_low = pivote_fin['precio']
             rango = swing_high - swing_low
             nivel_05 = swing_high - rango * 0.5
             nivel_0618 = swing_high - rango * 0.618
@@ -371,7 +397,7 @@ def main():
     with open('gp_data.json', 'w') as f:
         json.dump(gp_resultado, f, indent=2)
 
-    print("\n✅ Datos guardados en rsi_data.json, fvg_data.json, sr_data.json y gp_data.json")
+    print("\n✅ Datos guardados")
 
 
 if __name__ == '__main__':
