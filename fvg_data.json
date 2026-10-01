@@ -1,9 +1,16 @@
 {
-  "last_update": "2026-10-01T18:18:15.313116+00:00",
+  "last_update": "2026-10-01T18:55:25.952033+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [],
       "4h": [
+        {
+          "tipo": "alcista",
+          "desde": 78473.5,
+          "hasta": 80568.6,
+          "mitigado": false,
+          "timestamp": 21
+        },
         {
           "tipo": "alcista",
           "desde": 81887.8,
@@ -79,13 +86,6 @@
           "hasta": 87.672,
           "mitigado": false,
           "timestamp": 73
-        },
-        {
-          "tipo": "bajista",
-          "desde": 87.876,
-          "hasta": 88.335,
-          "mitigado": false,
-          "timestamp": 97
         }
       ],
       "4h": [
@@ -102,13 +102,6 @@
           "hasta": 92.75,
           "mitigado": false,
           "timestamp": 75
-        },
-        {
-          "tipo": "bajista",
-          "desde": 88.213,
-          "hasta": 88.402,
-          "mitigado": false,
-          "timestamp": 99
         }
       ],
       "1d": [
@@ -122,15 +115,7 @@
       ]
     },
     "DOGEUSDT": {
-      "1h": [
-        {
-          "tipo": "bajista",
-          "desde": 0.09455,
-          "hasta": 0.09546,
-          "mitigado": false,
-          "timestamp": 89
-        }
-      ],
+      "1h": [],
       "4h": [
         {
           "tipo": "alcista",
