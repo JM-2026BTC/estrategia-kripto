@@ -24,7 +24,7 @@ FVG_MIN_TAMANO_PCT = 0.15
 SR_VELAS = {'1h': 100, '4h': 100, '1d': 300, '1w': 200}
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 SR_STRENGTH = {'1h': 3, '4h': 3, '1d': 4, '1w': 5}
-SR_MIN_TOQUES = {'BTCUSDT': 3, 'HYPEUSDT': 2, 'DOGEUSDT': 2, 'PEPEUSDT': 2}
+SR_MIN_TOQUES = {'BTCUSDT': 2, 'HYPEUSDT': 2, 'DOGEUSDT': 2, 'PEPEUSDT': 2}
 SR_MAX_ZONAS = 4
 
 # Golden Pocket
