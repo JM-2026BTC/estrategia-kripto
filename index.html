@@ -210,7 +210,7 @@
   .rsi-tf { color: #8b949e; font-size: 13px; }
   .rsi-val { font-weight: 600; font-size: 14px; }
 
-  /* FVG */
+  /* FVG - Responsive */
   .fvg-confluencia {
     background: #1b2530;
     border-left: 3px solid #d29922;
@@ -229,19 +229,57 @@
     padding-bottom: 4px;
   }
   .fvg-row {
-    padding: 6px 0;
-    font-size: 13px;
+    padding: 8px 0;
     border-bottom: 1px solid #21262d;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
   }
   .fvg-row:last-child { border-bottom: none; }
-  .fvg-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+  .fvg-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .fvg-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
   .fvg-tipo.alcista { background: #1b2d1b; color: #3fb950; }
   .fvg-tipo.bajista { background: #2d1b1b; color: #f85149; }
-  .fvg-accion-long { color: #3fb950; font-size: 11px; font-weight: 600; margin-left: 6px; }
-  .fvg-accion-short { color: #f85149; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .fvg-zona { color: #8b949e; font-size: 11px; white-space: nowrap; }
+  .fvg-accion-long { color: #3fb950; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .fvg-accion-short { color: #f85149; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .fvg-precio {
+    font-weight: 600;
+    color: #58a6ff;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .fvg-precio::before {
+    content: "→ ";
+    color: #8b949e;
+    font-weight: 400;
+  }
+
+  /* Responsive FVG: en celular se apila */
+  @media (max-width: 600px) {
+    .fvg-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .fvg-info {
+      width: 100%;
+    }
+    .fvg-precio {
+      margin-top: 2px;
+      font-size: 14px;
+    }
+    .fvg-confluencia .fvg-info {
+      flex-wrap: wrap;
+    }
+  }
 
   /* S/R */
   .sr-header {
@@ -308,7 +346,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.4</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.5</p>
 
   <div class="layout">
 
@@ -438,7 +476,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v5.4 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v5.5 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -826,11 +864,13 @@ async function cargarFVG() {
         const accion = c.tipo === 'alcista' ? '<span class="fvg-accion-long">— Posible LONG</span>' : '<span class="fvg-accion-short">— Posible SHORT</span>';
         const tfsStr = c.tfs.join(' + ').toUpperCase();
         html += `<div class="fvg-confluencia">
-          <span class="fvg-tipo ${tipoClase}">${c.tipo.toUpperCase()}</span>
-          <span style="font-size:11px; color:#8b949e; margin-left:6px;">[${tfsStr}]</span>
-          ${accion}
+          <div class="fvg-info">
+            <span class="fvg-tipo ${tipoClase}">${c.tipo.toUpperCase()}</span>
+            <span style="font-size:11px; color:#8b949e;">[${tfsStr}]</span>
+            ${accion}
+          </div>
           <div style="font-size:11px; color:#8b949e; margin-top:4px;">${fmtPrecio(c.desde, cripto)} – ${fmtPrecio(c.hasta, cripto)}</div>
-          <div class="fvg-precio" style="margin-top:4px;">→ ${fmtPrecio(c.precio, cripto)}</div>
+          <div class="fvg-precio" style="margin-top:4px;">${fmtPrecio(c.precio, cripto)}</div>
         </div>`;
       });
       html += `<div style="margin-top:12px;"></div>`;
@@ -846,9 +886,9 @@ async function cargarFVG() {
         const confluye = confluencias.some(c => c.tfs.includes(tf) && c.desde <= fvg.hasta && c.hasta >= fvg.desde);
         const estrella = confluye ? ' ⭐' : '';
         html += `<div class="fvg-row">
-          <div>
+          <div class="fvg-info">
             <span class="fvg-tipo ${tipoClase}">${fvg.tipo.toUpperCase()}</span>
-            <span class="fvg-zona" style="margin-left:6px;">${fmtPrecio(fvg.desde, cripto)} – ${fmtPrecio(fvg.hasta, cripto)}${estrella}</span>
+            <span class="fvg-zona">${fmtPrecio(fvg.desde, cripto)} – ${fmtPrecio(fvg.hasta, cripto)}${estrella}</span>
             ${accion}
           </div>
           <div class="fvg-precio">${fmtPrecio(precio, cripto)}</div>
@@ -856,7 +896,6 @@ async function cargarFVG() {
       });
     });
 
-    // Leyenda
     html += `<div class="fvg-leyenda">
       <div><span class="verde">🟢 Alcista</span> = Zona de rebote → <span class="verde">Posible LONG</span></div>
       <div><span class="rojo">🔴 Bajista</span> = Zona de rechazo → <span class="rojo">Posible SHORT</span></div>
