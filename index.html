@@ -58,7 +58,6 @@
   }
   button:hover { background: #2ea043; }
 
-  /* Fila de cripto con precio al lado */
   .cripto-row {
     display: flex;
     align-items: center;
@@ -147,14 +146,43 @@
     margin-top: 12px;
   }
   .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 30px; }
+
+  /* Eventos */
   .evento { padding: 8px 0; border-bottom: 1px solid #21262d; }
   .evento:last-child { border-bottom: none; }
   .evento-fecha { color: #8b949e; font-size: 12px; }
   .evento-nombre { color: #c9d1d9; font-size: 13px; margin-top: 2px; }
+  .evento-dia-header {
+    color: #58a6ff;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #21262d;
+    padding-bottom: 4px;
+  }
+  .evento-proximo {
+    background: #2d1b1b;
+    border-left: 3px solid #f85149;
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .evento-proximo-titulo {
+    color: #f85149;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* RSI */
   .rsi-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #21262d; }
   .rsi-row:last-child { border-bottom: none; }
   .rsi-tf { color: #8b949e; font-size: 13px; }
   .rsi-val { font-weight: 600; font-size: 14px; }
+
+  /* FVG */
   .fvg-confluencia {
     background: #1b2530;
     border-left: 3px solid #d29922;
@@ -239,7 +267,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.1</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v5.2</p>
 
   <div class="layout">
 
@@ -355,21 +383,21 @@
         <div id="rsi-content"></div>
       </div>
 
-      <div class="card" id="sentiment-panel" style="display:none;">
-        <h2>📊 Sentimiento del Mercado</h2>
-        <div id="sentiment-content"></div>
-      </div>
-
       <div class="card" id="eventos-panel" style="display:none;">
         <h2>📅 Eventos Económicos</h2>
         <div id="eventos-content"></div>
+      </div>
+
+      <div class="card" id="sentiment-panel" style="display:none;">
+        <h2>📊 Sentimiento del Mercado</h2>
+        <div id="sentiment-content"></div>
       </div>
 
     </div>
 
   </div>
 
-  <p class="footer">GENISYS v5.1 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v5.2 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -894,6 +922,99 @@ function detectarConfluencias(fvgs) {
   return confluencias;
 }
 
+// ====== EVENTOS ECONÓMICOS (MEJORADO) ======
+async function cargarEventos() {
+  const panel = document.getElementById('eventos-panel');
+  const content = document.getElementById('eventos-content');
+  try {
+    const response = await fetch('https://biquote.io/api/calendar?importance=high&countries=US');
+    const data = await response.json();
+    let eventos = [];
+    if (Array.isArray(data)) eventos = data;
+    else if (data.events) eventos = data.events;
+    else if (data.data) eventos = data.data;
+
+    // 1. Filtrar solo eventos futuros
+    const ahora = new Date();
+    eventos = eventos.filter(ev => {
+      const fechaRaw = ev.date || ev.time || ev.datetime;
+      if (!fechaRaw) return false;
+      return new Date(fechaRaw) >= ahora;
+    });
+
+    // 2. Ordenar por fecha (más cercanos primero)
+    eventos.sort((a, b) => {
+      const fechaA = new Date(a.date || a.time || a.datetime);
+      const fechaB = new Date(b.date || b.time || b.datetime);
+      return fechaA - fechaB;
+    });
+
+    if (eventos.length === 0) {
+      content.innerHTML = '<div class="info">No hay eventos próximos de alto impacto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    // 3. Calcular el próximo evento
+    const proximo = eventos[0];
+    const fechaProximo = new Date(proximo.date || proximo.time || proximo.datetime);
+    const diffMs = fechaProximo - ahora;
+    const diffHoras = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutos = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    let tiempoRestante = '';
+    if (diffHoras > 0) tiempoRestante = `en ${diffHoras}h ${diffMinutos}min`;
+    else if (diffMinutos > 0) tiempoRestante = `en ${diffMinutos}min`;
+    else tiempoRestante = 'AHORA';
+
+    let html = '';
+
+    // Destacar el próximo
+    html += `<div class="evento-proximo">
+      <div class="evento-proximo-titulo">🔥 PRÓXIMO ${tiempoRestante}</div>
+      <div class="evento-fecha">${fechaProximo.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} ARG</div>
+      <div class="evento-nombre">🔴 ${proximo.name || proximo.title || proximo.event || 'Evento'} (${proximo.country || proximo.currency || 'US'})</div>
+    </div>`;
+
+    // Agrupar por día
+    const eventosPorDia = {};
+    eventos.slice(1, 10).forEach(ev => {
+      const fechaRaw = ev.date || ev.time || ev.datetime;
+      const d = new Date(fechaRaw);
+      const dia = d.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: '2-digit', month: '2-digit' });
+      if (!eventosPorDia[dia]) eventosPorDia[dia] = [];
+      eventosPorDia[dia].push({ ...ev, fecha: d });
+    });
+
+    const hoy = ahora.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: '2-digit', month: '2-digit' });
+    const manana = new Date(ahora.getTime() + 24 * 60 * 60 * 1000).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: '2-digit', month: '2-digit' });
+
+    Object.keys(eventosPorDia).forEach(dia => {
+      let tituloDia = dia;
+      if (dia === hoy) tituloDia = `HOY (${dia})`;
+      else if (dia === manana) tituloDia = `MAÑANA (${dia})`;
+
+      html += `<div class="evento-dia-header">── ${tituloDia.toUpperCase()} ──</div>`;
+      eventosPorDia[dia].forEach(ev => {
+        const fechaStr = ev.fecha.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit' });
+        const nombre = ev.name || ev.title || ev.event || 'Evento';
+        const pais = ev.country || ev.currency || 'US';
+        html += `<div class="evento">
+          <div class="evento-fecha">${fechaStr} ARG</div>
+          <div class="evento-nombre">🔴 ${nombre} (${pais})</div>
+        </div>`;
+      });
+    });
+
+    content.innerHTML = html + `<div style="margin-top:12px; font-size:11px; color:#484f58;">Fuente: Biquote | ${new Date().toLocaleString('es-AR')}</div>`;
+    panel.style.display = 'block';
+
+  } catch (error) {
+    console.log('Error cargando eventos:', error);
+    content.innerHTML = '<div class="info">No se pudieron cargar los eventos. Recargá la página.</div>';
+    panel.style.display = 'block';
+  }
+}
+
 async function cargarSentimiento() {
   const panel = document.getElementById('sentiment-panel');
   const content = document.getElementById('sentiment-content');
@@ -929,53 +1050,17 @@ async function cargarSentimiento() {
   }
 }
 
-async function cargarEventos() {
-  const panel = document.getElementById('eventos-panel');
-  const content = document.getElementById('eventos-content');
-  try {
-    const response = await fetch('https://biquote.io/api/calendar?importance=high&countries=US');
-    const data = await response.json();
-    let eventos = [];
-    if (Array.isArray(data)) eventos = data;
-    else if (data.events) eventos = data.events;
-    else if (data.data) eventos = data.data;
-    if (eventos.length === 0) {
-      content.innerHTML = '<div class="info">No hay eventos de alto impacto esta semana.</div>';
-      panel.style.display = 'block';
-      return;
-    }
-    let html = '';
-    eventos.slice(0, 6).forEach(ev => {
-      const fechaRaw = ev.date || ev.time || ev.datetime;
-      let fechaStr = 'Fecha no disponible';
-      if (fechaRaw) {
-        const d = new Date(fechaRaw);
-        fechaStr = d.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-      }
-      const nombre = ev.name || ev.title || ev.event || 'Evento';
-      const pais = ev.country || ev.currency || 'US';
-      html += `<div class="evento"><div class="evento-fecha">${fechaStr} ARG</div><div class="evento-nombre">🔴 ${nombre} (${pais})</div></div>`;
-    });
-    content.innerHTML = html + `<div style="margin-top:12px; font-size:11px; color:#484f58;">Fuente: Biquote | ${new Date().toLocaleString('es-AR')}</div>`;
-    panel.style.display = 'block';
-  } catch (error) {
-    console.log('Error cargando eventos:', error);
-    content.innerHTML = '<div class="info">No se pudieron cargar los eventos. Recargá la página.</div>';
-    panel.style.display = 'block';
-  }
-}
-
 cambiarModo();
 cargarRSI();
 cargarFVG();
 cargarSR().then(() => mostrarPrecioActual());
-cargarSentimiento();
 cargarEventos();
+cargarSentimiento();
 setInterval(cargarRSI, 600000);
 setInterval(cargarFVG, 600000);
 setInterval(cargarSR, 600000);
-setInterval(cargarSentimiento, 300000);
 setInterval(cargarEventos, 600000);
+setInterval(cargarSentimiento, 300000);
 </script>
 </body>
 </html>
