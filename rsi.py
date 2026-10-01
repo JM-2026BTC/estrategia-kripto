@@ -11,10 +11,10 @@ FVG_TEMPORALIDADES = ['1h', '4h', '1d']
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 GP_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 
-# Configuración por temporalidad
+# Configuración por temporalidad (AJUSTADA)
 VELAS_POR_TF = {
-    '1h': 100,
-    '4h': 200,
+    '1h': 300,   # ← Antes 100
+    '4h': 300,   # ← Antes 200
     '1d': 300,
     '1w': 200
 }
@@ -28,10 +28,10 @@ FVG_MAX_DISTANCIA_PCT = {
 
 FVG_MIN_TAMANO_PCT = 0.15
 
-# Configuración de S/R
+# Configuración de S/R (AJUSTADA)
 SWING_STRENGTH = {
-    '1h': 3,
-    '4h': 3,
+    '1h': 2,   # ← Antes 3
+    '4h': 3,   # ← Antes 3 (igual)
     '1d': 4,
     '1w': 5
 }
@@ -47,7 +47,6 @@ SR_MAX_ZONAS = 4
 
 
 def redondear(valor, precio_actual):
-    """Redondea según la magnitud del precio."""
     if precio_actual >= 1000:
         return round(valor, 2)
     elif precio_actual >= 1:
@@ -61,7 +60,6 @@ def redondear(valor, precio_actual):
 
 
 def calcular_cluster_pct(df):
-    """Calcula el cluster automáticamente según el ATR (40%)."""
     try:
         rango = (df['high'] - df['low']).tail(14).mean()
         precio = df['close'].iloc[-1]
@@ -239,7 +237,6 @@ def calcular_sr_par(exchange, symbol, timeframe):
 
 
 def calcular_golden_pocket_par(exchange, symbol, timeframe):
-    """Calcula el Golden Pocket (0.5 - 0.618) según el último impulso."""
     try:
         limit = VELAS_POR_TF.get(timeframe, 100)
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
@@ -259,7 +256,6 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
         ultimo_alto = pivotes_altos[-1]
         ultimo_bajo = pivotes_bajos[-1]
 
-        # Determinar tipo por el más reciente
         if ultimo_alto['indice'] > ultimo_bajo['indice']:
             tipo = 'alcista'
             swing_low = ultimo_bajo['precio']
