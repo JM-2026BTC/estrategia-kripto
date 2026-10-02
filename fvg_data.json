@@ -1,9 +1,16 @@
 {
-  "last_update": "2026-10-02T00:19:52.633593+00:00",
+  "last_update": "2026-10-02T01:14:13.706466+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [],
       "4h": [
+        {
+          "tipo": "alcista",
+          "desde": 78473.5,
+          "hasta": 80568.6,
+          "mitigado": false,
+          "timestamp": 19
+        },
         {
           "tipo": "alcista",
           "desde": 81887.8,
@@ -120,6 +127,13 @@
       "1d": [
         {
           "tipo": "alcista",
+          "desde": 0.07641,
+          "hasta": 0.0803,
+          "mitigado": false,
+          "timestamp": 257
+        },
+        {
+          "tipo": "alcista",
           "desde": 0.08104,
           "hasta": 0.08138,
           "mitigado": false,
@@ -144,6 +158,13 @@
     "PEPEUSDT": {
       "1h": [],
       "4h": [
+        {
+          "tipo": "alcista",
+          "desde": 4.052e-06,
+          "hasta": 4.207e-06,
+          "mitigado": false,
+          "timestamp": 36
+        },
         {
           "tipo": "bajista",
           "desde": 4.457e-06,
