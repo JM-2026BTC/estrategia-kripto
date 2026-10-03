@@ -17,7 +17,6 @@
   h1 { color: #58a6ff; font-size: 28px; margin-bottom: 6px; letter-spacing: 1px; }
   .sub { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
 
-  /* Banner de estado de la semana */
   .banner-semana {
     text-align: center;
     font-size: 12px;
@@ -188,7 +187,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.1</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.2</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -325,7 +324,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.1 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.2 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -1005,16 +1004,10 @@ async function cargarEventos() {
       texto = '🟡 1 evento importante esta semana';
     }
     
-    // Fecha de la semana
-    const hoy = new Date();
-    const diaSemana = hoy.getDay();
-    const diffLunes = (diaSemana === 0 ? -6 : 1 - diaSemana);
-    const lunes = new Date(hoy);
-    lunes.setDate(hoy.getDate() + diffLunes);
-    const domingo = new Date(lunes);
-    domingo.setDate(lunes.getDate() + 6);
+    // Próximos 7 días
+    const hasta = new Date(ahora.getTime() + 7 * 24 * 60 * 60 * 1000);
     const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
-    const rangoSemana = `${formatoFecha(lunes)} al ${formatoFecha(domingo)}`;
+    const rangoSemana = `próximos 7 días (${formatoFecha(ahora)} al ${formatoFecha(hasta)})`;
     
     // Mostrar banner
     const banner = document.getElementById('banner-semana');
