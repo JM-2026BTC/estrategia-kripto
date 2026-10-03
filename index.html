@@ -16,6 +16,26 @@
   .container { max-width: 1100px; margin: 0 auto; }
   h1 { color: #58a6ff; font-size: 28px; margin-bottom: 6px; letter-spacing: 1px; }
   .sub { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
+
+  /* Banner de estado de la semana */
+  .banner-semana {
+    text-align: center;
+    font-size: 12px;
+    color: #8b949e;
+    padding: 6px 10px;
+    margin-bottom: 16px;
+    border-top: 1px solid #21262d;
+    border-bottom: 1px solid #21262d;
+    letter-spacing: 0.3px;
+    display: none;
+  }
+  .banner-semana.activo { display: block; }
+  .banner-semana.tranquila { color: #3fb950; }
+  .banner-semana.uno { color: #d29922; }
+  .banner-semana.cuidado { color: #d29922; }
+  .banner-semana.peligrosa { color: #f85149; }
+  .banner-semana.alerta { color: #f85149; font-weight: 600; }
+
   .layout { display: flex; flex-direction: column; gap: 16px; }
   @media (min-width: 900px) {
     .layout { flex-direction: row; align-items: flex-start; }
@@ -58,57 +78,17 @@
   }
   button:hover { background: #2ea043; }
 
-  .cripto-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 6px;
-  }
-  .select-chico {
-    width: 180px !important;
-    flex-shrink: 0;
-  }
-  .precio-actual {
-    font-size: 13px;
-    color: #58a6ff;
-    font-weight: 600;
-    margin-left: auto;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
+  .cripto-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .select-chico { width: 180px !important; flex-shrink: 0; }
+  .precio-actual { font-size: 13px; color: #58a6ff; font-weight: 600; margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  .entrada-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-  }
-  .entrada-row label {
-    margin: 0;
-    min-width: 30px;
-    font-size: 13px;
-    color: #8b949e;
-  }
-  .input-chico {
-    width: 130px !important;
-    flex-shrink: 0;
-  }
-  .resumen-entrada {
-    font-size: 11px;
-    color: #8b949e;
-    margin-left: auto;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
+  .entrada-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .entrada-row label { margin: 0; min-width: 30px; font-size: 13px; color: #8b949e; }
+  .input-chico { width: 130px !important; flex-shrink: 0; }
+  .resumen-entrada { font-size: 11px; color: #8b949e; margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .resumen-entrada .prom { color: #58a6ff; }
   .resumen-entrada .liq { color: #f85149; }
-  .resumen-total {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid #21262d;
-    font-size: 13px;
-    color: #8b949e;
-  }
+  .resumen-total { margin-top: 14px; padding-top: 12px; border-top: 1px solid #21262d; font-size: 13px; color: #8b949e; }
   .resumen-total strong { color: #58a6ff; }
 
   .resultado { display: none; }
@@ -121,30 +101,9 @@
   .verde { color: #3fb950; }
   .rojo { color: #f85149; }
   .amarillo { color: #d29922; }
-  .alerta {
-    background: #2d1b1b;
-    border-left: 3px solid #f85149;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-top: 12px;
-  }
-  .ok {
-    background: #1b2d1b;
-    border-left: 3px solid #3fb950;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-top: 12px;
-  }
-  .info {
-    background: #1b2530;
-    border-left: 3px solid #58a6ff;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-top: 12px;
-  }
+  .alerta { background: #2d1b1b; border-left: 3px solid #f85149; padding: 10px 14px; border-radius: 4px; font-size: 13px; margin-top: 12px; }
+  .ok { background: #1b2d1b; border-left: 3px solid #3fb950; padding: 10px 14px; border-radius: 4px; font-size: 13px; margin-top: 12px; }
+  .info { background: #1b2530; border-left: 3px solid #58a6ff; padding: 10px 14px; border-radius: 4px; font-size: 13px; margin-top: 12px; }
   .footer { text-align: center; color: #484f58; font-size: 11px; margin-top: 30px; }
 
   /* Eventos */
@@ -152,39 +111,10 @@
   .evento:last-child { border-bottom: none; }
   .evento-fecha { color: #8b949e; font-size: 12px; }
   .evento-nombre { color: #c9d1d9; font-size: 13px; margin-top: 2px; }
-  .evento-dia-header {
-    color: #58a6ff;
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 12px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid #21262d;
-    padding-bottom: 4px;
-  }
-  .evento-proximo {
-    background: #2d1b1b;
-    border-left: 3px solid #f85149;
-    padding: 10px 12px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-  }
-  .evento-proximo-titulo {
-    color: #f85149;
-    font-size: 11px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-  }
-  .relevancia-tag {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 3px;
-    margin-left: 6px;
-    vertical-align: middle;
-    white-space: nowrap;
-    display: inline-block;
-  }
+  .evento-dia-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; border-bottom: 1px solid #21262d; padding-bottom: 4px; }
+  .evento-proximo { background: #2d1b1b; border-left: 3px solid #f85149; padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; }
+  .evento-proximo-titulo { color: #f85149; font-size: 11px; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .relevancia-tag { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; white-space: nowrap; display: inline-block; }
   .relevancia-max { background: #3d1414; color: #f85149; border: 1px solid #f85149; }
   .relevancia-alto { background: #3d2414; color: #d29922; border: 1px solid #d29922; }
   .relevancia-medio { background: #2d2d14; color: #d29922; border: 1px solid #6e6e2d; }
@@ -197,124 +127,41 @@
   .rsi-val { font-weight: 600; font-size: 14px; }
 
   /* FVG */
-  .fvg-confluencia {
-    background: #1b2530;
-    border-left: 3px solid #d29922;
-    padding: 8px 12px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    font-size: 13px;
-  }
-  .fvg-tf-header {
-    color: #58a6ff;
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 12px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid #21262d;
-    padding-bottom: 4px;
-  }
-  .fvg-row {
-    padding: 8px 0;
-    border-bottom: 1px solid #21262d;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
+  .fvg-confluencia { background: #1b2530; border-left: 3px solid #d29922; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 13px; }
+  .fvg-tf-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; border-bottom: 1px solid #21262d; padding-bottom: 4px; }
+  .fvg-row { padding: 8px 0; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .fvg-row:last-child { border-bottom: none; }
-  .fvg-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+  .fvg-info { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .fvg-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
   .fvg-tipo.alcista { background: #1b2d1b; color: #3fb950; }
   .fvg-tipo.bajista { background: #2d1b1b; color: #f85149; }
   .fvg-zona { color: #8b949e; font-size: 11px; white-space: nowrap; }
   .fvg-accion-long { color: #3fb950; font-size: 11px; font-weight: 600; white-space: nowrap; }
   .fvg-accion-short { color: #f85149; font-size: 11px; font-weight: 600; white-space: nowrap; }
-  .fvg-precio {
-    font-weight: 600;
-    color: #58a6ff;
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  .fvg-precio::before {
-    content: "→ ";
-    color: #8b949e;
-    font-weight: 400;
-  }
+  .fvg-precio { font-weight: 600; color: #58a6ff; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fvg-precio::before { content: "→ "; color: #8b949e; font-weight: 400; }
   @media (max-width: 600px) {
     .fvg-row { flex-direction: column; align-items: flex-start; gap: 4px; }
     .fvg-info { width: 100%; }
     .fvg-precio { margin-top: 2px; font-size: 14px; }
-    .fvg-confluencia .fvg-info { flex-wrap: wrap; }
   }
 
   /* Golden Pocket */
-  .gp-row {
-    padding: 8px 0;
-    border-bottom: 1px solid #21262d;
-  }
+  .gp-row { padding: 8px 0; border-bottom: 1px solid #21262d; }
   .gp-row:last-child { border-bottom: none; }
-  .gp-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
-  }
+  .gp-header { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
   .gp-tipo { font-size: 11px; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
   .gp-tipo.alcista { background: #1b2d1b; color: #3fb950; }
   .gp-tipo.bajista { background: #2d1b1b; color: #f85149; }
-  .gp-accion {
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
+  .gp-accion { font-size: 11px; font-weight: 600; white-space: nowrap; }
   .gp-accion.soporte { color: #3fb950; }
   .gp-accion.resistencia { color: #f85149; }
-  .gp-tf {
-    background: #21262d;
-    color: #8b949e;
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-weight: 600;
-    margin-left: auto;
-  }
-  .gp-swing {
-    color: #8b949e;
-    font-size: 11px;
-    margin-bottom: 2px;
-  }
-  .gp-zona {
-    color: #c9d1d9;
-    font-size: 12px;
-    margin-bottom: 2px;
-  }
-  .gp-precio {
-    color: #58a6ff;
-    font-weight: 600;
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-  }
-  .gp-precio::before {
-    content: "→ ";
-    color: #8b949e;
-    font-weight: 400;
-  }
-  .gp-leyenda {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #21262d;
-    font-size: 10px;
-    color: #484f58;
-    line-height: 1.6;
-  }
+  .gp-tf { background: #21262d; color: #8b949e; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; margin-left: auto; }
+  .gp-swing { color: #8b949e; font-size: 11px; margin-bottom: 2px; }
+  .gp-zona { color: #c9d1d9; font-size: 12px; margin-bottom: 2px; }
+  .gp-precio { color: #58a6ff; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .gp-precio::before { content: "→ "; color: #8b949e; font-weight: 400; }
+  .gp-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
   .gp-leyenda div { margin-bottom: 3px; }
   .gp-leyenda .verde { color: #3fb950; font-weight: 600; }
   .gp-leyenda .rojo { color: #f85149; font-weight: 600; }
@@ -341,7 +188,9 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.0</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.1</p>
+
+  <div id="banner-semana" class="banner-semana"></div>
 
   <div class="layout">
 
@@ -476,7 +325,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.0 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.1 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -1127,6 +976,51 @@ async function cargarEventos() {
       return fechaA - fechaB;
     });
 
+    // Calcular banner de la semana
+    let countMax = 0;
+    let countAlto = 0;
+    let countMedio = 0;
+    eventos.forEach(ev => {
+      const nombre = ev.name || ev.title || ev.event || '';
+      const rel = getRelevanciaBTC(nombre);
+      if (rel.nivel === 'MÁXIMO') countMax++;
+      else if (rel.nivel === 'ALTO') countAlto++;
+      else if (rel.nivel === 'MEDIO') countMedio++;
+    });
+    const importantes = countAlto + countMedio;
+    
+    let estado = 'tranquila';
+    let texto = '🟢 Semana tranquila — sin eventos fuertes';
+    if (countMax > 0) {
+      estado = 'alerta';
+      texto = '🔴🔴 ALERTA — NFP/PCE esta semana';
+    } else if (importantes >= 4) {
+      estado = 'peligrosa';
+      texto = '🔴 Semana peligrosa — 4+ eventos fuertes';
+    } else if (importantes >= 2) {
+      estado = 'cuidado';
+      texto = '🟡 Cuidado — 2-3 eventos importantes';
+    } else if (importantes === 1) {
+      estado = 'uno';
+      texto = '🟡 1 evento importante esta semana';
+    }
+    
+    // Fecha de la semana
+    const hoy = new Date();
+    const diaSemana = hoy.getDay();
+    const diffLunes = (diaSemana === 0 ? -6 : 1 - diaSemana);
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() + diffLunes);
+    const domingo = new Date(lunes);
+    domingo.setDate(lunes.getDate() + 6);
+    const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+    const rangoSemana = `${formatoFecha(lunes)} al ${formatoFecha(domingo)}`;
+    
+    // Mostrar banner
+    const banner = document.getElementById('banner-semana');
+    banner.className = `banner-semana activo ${estado}`;
+    banner.textContent = `── ${texto} · ${rangoSemana} ──`;
+
     if (eventos.length === 0) {
       content.innerHTML = '<div class="info">No hay eventos próximos de alto impacto.</div>';
       panel.style.display = 'block';
@@ -1162,12 +1056,12 @@ async function cargarEventos() {
       eventosPorDia[dia].push({ ...ev, fecha: d });
     });
 
-    const hoy = ahora.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: '2-digit', month: '2-digit' });
+    const hoyStr = ahora.toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: '2-digit', month: '2-digit' });
     const manana = new Date(ahora.getTime() + 24 * 60 * 60 * 1000).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', weekday: 'long', day: '2-digit', month: '2-digit' });
 
     Object.keys(eventosPorDia).forEach(dia => {
       let tituloDia = dia;
-      if (dia === hoy) tituloDia = `HOY (${dia})`;
+      if (dia === hoyStr) tituloDia = `HOY (${dia})`;
       else if (dia === manana) tituloDia = `MAÑANA (${dia})`;
 
       html += `<div class="evento-dia-header">── ${tituloDia.toUpperCase()} ──</div>`;
