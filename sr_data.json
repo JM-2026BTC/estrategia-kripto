@@ -1,9 +1,9 @@
 {
-  "last_update": "2026-10-04T22:13:19.537209+00:00",
+  "last_update": "2026-10-04T23:11:26.090567+00:00",
   "data": {
     "BTCUSDT": {
       "1h": {
-        "precio_actual": 86298.7,
+        "precio_actual": 86518.9,
         "cluster_usado": 0.3,
         "strength_usado": 3,
         "min_toques_usado": 2,
@@ -20,7 +20,7 @@
         ]
       },
       "4h": {
-        "precio_actual": 86298.7,
+        "precio_actual": 86518.9,
         "cluster_usado": 0.3,
         "strength_usado": 3,
         "min_toques_usado": 2,
@@ -46,8 +46,8 @@
         ]
       },
       "1d": {
-        "precio_actual": 86298.8,
-        "cluster_usado": 1.07,
+        "precio_actual": 86518.9,
+        "cluster_usado": 1.08,
         "strength_usado": 4,
         "min_toques_usado": 2,
         "resistencias": [
@@ -76,8 +76,8 @@
         ]
       },
       "1w": {
-        "precio_actual": 86298.7,
-        "cluster_usado": 2.53,
+        "precio_actual": 86518.8,
+        "cluster_usado": 2.52,
         "strength_usado": 5,
         "min_toques_usado": 2,
         "resistencias": [
@@ -104,11 +104,16 @@
     },
     "HYPEUSDT": {
       "1h": {
-        "precio_actual": 90.914,
+        "precio_actual": 90.552,
         "cluster_usado": 0.3,
         "strength_usado": 3,
         "min_toques_usado": 2,
-        "resistencias": [],
+        "resistencias": [
+          {
+            "precio": 90.839,
+            "toques": 3
+          }
+        ],
         "soportes": [
           {
             "precio": 89.67,
@@ -129,8 +134,8 @@
         ]
       },
       "4h": {
-        "precio_actual": 90.914,
-        "cluster_usado": 0.57,
+        "precio_actual": 90.552,
+        "cluster_usado": 0.58,
         "strength_usado": 3,
         "min_toques_usado": 2,
         "resistencias": [
@@ -159,8 +164,8 @@
         ]
       },
       "1d": {
-        "precio_actual": 90.884,
-        "cluster_usado": 1.9,
+        "precio_actual": 90.552,
+        "cluster_usado": 1.92,
         "strength_usado": 4,
         "min_toques_usado": 2,
         "resistencias": [],
@@ -172,8 +177,8 @@
         ]
       },
       "1w": {
-        "precio_actual": 90.914,
-        "cluster_usado": 4.69,
+        "precio_actual": 90.552,
+        "cluster_usado": 4.71,
         "strength_usado": 5,
         "min_toques_usado": 2,
         "resistencias": [],
@@ -182,7 +187,7 @@
     },
     "DOGEUSDT": {
       "1h": {
-        "precio_actual": 0.09673,
+        "precio_actual": 0.09631,
         "cluster_usado": 0.3,
         "strength_usado": 3,
         "min_toques_usado": 2,
@@ -204,7 +209,7 @@
         ]
       },
       "4h": {
-        "precio_actual": 0.09673,
+        "precio_actual": 0.09631,
         "cluster_usado": 0.57,
         "strength_usado": 3,
         "min_toques_usado": 2,
@@ -226,8 +231,8 @@
         ]
       },
       "1d": {
-        "precio_actual": 0.09668,
-        "cluster_usado": 2.62,
+        "precio_actual": 0.09631,
+        "cluster_usado": 2.63,
         "strength_usado": 4,
         "min_toques_usado": 2,
         "resistencias": [
@@ -241,10 +246,6 @@
           }
         ],
         "soportes": [
-          {
-            "precio": 0.09576,
-            "toques": 2
-          },
           {
             "precio": 0.08887,
             "toques": 7
@@ -260,8 +261,8 @@
         ]
       },
       "1w": {
-        "precio_actual": 0.09673,
-        "cluster_usado": 4.42,
+        "precio_actual": 0.09633,
+        "cluster_usado": 4.44,
         "strength_usado": 5,
         "min_toques_usado": 2,
         "resistencias": [
@@ -284,8 +285,8 @@
     },
     "PEPEUSDT": {
       "1h": {
-        "precio_actual": 4.364e-06,
-        "cluster_usado": 0.3,
+        "precio_actual": 4.407e-06,
+        "cluster_usado": 0.31,
         "strength_usado": 3,
         "min_toques_usado": 2,
         "resistencias": [],
@@ -297,8 +298,8 @@
         ]
       },
       "4h": {
-        "precio_actual": 4.364e-06,
-        "cluster_usado": 0.72,
+        "precio_actual": 4.407e-06,
+        "cluster_usado": 0.75,
         "strength_usado": 3,
         "min_toques_usado": 2,
         "resistencias": [
@@ -319,8 +320,8 @@
         ]
       },
       "1d": {
-        "precio_actual": 4.364e-06,
-        "cluster_usado": 3.66,
+        "precio_actual": 4.407e-06,
+        "cluster_usado": 3.67,
         "strength_usado": 4,
         "min_toques_usado": 2,
         "resistencias": [
@@ -345,8 +346,8 @@
         ]
       },
       "1w": {
-        "precio_actual": 4.364e-06,
-        "cluster_usado": 6.49,
+        "precio_actual": 4.407e-06,
+        "cluster_usado": 6.42,
         "strength_usado": 5,
         "min_toques_usado": 2,
         "resistencias": [
