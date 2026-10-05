@@ -8,9 +8,6 @@ CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
 TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 RSI_PERIODO = 14
 
-# ===== CONFIGURACIÓN POR INDICADOR =====
-# Cada indicador usa sus propias velas y parámetros
-
 # RSI
 RSI_VELAS = {'1h': 100, '4h': 100, '1d': 300, '1w': 200}
 
@@ -31,6 +28,14 @@ SR_MAX_ZONAS = 4
 GP_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 200}
 GP_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 GP_STRENGTH = {'1h': 5, '4h': 5, '1d': 5, '1w': 5}
+
+# Liquidaciones
+LIQ_VELAS = 300
+LIQ_APALANCAMIENTOS = [10, 12, 15, 20, 30]
+LIQ_PCT = {10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8}
+LIQ_LOOKBACK = 100
+LIQ_SENSIBILIDAD = 2.0
+LIQ_TOLERANCIA_PCT = 1.0
 
 
 def redondear(valor, precio_actual):
@@ -200,8 +205,6 @@ def agrupar_pivotes(pivotes, precio_actual, cluster_pct, min_toques):
     return zonas
 
 
-# ===== FUNCIONES POR INDICADOR =====
-
 def calcular_rsi_par(exchange, symbol, timeframe):
     try:
         limit = RSI_VELAS.get(timeframe, 100)
@@ -328,6 +331,110 @@ def calcular_golden_pocket_par(exchange, symbol, timeframe):
         return None
 
 
+def calcular_liquidaciones_par(exchange, symbol):
+    try:
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1h', limit=LIQ_VELAS)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        df['high'] = df['high'].astype(float)
+        df['low'] = df['low'].astype(float)
+        df['volume'] = df['volume'].astype(float)
+
+        precio_actual = float(df['close'].iloc[-1])
+
+        volumen = df['volume']
+        media = volumen.rolling(window=LIQ_LOOKBACK).mean()
+        std = volumen.rolling(window=LIQ_LOOKBACK).std()
+        spikes = volumen > (media + LIQ_SENSIBILIDAD * std)
+
+        zonas_long = {}
+        zonas_short = {}
+
+        for i in range(len(df)):
+            if pd.isna(spikes.iloc[i]) or not spikes.iloc[i]:
+                continue
+
+            precio = float(df['close'].iloc[i])
+            peso = float(df['volume'].iloc[i])
+
+            for apal in LIQ_APALANCAMIENTOS:
+                liq_long = precio * (1 - LIQ_PCT[apal] / 100)
+                liq_short = precio * (1 + LIQ_PCT[apal] / 100)
+
+                key_long = round(liq_long / (precio_actual * 0.001)) * (precio_actual * 0.001)
+                key_short = round(liq_short / (precio_actual * 0.001)) * (precio_actual * 0.001)
+
+                if key_long not in zonas_long:
+                    zonas_long[key_long] = {'precio': liq_long, 'peso': 0, 'apalancamientos': set()}
+                zonas_long[key_long]['peso'] += peso
+                zonas_long[key_long]['apalancamientos'].add(apal)
+
+                if key_short not in zonas_short:
+                    zonas_short[key_short] = {'precio': liq_short, 'peso': 0, 'apalancamientos': set()}
+                zonas_short[key_short]['peso'] += peso
+                zonas_short[key_short]['apalancamientos'].add(apal)
+
+        def agrupar_zonas(zonas_dict):
+            lista = sorted(zonas_dict.values(), key=lambda x: x['precio'])
+            if not lista:
+                return []
+            agrupadas = []
+            grupo_actual = [lista[0]]
+            for i in range(1, len(lista)):
+                precio_actual_z = lista[i]['precio']
+                precio_anterior = grupo_actual[-1]['precio']
+                dist_pct = abs(precio_actual_z - precio_anterior) / precio_anterior * 100
+                if dist_pct <= LIQ_TOLERANCIA_PCT:
+                    grupo_actual.append(lista[i])
+                else:
+                    agrupadas.append(combinar_grupo(grupo_actual, precio_actual))
+                    grupo_actual = [lista[i]]
+            if grupo_actual:
+                agrupadas.append(combinar_grupo(grupo_actual, precio_actual))
+            return agrupadas
+
+        def combinar_grupo(grupo, precio_actual):
+            peso_total = sum(g['peso'] for g in grupo)
+            if peso_total > 0:
+                precio_pond = sum(g['precio'] * g['peso'] for g in grupo) / peso_total
+            else:
+                precio_pond = grupo[0]['precio']
+            apals = set()
+            for g in grupo:
+                apals.update(g['apalancamientos'])
+            return {
+                'precio': redondear(precio_pond, precio_actual),
+                'peso': redondear(peso_total, precio_actual),
+                'apalancamientos': sorted(list(apals))
+            }
+
+        zonas_long_agr = agrupar_zonas(zonas_long)
+        zonas_short_agr = agrupar_zonas(zonas_short)
+
+        zonas_long_final = [z for z in zonas_long_agr if z['precio'] < precio_actual]
+        zonas_short_final = [z for z in zonas_short_agr if z['precio'] > precio_actual]
+
+        zonas_long_final.sort(key=lambda x: abs(x['precio'] - precio_actual))
+        zonas_short_final.sort(key=lambda x: abs(x['precio'] - precio_actual))
+
+        zonas_long_final = zonas_long_final[:5]
+        zonas_short_final = zonas_short_final[:5]
+
+        for z in zonas_long_final:
+            z['distancia_pct'] = round((z['precio'] - precio_actual) / precio_actual * 100, 2)
+        for z in zonas_short_final:
+            z['distancia_pct'] = round((z['precio'] - precio_actual) / precio_actual * 100, 2)
+
+        return {
+            'precio_actual': redondear(precio_actual, precio_actual),
+            'long_zones': zonas_long_final,
+            'short_zones': zonas_short_final
+        }
+    except Exception as e:
+        print(f"Error Liquidaciones {symbol}: {e}")
+        return {'precio_actual': None, 'long_zones': [], 'short_zones': []}
+
+
 def main():
     exchange = ccxt.okx()
 
@@ -335,6 +442,7 @@ def main():
     fvg_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     sr_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     gp_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
+    liq_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
 
     for cripto in CRIPTOS:
         symbol = cripto.replace('/', '')
@@ -342,6 +450,7 @@ def main():
         fvg_resultado['data'][symbol] = {}
         sr_resultado['data'][symbol] = {}
         gp_resultado['data'][symbol] = {}
+        liq_resultado['data'][symbol] = {}
 
         for tf in TEMPORALIDADES:
             rsi = calcular_rsi_par(exchange, cripto, tf)
@@ -363,8 +472,10 @@ def main():
             gp_resultado['data'][symbol][tf] = gp
             if gp:
                 print(f"{symbol} {tf}: GP {gp['tipo']} ({gp['accion']})")
-            else:
-                print(f"{symbol} {tf}: GP sin datos")
+
+        liq = calcular_liquidaciones_par(exchange, cripto)
+        liq_resultado['data'][symbol] = liq
+        print(f"{symbol}: {len(liq['short_zones'])} short / {len(liq['long_zones'])} long")
 
     with open('rsi_data.json', 'w') as f:
         json.dump(rsi_resultado, f, indent=2)
@@ -374,6 +485,8 @@ def main():
         json.dump(sr_resultado, f, indent=2)
     with open('gp_data.json', 'w') as f:
         json.dump(gp_resultado, f, indent=2)
+    with open('liq_data.json', 'w') as f:
+        json.dump(liq_resultado, f, indent=2)
 
     print("\n✅ Datos guardados")
 
