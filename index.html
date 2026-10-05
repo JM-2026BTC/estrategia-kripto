@@ -165,6 +165,44 @@
   .gp-leyenda .verde { color: #3fb950; font-weight: 600; }
   .gp-leyenda .rojo { color: #f85149; font-weight: 600; }
 
+  /* Liquidaciones */
+  .liq-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
+  .liq-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+  .liq-table th { color: #8b949e; font-weight: 500; font-size: 11px; padding: 4px 6px; text-align: left; border-bottom: 1px solid #21262d; }
+  .liq-table td { padding: 6px; border-bottom: 1px solid #21262d; font-size: 12px; vertical-align: top; }
+  .liq-table tr:last-child td { border-bottom: none; }
+  .liq-zona { font-weight: 600; color: #c9d1d9; font-variant-numeric: tabular-nums; }
+  .liq-nivel { font-size: 11px; white-space: nowrap; }
+  .liq-nivel.alto { color: #f85149; font-weight: 600; }
+  .liq-nivel.medio { color: #d29922; font-weight: 600; }
+  .liq-nivel.bajo { color: #3fb950; font-weight: 600; }
+  .liq-apal { color: #8b949e; font-size: 11px; }
+  .liq-dist { color: #58a6ff; font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
+  .liq-card {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: none;
+  }
+  .liq-card .liq-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  .liq-card .liq-row:last-child { margin-bottom: 0; }
+  .liq-card .liq-label { color: #8b949e; }
+  .liq-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
+  .liq-leyenda div { margin-bottom: 3px; }
+
+  /* Responsive Liquidaciones */
+  @media (max-width: 600px) {
+    .liq-table { display: none; }
+    .liq-card { display: block; }
+  }
+
   /* S/R */
   .sr-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
   .sr-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
@@ -187,7 +225,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.2</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.3</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -290,6 +328,11 @@
 
     <div class="col-paneles">
 
+      <div class="card" id="liq-panel" style="display:none;">
+        <h2>📊 Liquidaciones — <span id="liq-cripto-nombre">BTC</span></h2>
+        <div id="liq-content"></div>
+      </div>
+
       <div class="card" id="gp-panel" style="display:none;">
         <h2>📐 Golden Pocket — <span id="gp-cripto-nombre">BTC</span></h2>
         <div id="gp-content"></div>
@@ -324,7 +367,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.2 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.3 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -337,6 +380,7 @@ let rsiDataGlobal = null;
 let fvgDataGlobal = null;
 let srDataGlobal = null;
 let gpDataGlobal = null;
+let liqDataGlobal = null;
 
 function fmt(n, dec = 2) {
   if (isNaN(n) || n === null || n === undefined) return '—';
@@ -379,23 +423,39 @@ function getRelevanciaBTC(nombreEvento) {
   return { nivel: 'MEDIO', clase: 'relevancia-medio' };
 }
 
+function getNivelPeso(peso, pesoMax) {
+  if (pesoMax <= 0) return { nivel: 'Bajo', clase: 'bajo', emoji: '🟢' };
+  const pct = peso / pesoMax;
+  if (pct >= 0.66) return { nivel: 'Alto', clase: 'alto', emoji: '🔴🔴🔴' };
+  if (pct >= 0.33) return { nivel: 'Medio', clase: 'medio', emoji: '🟡🟡' };
+  return { nivel: 'Bajo', clase: 'bajo', emoji: '🟢' };
+}
+
+function calcularZona(precio, precioActual) {
+  const margen = precioActual * 0.002; // ±0.2%
+  const desde = precio - margen;
+  const hasta = precio + margen;
+  return { desde, hasta };
+}
+
 function cambiarCripto() {
   cargarRSI();
   cargarFVG();
   cargarSR();
   cargarGP();
+  cargarLiq();
   mostrarPrecioActual();
 }
 
 function mostrarPrecioActual() {
   const cripto = document.getElementById('cripto').value;
   const span = document.getElementById('precio-actual');
-  if (!srDataGlobal) {
+  if (!liqDataGlobal) {
     span.textContent = '';
     return;
   }
-  const data = srDataGlobal.data[cripto];
-  const precio = data?.['1h']?.precio_actual;
+  const data = liqDataGlobal.data[cripto];
+  const precio = data?.precio_actual;
   if (precio) {
     span.textContent = `Precio: ${fmtPrecio(precio, cripto)}`;
   } else {
@@ -637,6 +697,127 @@ function calcular() {
   res.innerHTML = html;
   res.classList.add('activo');
   res.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function cargarLiq() {
+  const cripto = document.getElementById('cripto').value;
+  const panel = document.getElementById('liq-panel');
+  const content = document.getElementById('liq-content');
+  const nombre = document.getElementById('liq-cripto-nombre');
+  nombre.textContent = NOMBRES[cripto] || cripto;
+
+  try {
+    if (!liqDataGlobal) {
+      const response = await fetch('liq_data.json?t=' + Date.now());
+      liqDataGlobal = await response.json();
+    }
+    const data = liqDataGlobal.data[cripto];
+    if (!data) {
+      content.innerHTML = '<div class="info">No hay datos de liquidaciones para esta cripto.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    const precioActual = data.precio_actual;
+    const shortZones = data.short_zones || [];
+    const longZones = data.long_zones || [];
+
+    if (shortZones.length === 0 && longZones.length === 0) {
+      content.innerHTML = '<div class="info">No hay zonas de liquidación activas.</div>';
+      panel.style.display = 'block';
+      return;
+    }
+
+    // Calcular peso máximo para nivel
+    let pesoMax = 0;
+    [...shortZones, ...longZones].forEach(z => {
+      if (z.peso > pesoMax) pesoMax = z.peso;
+    });
+
+    let html = '';
+
+    // SHORT
+    if (shortZones.length > 0) {
+      html += `<div class="liq-header">🔴 SHORT (arriba del precio)</div>`;
+      html += `<table class="liq-table">
+        <tr><th>Zona</th><th>Nivel</th><th>Apal.</th><th style="text-align:right;">Dist.</th></tr>`;
+      shortZones.forEach(z => {
+        const zona = calcularZona(z.precio, precioActual);
+        const nivel = getNivelPeso(z.peso, pesoMax);
+        const apalsStr = '[' + z.apalancamientos.map(a => 'x' + a).join(', ') + ']';
+        html += `<tr>
+          <td class="liq-zona">${fmtPrecio(zona.desde, cripto)} – ${fmtPrecio(zona.hasta, cripto)}</td>
+          <td class="liq-nivel ${nivel.clase}">${nivel.emoji} ${nivel.nivel}</td>
+          <td class="liq-apal">${apalsStr}</td>
+          <td class="liq-dist">${z.distancia_pct >= 0 ? '+' : ''}${fmt(z.distancia_pct)}%</td>
+        </tr>`;
+      });
+      html += `</table>`;
+
+      // Tarjetas para celular
+      shortZones.forEach(z => {
+        const zona = calcularZona(z.precio, precioActual);
+        const nivel = getNivelPeso(z.peso, pesoMax);
+        const apalsStr = '[' + z.apalancamientos.map(a => 'x' + a).join(', ') + ']';
+        html += `<div class="liq-card">
+          <div class="liq-row"><span class="liq-label">ZONA:</span><span class="liq-zona">${fmtPrecio(zona.desde, cripto)} – ${fmtPrecio(zona.hasta, cripto)}</span></div>
+          <div class="liq-row"><span class="liq-label">NIVEL:</span><span class="liq-nivel ${nivel.clase}">${nivel.emoji} ${nivel.nivel}</span></div>
+          <div class="liq-row"><span class="liq-label">APAL.:</span><span class="liq-apal">${apalsStr}</span></div>
+          <div class="liq-row"><span class="liq-label">DIST.:</span><span class="liq-dist">${z.distancia_pct >= 0 ? '+' : ''}${fmt(z.distancia_pct)}%</span></div>
+        </div>`;
+      });
+    }
+
+    // LONG
+    if (longZones.length > 0) {
+      html += `<div class="liq-header" style="margin-top:14px;">🟢 LONG (abajo del precio)</div>`;
+      html += `<table class="liq-table">
+        <tr><th>Zona</th><th>Nivel</th><th>Apal.</th><th style="text-align:right;">Dist.</th></tr>`;
+      longZones.forEach(z => {
+        const zona = calcularZona(z.precio, precioActual);
+        const nivel = getNivelPeso(z.peso, pesoMax);
+        const apalsStr = '[' + z.apalancamientos.map(a => 'x' + a).join(', ') + ']';
+        html += `<tr>
+          <td class="liq-zona">${fmtPrecio(zona.desde, cripto)} – ${fmtPrecio(zona.hasta, cripto)}</td>
+          <td class="liq-nivel ${nivel.clase}">${nivel.emoji} ${nivel.nivel}</td>
+          <td class="liq-apal">${apalsStr}</td>
+          <td class="liq-dist">${z.distancia_pct >= 0 ? '+' : ''}${fmt(z.distancia_pct)}%</td>
+        </tr>`;
+      });
+      html += `</table>`;
+
+      // Tarjetas para celular
+      longZones.forEach(z => {
+        const zona = calcularZona(z.precio, precioActual);
+        const nivel = getNivelPeso(z.peso, pesoMax);
+        const apalsStr = '[' + z.apalancamientos.map(a => 'x' + a).join(', ') + ']';
+        html += `<div class="liq-card">
+          <div class="liq-row"><span class="liq-label">ZONA:</span><span class="liq-zona">${fmtPrecio(zona.desde, cripto)} – ${fmtPrecio(zona.hasta, cripto)}</span></div>
+          <div class="liq-row"><span class="liq-label">NIVEL:</span><span class="liq-nivel ${nivel.clase}">${nivel.emoji} ${nivel.nivel}</span></div>
+          <div class="liq-row"><span class="liq-label">APAL.:</span><span class="liq-apal">${apalsStr}</span></div>
+          <div class="liq-row"><span class="liq-label">DIST.:</span><span class="liq-dist">${z.distancia_pct >= 0 ? '+' : ''}${fmt(z.distancia_pct)}%</span></div>
+        </div>`;
+      });
+    }
+
+    html += `<div class="liq-leyenda">
+      <div><strong>ZONA</strong> = Rango de liquidación (±0,2%)</div>
+      <div><strong>NIVEL</strong> = 🔴🔴🔴 Alto / 🟡🟡 Medio / 🟢 Bajo</div>
+      <div><strong>APAL.</strong> = Apalancamientos que liquidan en esa zona</div>
+      <div><strong>DIST.</strong> = Distancia al precio actual</div>
+    </div>`;
+
+    const fecha = liqDataGlobal.last_update ? new Date(liqDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
+
+    content.innerHTML = html;
+    panel.style.display = 'block';
+
+  } catch (error) {
+    console.log('Error cargando liquidaciones:', error);
+    content.innerHTML = '<div class="info">No se pudieron cargar las liquidaciones.</div>';
+    panel.style.display = 'block';
+  }
 }
 
 async function cargarRSI() {
@@ -1128,12 +1309,14 @@ cargarRSI();
 cargarFVG();
 cargarSR();
 cargarGP();
+cargarLiq();
 cargarEventos();
 cargarSentimiento();
 setInterval(cargarRSI, 600000);
 setInterval(cargarFVG, 600000);
 setInterval(cargarSR, 600000);
 setInterval(cargarGP, 600000);
+setInterval(cargarLiq, 600000);
 setInterval(cargarEventos, 600000);
 setInterval(cargarSentimiento, 300000);
 </script>
