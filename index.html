@@ -165,6 +165,17 @@
   .gp-leyenda .verde { color: #3fb950; font-weight: 600; }
   .gp-leyenda .rojo { color: #f85149; font-weight: 600; }
 
+  /* Precio actual en Liquidaciones */
+  .liq-precio-actual {
+    font-size: 13px;
+    color: #58a6ff;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #21262d;
+  }
+
   /* Liquidaciones */
   .liq-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
   .liq-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
@@ -432,7 +443,7 @@ function getNivelPeso(peso, pesoMax) {
 }
 
 function calcularZona(precio, precioActual) {
-  const margen = precioActual * 0.002; // ±0.2%
+  const margen = precioActual * 0.002;
   const desde = precio - margen;
   const hasta = precio + margen;
   return { desde, hasta };
@@ -735,6 +746,7 @@ async function cargarLiq() {
     });
 
     let html = '';
+    html += `<div class="liq-precio-actual">💰 Precio actual: ${fmtPrecio(precioActual, cripto)}</div>`;
 
     // SHORT
     if (shortZones.length > 0) {
@@ -754,7 +766,6 @@ async function cargarLiq() {
       });
       html += `</table>`;
 
-      // Tarjetas para celular
       shortZones.forEach(z => {
         const zona = calcularZona(z.precio, precioActual);
         const nivel = getNivelPeso(z.peso, pesoMax);
@@ -786,7 +797,6 @@ async function cargarLiq() {
       });
       html += `</table>`;
 
-      // Tarjetas para celular
       longZones.forEach(z => {
         const zona = calcularZona(z.precio, precioActual);
         const nivel = getNivelPeso(z.peso, pesoMax);
@@ -1156,7 +1166,6 @@ async function cargarEventos() {
       return fechaA - fechaB;
     });
 
-    // Calcular banner de la semana
     let countMax = 0;
     let countAlto = 0;
     let countMedio = 0;
@@ -1185,12 +1194,10 @@ async function cargarEventos() {
       texto = '🟡 1 evento importante esta semana';
     }
     
-    // Próximos 7 días
     const hasta = new Date(ahora.getTime() + 7 * 24 * 60 * 60 * 1000);
     const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
     const rangoSemana = `próximos 7 días (${formatoFecha(ahora)} al ${formatoFecha(hasta)})`;
     
-    // Mostrar banner
     const banner = document.getElementById('banner-semana');
     banner.className = `banner-semana activo ${estado}`;
     banner.textContent = `── ${texto} · ${rangoSemana} ──`;
