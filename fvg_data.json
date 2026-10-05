@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-05T12:19:39.644590+00:00",
+  "last_update": "2026-10-05T13:19:29.824574+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [],
@@ -85,14 +85,21 @@
           "desde": 91.25,
           "hasta": 91.74,
           "mitigado": false,
-          "timestamp": 94
+          "timestamp": 93
         },
         {
           "tipo": "alcista",
           "desde": 91.813,
           "hasta": 92.763,
           "mitigado": false,
-          "timestamp": 95
+          "timestamp": 94
+        },
+        {
+          "tipo": "bajista",
+          "desde": 92.49,
+          "hasta": 92.92,
+          "mitigado": false,
+          "timestamp": 99
         }
       ],
       "4h": [
@@ -142,28 +149,21 @@
           "desde": 0.09217,
           "hasta": 0.09235,
           "mitigado": false,
-          "timestamp": 38
+          "timestamp": 37
         },
         {
           "tipo": "alcista",
           "desde": 0.09378,
           "hasta": 0.09398,
           "mitigado": false,
-          "timestamp": 78
+          "timestamp": 77
         },
         {
           "tipo": "alcista",
           "desde": 0.09475,
           "hasta": 0.09507,
           "mitigado": false,
-          "timestamp": 81
-        },
-        {
-          "tipo": "alcista",
-          "desde": 0.09545,
-          "hasta": 0.09597,
-          "mitigado": false,
-          "timestamp": 94
+          "timestamp": 80
         }
       ],
       "4h": [
@@ -224,31 +224,17 @@
       "1h": [
         {
           "tipo": "alcista",
-          "desde": 4.28e-06,
-          "hasta": 4.288e-06,
-          "mitigado": false,
-          "timestamp": 78
-        },
-        {
-          "tipo": "alcista",
           "desde": 4.305e-06,
           "hasta": 4.331e-06,
           "mitigado": false,
-          "timestamp": 85
+          "timestamp": 84
         },
         {
           "tipo": "alcista",
           "desde": 4.402e-06,
           "hasta": 4.448e-06,
           "mitigado": false,
-          "timestamp": 94
-        },
-        {
-          "tipo": "alcista",
-          "desde": 4.473e-06,
-          "hasta": 4.496e-06,
-          "mitigado": false,
-          "timestamp": 95
+          "timestamp": 93
         }
       ],
       "4h": [
