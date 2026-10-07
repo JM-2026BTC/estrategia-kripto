@@ -236,7 +236,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.3</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.4</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -378,7 +378,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.3 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.4 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -739,7 +739,6 @@ async function cargarLiq() {
       return;
     }
 
-    // Calcular peso máximo para nivel
     let pesoMax = 0;
     [...shortZones, ...longZones].forEach(z => {
       if (z.peso > pesoMax) pesoMax = z.peso;
@@ -748,7 +747,6 @@ async function cargarLiq() {
     let html = '';
     html += `<div class="liq-precio-actual">💰 Precio actual: ${fmtPrecio(precioActual, cripto)}</div>`;
 
-    // SHORT
     if (shortZones.length > 0) {
       html += `<div class="liq-header">🔴 SHORT (arriba del precio)</div>`;
       html += `<table class="liq-table">
@@ -779,7 +777,6 @@ async function cargarLiq() {
       });
     }
 
-    // LONG
     if (longZones.length > 0) {
       html += `<div class="liq-header" style="margin-top:14px;">🟢 LONG (abajo del precio)</div>`;
       html += `<table class="liq-table">
