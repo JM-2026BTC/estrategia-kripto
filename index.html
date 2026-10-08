@@ -327,7 +327,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.6</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.7</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -488,7 +488,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.6 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.7 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -1277,41 +1277,71 @@ async function cargarEventos() {
       return fechaA - fechaB;
     });
 
-    let countMax = 0;
-    let countAlto = 0;
-    let countMedio = 0;
-    eventos.forEach(ev => {
+    // Calcular semana lunes-viernes según calendario real
+    const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+    const diaSemana = ahora.getDay(); // 0=dom, 1=lun, ..., 6=sáb
+    const esFinde = (diaSemana === 0 || diaSemana === 6);
+
+    let lunesRef;
+    if (esFinde) {
+      const proximoLunes = new Date(ahora);
+      proximoLunes.setDate(ahora.getDate() + (diaSemana === 6 ? 2 : 1));
+      proximoLunes.setHours(0, 0, 0, 0);
+      lunesRef = proximoLunes;
+    } else {
+      const lunesActual = new Date(ahora);
+      const diff = 1 - diaSemana;
+      lunesActual.setDate(ahora.getDate() + diff);
+      lunesActual.setHours(0, 0, 0, 0);
+      lunesRef = lunesActual;
+    }
+
+    const viernesRef = new Date(lunesRef);
+    viernesRef.setDate(viernesRef.getDate() + 4);
+    viernesRef.setHours(23, 59, 59, 999);
+
+    const prefijo = esFinde ? 'Próxima semana del' : 'Semana del';
+    const rangoSemana = `${prefijo} ${formatoFecha(lunesRef)} al ${formatoFecha(viernesRef)}`;
+
+    // Filtrar eventos de la semana
+    const eventosSemana = eventos.filter(ev => {
+      const fechaRaw = ev.date || ev.time || ev.datetime;
+      if (!fechaRaw) return false;
+      const fechaEv = new Date(fechaRaw);
+      return fechaEv >= lunesRef && fechaEv <= viernesRef;
+    });
+
+    let countMaxSem = 0;
+    let countAltoSem = 0;
+    let countMedioSem = 0;
+    eventosSemana.forEach(ev => {
       const nombre = ev.name || ev.title || ev.event || '';
       const rel = getRelevanciaBTC(nombre);
-      if (rel.nivel === 'MÁXIMO') countMax++;
-      else if (rel.nivel === 'ALTO') countAlto++;
-      else if (rel.nivel === 'MEDIO') countMedio++;
+      if (rel.nivel === 'MÁXIMO') countMaxSem++;
+      else if (rel.nivel === 'ALTO') countAltoSem++;
+      else if (rel.nivel === 'MEDIO') countMedioSem++;
     });
-    const importantes = countAlto + countMedio;
-    
-    let estado = 'tranquila';
-    let texto = '🟢 Semana tranquila — sin eventos fuertes';
-    if (countMax > 0) {
-      estado = 'alerta';
-      texto = '🔴🔴 ALERTA — NFP/PCE esta semana';
-    } else if (importantes >= 4) {
-      estado = 'peligrosa';
-      texto = '🔴 Semana peligrosa — 4+ eventos fuertes';
-    } else if (importantes >= 2) {
-      estado = 'cuidado';
-      texto = '🟡 Cuidado — 2-3 eventos importantes';
-    } else if (importantes === 1) {
-      estado = 'uno';
-      texto = '🟡 1 evento importante esta semana';
+    const importantesSem = countAltoSem + countMedioSem;
+
+    let estadoSem = 'tranquila';
+    let textoSem = '🟢 Semana tranquila — sin eventos fuertes';
+    if (countMaxSem > 0) {
+      estadoSem = 'alerta';
+      textoSem = '🔴🔴 ALERTA — NFP/PCE esta semana';
+    } else if (importantesSem >= 4) {
+      estadoSem = 'peligrosa';
+      textoSem = '🔴 Semana peligrosa — 4+ eventos fuertes';
+    } else if (importantesSem >= 2) {
+      estadoSem = 'cuidado';
+      textoSem = '🟡 Cuidado — 2-3 eventos importantes';
+    } else if (importantesSem === 1) {
+      estadoSem = 'uno';
+      textoSem = '🟡 1 evento importante esta semana';
     }
-    
-    const hasta = new Date(ahora.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
-    const rangoSemana = `próximos 7 días (${formatoFecha(ahora)} al ${formatoFecha(hasta)})`;
-    
+
     const banner = document.getElementById('banner-semana');
-    banner.className = `banner-semana activo ${estado}`;
-    banner.textContent = `── ${texto} · ${rangoSemana} ──`;
+    banner.className = `banner-semana activo ${estadoSem}`;
+    banner.textContent = `── ${textoSem} · ${rangoSemana} ──`;
 
     if (eventos.length === 0) {
       content.innerHTML = '<div class="info">No hay eventos próximos de alto impacto.</div>';
@@ -1429,12 +1459,10 @@ async function cargarInfoResumen() {
   try {
     const response = await fetch('resumen.txt?t=' + Date.now());
     const texto = await response.text();
-    // Extraer fecha del header: "📅 08/10/2026 — 21:55 (ARG)"
     const match = texto.match(/📅 (\d{2}\/\d{2}\/\d{4}) — (\d{2}:\d{2}) \(ARG\)/);
     if (match) {
       fechaSpan.textContent = `${match[1]} ${match[2]} (ARG)`;
 
-      // Calcular próxima actualización (+1h)
       const [dia, mes, anio] = match[1].split('/');
       const [hora, min] = match[2].split(':');
       const ultima = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia), parseInt(hora), parseInt(min));
@@ -1462,7 +1490,6 @@ async function copiarResumen(btn) {
     const response = await fetch('resumen.txt?t=' + Date.now());
     const texto = await response.text();
     await navigator.clipboard.writeText(texto);
-    // Feedback visual
     const original = btn.textContent;
     btn.textContent = '✅ ¡Copiado!';
     btn.style.background = '#3fb950';
@@ -1493,7 +1520,7 @@ setInterval(cargarGP, 600000);
 setInterval(cargarLiq, 600000);
 setInterval(cargarEventos, 600000);
 setInterval(cargarSentimiento, 300000);
-setInterval(cargarInfoResumen, 60000);  // Cada 1 min
+setInterval(cargarInfoResumen, 60000);
 </script>
 </body>
 </html>
