@@ -21,8 +21,8 @@ FVG_MIN_TAMANO_PCT = 0.15
 SR_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 300}
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 
-# Parámetros del indicador
-SR_PIVOT_LENGTH = 10
+# Parámetros del indicador (v2.6)
+SR_PIVOT_LENGTH = 7
 SR_ATR_LEN = 14
 SR_ATR_MULT = 0.5
 SR_MIN_PIVOTS = 1
@@ -38,8 +38,8 @@ SR_REACTION_BARS = 6
 SR_REACTION_ATR = 0.8
 SR_REACTION_RETRACE_FRAC = 0.6
 
-# Merge de zonas
-SR_MERGE_ATR_FRAC = 0.8
+# Merge de zonas (v2.6)
+SR_MERGE_ATR_FRAC = 0.5
 
 # Umbrales RELATIVOS
 SR_UMBRAL_MUY_FUERTE_PCT = 0.7
@@ -164,7 +164,7 @@ def filtrar_fvgs(fvgs, precio_actual, timeframe):
     return filtrados
 
 
-def detectar_pivotes_juniorq(df, pivot_length=10):
+def detectar_pivotes_juniorq(df, pivot_length=7):
     pivotes = []
     highs = df['high'].values
     lows = df['low'].values
