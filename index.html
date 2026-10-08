@@ -345,7 +345,7 @@
       </div>
     </div>
     <div class="resumen-botones">
-      <button onclick="copiarResumen()">📋 Copiar resumen</button>
+      <button onclick="copiarResumen(this)">📋 Copiar resumen</button>
       <a href="resumen.txt" download="resumen.txt">📥 Descargar .txt</a>
     </div>
   </div>
@@ -1457,13 +1457,12 @@ async function cargarInfoResumen() {
   }
 }
 
-async function copiarResumen() {
+async function copiarResumen(btn) {
   try {
     const response = await fetch('resumen.txt?t=' + Date.now());
     const texto = await response.text();
     await navigator.clipboard.writeText(texto);
     // Feedback visual
-    const btn = event.target;
     const original = btn.textContent;
     btn.textContent = '✅ ¡Copiado!';
     btn.style.background = '#3fb950';
