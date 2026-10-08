@@ -28,7 +28,7 @@ SR_ATR_MULT = 0.5
 SR_MIN_PIVOTS = 1
 SR_TOP_ZONES = 2
 
-# Pesos (weights) del score — AJUSTADOS v2.1
+# Pesos (weights) del score
 SR_PIVOT_WEIGHT = 20
 SR_BREAK_WEIGHT = 2
 SR_DWELL_WEIGHT = 1
@@ -41,9 +41,9 @@ SR_REACTION_RETRACE_FRAC = 0.6
 # Merge de zonas
 SR_MERGE_ATR_FRAC = 0.8
 
-# Umbrales de clasificación (texto)
-SR_SCORE_MUY_FUERTE = 30
-SR_SCORE_MEDIA = 10
+# Umbrales RELATIVOS (v2.2) — % del score máximo del TF
+SR_UMBRAL_MUY_FUERTE_PCT = 0.7
+SR_UMBRAL_MEDIA_PCT = 0.4
 
 # Golden Pocket
 GP_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 200}
@@ -73,7 +73,6 @@ def redondear(valor, precio_actual):
 
 
 def calcular_atr(df, periodo=14):
-    """ATR (Average True Range)"""
     high = df['high']
     low = df['low']
     close = df['close']
@@ -160,7 +159,6 @@ def filtrar_fvgs(fvgs, precio_actual, timeframe):
 
 
 def detectar_pivotes_juniorq(df, pivot_length=10):
-    """Detecta pivotes al estilo JuniorQTrader"""
     pivotes = []
     highs = df['high'].values
     lows = df['low'].values
@@ -187,7 +185,6 @@ def detectar_pivotes_juniorq(df, pivot_length=10):
 
 
 def calcular_reaction_score(df, pivot, atr_series):
-    """Calcula el reaction score de un pivote"""
     idx = pivot['indice']
     tipo = pivot['tipo']
     precio = pivot['precio']
@@ -223,31 +220,22 @@ def calcular_reaction_score(df, pivot, atr_series):
 
 
 def calcular_penalizaciones(df, zona_desde, zona_hasta, idx_inicio):
-    """
-    Calcula breaks, dwell, close inside para una zona.
-    v2.1: Solo cuenta breaks CONFIRMADOS (cierre fuera, no mecha).
-    """
     breaks = 0
     dwell = 0
     close_inside = 0
-
-    # Estado: ¿el precio está "fuera" de la zona después de una ruptura?
-    estado = 'dentro'  # puede ser 'dentro', 'arriba', 'abajo'
+    estado = 'dentro'
 
     for i in range(idx_inicio, len(df)):
         high = df['high'].iloc[i]
         low = df['low'].iloc[i]
         close = df['close'].iloc[i]
 
-        # Close inside (vela cierra dentro de la zona)
         if zona_desde <= close <= zona_hasta:
             close_inside += 1
 
-        # Dwell (vela completa dentro de la zona)
         if zona_desde <= low and high <= zona_hasta:
             dwell += 1
 
-        # Break confirmado: cierre fuera de la zona, cambio de estado
         if estado == 'dentro':
             if close > zona_hasta:
                 breaks += 1
@@ -272,7 +260,6 @@ def calcular_penalizaciones(df, zona_desde, zona_hasta, idx_inicio):
 
 
 def agrupar_pivotes_juniorq(pivotes, atr_promedio, df):
-    """Agrupa pivotes en zonas por ATR × factor"""
     if not pivotes:
         return []
 
@@ -302,7 +289,7 @@ def agrupar_pivotes_juniorq(pivotes, atr_promedio, df):
 
 
 def crear_zona(pivotes, zona_width, df):
-    """Crea una zona con score calculado (v2.1)"""
+    """Crea una zona con score calculado (sin clasificar todavía)"""
     precios = [p['precio'] for p in pivotes]
     precio_prom = np.mean(precios)
     zona_desde = precio_prom - zona_width
@@ -312,38 +299,59 @@ def crear_zona(pivotes, zona_width, df):
 
     breaks, dwell, close_inside = calcular_penalizaciones(df, zona_desde, zona_hasta, idx_min)
 
-    # Score v2.1
     pivot_score = len(pivotes) * SR_PIVOT_WEIGHT
     reaction_score = sum(p.get('reaction', 0) for p in pivotes)
     penalty = (breaks * SR_BREAK_WEIGHT) + (dwell * SR_DWELL_WEIGHT) + (close_inside * SR_CLOSE_INSIDE_WEIGHT)
 
     score = pivot_score + reaction_score - penalty
 
-    # Clasificar
-    if score >= SR_SCORE_MUY_FUERTE:
-        texto = 'Muy fuerte'
-        emoji = '🔴'
-    elif score >= SR_SCORE_MEDIA:
-        texto = 'Media'
-        emoji = '🟡'
-    else:
-        texto = 'Débil'
-        emoji = '🟢'
-
     return {
         'precio': round(precio_prom, 2),
         'toques': len(pivotes),
         'score': round(score, 2),
-        'texto': texto,
-        'emoji': emoji,
+        'texto': None,  # Se asigna después con umbrales relativos
+        'emoji': None,
         'breaks': breaks,
         'dwell': dwell,
         'close_inside': close_inside
     }
 
 
+def clasificar_zonas_relativo(zonas):
+    """Clasifica zonas con umbrales relativos al máximo score (v2.2)"""
+    if not zonas:
+        return zonas
+
+    scores = [z['score'] for z in zonas]
+    score_max = max(scores)
+    score_min = min(scores)
+
+    # Si todas las zonas tienen el mismo score, todas son "Media"
+    if score_max == score_min:
+        for z in zonas:
+            z['texto'] = 'Media'
+            z['emoji'] = '🟡'
+        return zonas
+
+    umbral_muy_fuerte = score_max * SR_UMBRAL_MUY_FUERTE_PCT
+    umbral_media = score_max * SR_UMBRAL_MEDIA_PCT
+
+    for z in zonas:
+        if z['score'] >= umbral_muy_fuerte:
+            z['texto'] = 'Muy fuerte'
+            z['emoji'] = '🔴'
+        elif z['score'] >= umbral_media:
+            z['texto'] = 'Media'
+            z['emoji'] = '🟡'
+        else:
+            z['texto'] = 'Débil'
+            z['emoji'] = '🟢'
+
+    return zonas
+
+
 def calcular_sr_par(exchange, symbol, timeframe):
-    """Nueva lógica S/R basada en JuniorQTrader (v2.1)"""
+    """Nueva lógica S/R basada en JuniorQTrader (v2.2)"""
     try:
         limit = SR_VELAS.get(timeframe, 300)
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
@@ -354,15 +362,12 @@ def calcular_sr_par(exchange, symbol, timeframe):
 
         precio_actual = float(df['close'].iloc[-1])
 
-        # ATR con mínimo para evitar ATR muy chicos (v2.1)
         atr_series = calcular_atr(df, SR_ATR_LEN)
         atr_promedio = float(atr_series.iloc[-1]) if not pd.isna(atr_series.iloc[-1]) else precio_actual * 0.01
         atr_promedio = max(atr_promedio, precio_actual * 0.005)
 
-        # Detectar pivotes
         pivotes = detectar_pivotes_juniorq(df, SR_PIVOT_LENGTH)
 
-        # Reaction score
         for piv in pivotes:
             piv['reaction'] = calcular_reaction_score(df, piv, atr_series)
 
@@ -375,9 +380,15 @@ def calcular_sr_par(exchange, symbol, timeframe):
         resistencias = [z for z in zonas_altas if z['precio'] > precio_actual]
         soportes = [z for z in zonas_bajas if z['precio'] < precio_actual]
 
+        # Ordenar por score y tomar top N
         resistencias = sorted(resistencias, key=lambda x: -x['score'])[:SR_TOP_ZONES]
         soportes = sorted(soportes, key=lambda x: -x['score'])[:SR_TOP_ZONES]
 
+        # Clasificar con umbrales relativos (v2.2)
+        resistencias = clasificar_zonas_relativo(resistencias)
+        soportes = clasificar_zonas_relativo(soportes)
+
+        # Ordenar por cercanía al precio para mostrar
         resistencias = sorted(resistencias, key=lambda x: abs(x['precio'] - precio_actual))
         soportes = sorted(soportes, key=lambda x: abs(x['precio'] - precio_actual))
 
