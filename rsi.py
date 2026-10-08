@@ -41,9 +41,13 @@ SR_REACTION_RETRACE_FRAC = 0.6
 # Merge de zonas
 SR_MERGE_ATR_FRAC = 0.8
 
-# Umbrales RELATIVOS (v2.2) — % del score máximo del TF
+# Umbrales RELATIVOS — % del score máximo del TF
 SR_UMBRAL_MUY_FUERTE_PCT = 0.7
 SR_UMBRAL_MEDIA_PCT = 0.4
+
+# Umbrales ABSOLUTOS — para cuando hay 1 sola zona o todas iguales
+SR_SCORE_ABS_MUY_FUERTE = 100
+SR_SCORE_ABS_MEDIA = 40
 
 # Golden Pocket
 GP_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 200}
@@ -317,6 +321,7 @@ def crear_zona(pivotes, zona_width, df):
 
 
 def clasificar_zonas_relativo(zonas):
+    """Clasifica zonas con umbrales relativos (v2.3)"""
     if not zonas:
         return zonas
 
@@ -324,12 +329,22 @@ def clasificar_zonas_relativo(zonas):
     score_max = max(scores)
     score_min = min(scores)
 
-    if score_max == score_min:
+    # Caso especial: 1 sola zona o todas con el mismo score
+    # → usar umbrales ABSOLUTOS
+    if len(zonas) == 1 or score_max == score_min:
         for z in zonas:
-            z['texto'] = 'Media'
-            z['emoji'] = '🟡'
+            if z['score'] >= SR_SCORE_ABS_MUY_FUERTE:
+                z['texto'] = 'Muy fuerte'
+                z['emoji'] = '🔴'
+            elif z['score'] >= SR_SCORE_ABS_MEDIA:
+                z['texto'] = 'Media'
+                z['emoji'] = '🟡'
+            else:
+                z['texto'] = 'Débil'
+                z['emoji'] = '🟢'
         return zonas
 
+    # Umbrales relativos al máximo
     umbral_muy_fuerte = score_max * SR_UMBRAL_MUY_FUERTE_PCT
     umbral_media = score_max * SR_UMBRAL_MEDIA_PCT
 
