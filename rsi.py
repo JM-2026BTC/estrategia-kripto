@@ -26,7 +26,7 @@ SR_PIVOT_LENGTH = 10
 SR_ATR_LEN = 14
 SR_ATR_MULT = 0.5
 SR_MIN_PIVOTS = 1
-SR_TOP_ZONES = 2
+SR_TOP_ZONES = 3
 
 # Pesos (weights) del score
 SR_PIVOT_WEIGHT = 20
@@ -289,7 +289,6 @@ def agrupar_pivotes_juniorq(pivotes, atr_promedio, df):
 
 
 def crear_zona(pivotes, zona_width, df):
-    """Crea una zona con score calculado (sin clasificar todavía)"""
     precios = [p['precio'] for p in pivotes]
     precio_prom = np.mean(precios)
     zona_desde = precio_prom - zona_width
@@ -309,7 +308,7 @@ def crear_zona(pivotes, zona_width, df):
         'precio': round(precio_prom, 2),
         'toques': len(pivotes),
         'score': round(score, 2),
-        'texto': None,  # Se asigna después con umbrales relativos
+        'texto': None,
         'emoji': None,
         'breaks': breaks,
         'dwell': dwell,
@@ -318,7 +317,6 @@ def crear_zona(pivotes, zona_width, df):
 
 
 def clasificar_zonas_relativo(zonas):
-    """Clasifica zonas con umbrales relativos al máximo score (v2.2)"""
     if not zonas:
         return zonas
 
@@ -326,7 +324,6 @@ def clasificar_zonas_relativo(zonas):
     score_max = max(scores)
     score_min = min(scores)
 
-    # Si todas las zonas tienen el mismo score, todas son "Media"
     if score_max == score_min:
         for z in zonas:
             z['texto'] = 'Media'
@@ -351,7 +348,6 @@ def clasificar_zonas_relativo(zonas):
 
 
 def calcular_sr_par(exchange, symbol, timeframe):
-    """Nueva lógica S/R basada en JuniorQTrader (v2.2)"""
     try:
         limit = SR_VELAS.get(timeframe, 300)
         ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
@@ -380,15 +376,12 @@ def calcular_sr_par(exchange, symbol, timeframe):
         resistencias = [z for z in zonas_altas if z['precio'] > precio_actual]
         soportes = [z for z in zonas_bajas if z['precio'] < precio_actual]
 
-        # Ordenar por score y tomar top N
         resistencias = sorted(resistencias, key=lambda x: -x['score'])[:SR_TOP_ZONES]
         soportes = sorted(soportes, key=lambda x: -x['score'])[:SR_TOP_ZONES]
 
-        # Clasificar con umbrales relativos (v2.2)
         resistencias = clasificar_zonas_relativo(resistencias)
         soportes = clasificar_zonas_relativo(soportes)
 
-        # Ordenar por cercanía al precio para mostrar
         resistencias = sorted(resistencias, key=lambda x: abs(x['precio'] - precio_actual))
         soportes = sorted(soportes, key=lambda x: abs(x['precio'] - precio_actual))
 
