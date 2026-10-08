@@ -1,10 +1,10 @@
 {
-  "last_update": "2026-10-08T02:24:35.635169+00:00",
+  "last_update": "2026-10-08T02:36:07.060788+00:00",
   "data": {
     "BTCUSDT": {
       "1h": {
-        "precio_actual": 83144.6,
-        "atr": 415.723,
+        "precio_actual": 83175.6,
+        "atr": 415.878,
         "resistencias": [
           {
             "precio": 85113.8,
@@ -39,6 +39,16 @@
         ],
         "soportes": [
           {
+            "precio": 83168.9,
+            "toques": 1,
+            "score": 37.0,
+            "texto": "D\u00e9bil",
+            "emoji": "\ud83d\udfe2",
+            "breaks": 3,
+            "dwell": 1,
+            "close_inside": 9
+          },
+          {
             "precio": 82790.12,
             "toques": 5,
             "score": 279.97,
@@ -51,7 +61,7 @@
         ]
       },
       "4h": {
-        "precio_actual": 83144.6,
+        "precio_actual": 83175.6,
         "atr": 732.8786,
         "resistencias": [
           {
@@ -109,7 +119,7 @@
         ]
       },
       "1d": {
-        "precio_actual": 83144.6,
+        "precio_actual": 83175.6,
         "atr": 1849.0643,
         "resistencias": [
           {
@@ -167,7 +177,7 @@
         ]
       },
       "1w": {
-        "precio_actual": 83144.6,
+        "precio_actual": 83184.7,
         "atr": 5315.85,
         "resistencias": [
           {
@@ -227,7 +237,7 @@
     },
     "HYPEUSDT": {
       "1h": {
-        "precio_actual": 88.287,
+        "precio_actual": 88.342,
         "atr": 0.898,
         "resistencias": [
           {
@@ -285,7 +295,7 @@
         ]
       },
       "4h": {
-        "precio_actual": 88.287,
+        "precio_actual": 88.342,
         "atr": 1.5788,
         "resistencias": [
           {
@@ -353,7 +363,7 @@
         ]
       },
       "1d": {
-        "precio_actual": 88.287,
+        "precio_actual": 88.342,
         "atr": 3.9186,
         "resistencias": [
           {
@@ -411,7 +421,7 @@
         ]
       },
       "1w": {
-        "precio_actual": 88.287,
+        "precio_actual": 88.311,
         "atr": 10.4259,
         "resistencias": [],
         "soportes": [
@@ -430,7 +440,7 @@
     },
     "DOGEUSDT": {
       "1h": {
-        "precio_actual": 0.08916,
+        "precio_actual": 0.08912,
         "atr": 0.0006,
         "resistencias": [
           {
@@ -467,7 +477,7 @@
         "soportes": []
       },
       "4h": {
-        "precio_actual": 0.08916,
+        "precio_actual": 0.08914,
         "atr": 0.0016,
         "resistencias": [
           {
@@ -535,7 +545,7 @@
         ]
       },
       "1d": {
-        "precio_actual": 0.08916,
+        "precio_actual": 0.08911,
         "atr": 0.0042,
         "resistencias": [
           {
@@ -593,7 +603,7 @@
         ]
       },
       "1w": {
-        "precio_actual": 0.08916,
+        "precio_actual": 0.08912,
         "atr": 0.0107,
         "resistencias": [
           {
@@ -663,81 +673,71 @@
     },
     "PEPEUSDT": {
       "1h": {
-        "precio_actual": 4.1e-06,
+        "precio_actual": 4.096e-06,
         "atr": 0.0,
         "resistencias": [],
         "soportes": [
           {
             "precio": 0.0,
             "toques": 5,
-            "score": 130.04,
+            "score": 161.99,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
-            "breaks": 22,
-            "dwell": 1,
-            "close_inside": 35
+            "breaks": 2,
+            "dwell": 25,
+            "close_inside": 28
           },
           {
             "precio": 0.0,
-            "toques": 2,
-            "score": 86.59,
-            "texto": "Media",
-            "emoji": "\ud83d\udfe1",
-            "breaks": 1,
-            "dwell": 0,
-            "close_inside": 0
-          },
-          {
-            "precio": 0.0,
-            "toques": 2,
-            "score": 72.58,
-            "texto": "Media",
-            "emoji": "\ud83d\udfe1",
-            "breaks": 4,
-            "dwell": 1,
-            "close_inside": 8
+            "toques": 5,
+            "score": -96.96,
+            "texto": "D\u00e9bil",
+            "emoji": "\ud83d\udfe2",
+            "breaks": 18,
+            "dwell": 114,
+            "close_inside": 157
           }
         ]
       },
       "4h": {
-        "precio_actual": 4.1e-06,
+        "precio_actual": 4.098e-06,
         "atr": 0.0,
         "resistencias": [],
         "soportes": [
           {
             "precio": 0.0,
-            "toques": 2,
-            "score": 104.15,
+            "toques": 4,
+            "score": 171.51,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
-            "breaks": 8,
-            "dwell": 2,
-            "close_inside": 18
+            "breaks": 5,
+            "dwell": 11,
+            "close_inside": 23
           },
           {
             "precio": 0.0,
-            "toques": 2,
-            "score": 73.36,
-            "texto": "Muy fuerte",
-            "emoji": "\ud83d\udd34",
-            "breaks": 1,
-            "dwell": 0,
-            "close_inside": 0
-          },
-          {
-            "precio": 0.0,
-            "toques": 2,
-            "score": 69.65,
+            "toques": 3,
+            "score": 93.68,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
-            "breaks": 2,
-            "dwell": 1,
-            "close_inside": 6
+            "breaks": 3,
+            "dwell": 5,
+            "close_inside": 15
+          },
+          {
+            "precio": 0.0,
+            "toques": 1,
+            "score": -72.61,
+            "texto": "D\u00e9bil",
+            "emoji": "\ud83d\udfe2",
+            "breaks": 9,
+            "dwell": 41,
+            "close_inside": 58
           }
         ]
       },
       "1d": {
-        "precio_actual": 4.1e-06,
+        "precio_actual": 4.098e-06,
         "atr": 0.0,
         "resistencias": [],
         "soportes": [
@@ -774,7 +774,7 @@
         ]
       },
       "1w": {
-        "precio_actual": 4.1e-06,
+        "precio_actual": 4.096e-06,
         "atr": 0.0,
         "resistencias": [],
         "soportes": [
