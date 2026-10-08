@@ -2,7 +2,7 @@ import json
 import ccxt
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # ===== CONFIGURACIÓN =====
 CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
@@ -705,7 +705,8 @@ def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rs
     """Genera el resumen.txt con todos los datos (v2.7)"""
     lineas = []
 
-    ahora_arg = datetime.now()
+    ARG_TZ = timezone(timedelta(hours=-3))     
+    ahora_arg = datetime.now(ARG_TZ)
     fecha_str = ahora_arg.strftime('%d/%m/%Y')
     hora_str = ahora_arg.strftime('%H:%M')
 
