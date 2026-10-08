@@ -214,7 +214,7 @@
     .liq-card { display: block; }
   }
 
-  /* S/R — NUEVO v6.5 */
+  /* S/R */
   .sr-precio-actual {
     font-size: 13px;
     color: #58a6ff;
@@ -267,29 +267,88 @@
   .sr-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
   .sr-leyenda div { margin-bottom: 3px; }
 
-  /* S/R viejo (mantener por compatibilidad) */
-  .sr-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
-  .sr-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
-  .sr-table th { color: #8b949e; font-weight: 500; font-size: 11px; padding: 4px 6px; text-align: left; border-bottom: 1px solid #21262d; }
-  .sr-table td { padding: 5px 6px; border-bottom: 1px solid #21262d; font-size: 12px; }
-  .sr-table tr:last-child td { border-bottom: none; }
-  .sr-toques { color: #8b949e; font-size: 11px; text-align: center; }
-  .sr-tf { background: #21262d; color: #8b949e; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
-  .sr-leyenda-viejo { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.5; }
-  .sr-leyenda-viejo div { margin-bottom: 2px; }
-  .fvg-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
-  .fvg-leyenda div { margin-bottom: 3px; }
-  .fvg-leyenda .verde { color: #3fb950; font-weight: 600; }
-  .fvg-leyenda .rojo { color: #f85149; font-weight: 600; }
+  /* Resumen */
+  .resumen-panel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .resumen-panel h2 { font-size: 16px; color: #58a6ff; margin-bottom: 12px; }
+  .resumen-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .resumen-info-item {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .resumen-info-item .label { color: #8b949e; }
+  .resumen-info-item .valor { color: #3fb950; font-weight: 600; }
+  .resumen-info-item .valor-proxima { color: #d29922; font-weight: 600; }
+  .resumen-botones {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .resumen-botones button,
+  .resumen-botones a {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: opacity 0.2s;
+  }
+  .resumen-botones button {
+    background: #238636;
+    color: #fff;
+  }
+  .resumen-botones button:hover { opacity: 0.9; }
+  .resumen-botones a {
+    background: #1b2530;
+    color: #58a6ff;
+    border: 1px solid #58a6ff;
+  }
+  .resumen-botones a:hover { background: #1f2a3a; }
 </style>
 </head>
 <body>
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.5</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.6</p>
 
   <div id="banner-semana" class="banner-semana"></div>
+
+  <!-- PANEL DE RESUMEN (arriba) -->
+  <div class="resumen-panel" id="resumen-panel">
+    <h2>📄 Resumen</h2>
+    <div class="resumen-info">
+      <div class="resumen-info-item">
+        <span class="label">✅ Actualizado:</span>
+        <span class="valor" id="resumen-fecha">—</span>
+      </div>
+      <div class="resumen-info-item">
+        <span class="label">⏱️ Próxima actualización en:</span>
+        <span class="valor-proxima" id="resumen-proxima">—</span>
+      </div>
+    </div>
+    <div class="resumen-botones">
+      <button onclick="copiarResumen()">📋 Copiar resumen</button>
+      <a href="resumen.txt" download="resumen.txt">📥 Descargar .txt</a>
+    </div>
+  </div>
 
   <div class="layout">
 
@@ -429,14 +488,14 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.5 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.6 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
 const LIQ = { 10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8 };
 const ESC_SUGERIDO = { 10: 2.5, 12: 2.0, 15: 1.5, 20: 1.0, 30: 0.6 };
 const NOMBRES = { BTCUSDT: 'BTC', HYPEUSDT: 'HYPE', DOGEUSDT: 'DOGE', PEPEUSDT: 'PEPE' };
-const DECIMALES = { BTCUSDT: 2, HYPEUSDT: 3, DOGEUSDT: 6, PEPEUSDT: 12 };
+const DECIMALES = { BTCUSDT: 2, HYPEUSDT: 4, DOGEUSDT: 6, PEPEUSDT: 12 };
 
 let rsiDataGlobal = null;
 let fvgDataGlobal = null;
@@ -1022,7 +1081,6 @@ async function cargarSR() {
       return;
     }
 
-    // Precio actual (viene de cualquier TF)
     const precioActual = data['1h']?.precio_actual || data['4h']?.precio_actual || 0;
 
     let html = '';
@@ -1043,11 +1101,9 @@ async function cargarSR() {
 
       hayDatos = true;
 
-      // Sección de TF
       html += `<div class="sr-tf-seccion">`;
       html += `<div class="sr-tf-titulo">──── ${nombresTF[tf]} ────</div>`;
 
-      // Resistencias
       if (resistencias.length > 0) {
         html += `<div class="sr-subtitulo resistencia">🔴 RESISTENCIAS</div>`;
         resistencias.forEach(r => {
@@ -1062,7 +1118,6 @@ async function cargarSR() {
         });
       }
 
-      // Soportes
       if (soportes.length > 0) {
         html += `<div class="sr-subtitulo soporte" style="margin-top:8px;">🟢 SOPORTES</div>`;
         soportes.forEach(s => {
@@ -1086,7 +1141,6 @@ async function cargarSR() {
       return;
     }
 
-    // Leyenda
     html += `<div class="sr-leyenda">
       <div>🔴 <strong>Muy fuerte</strong> = probable rebote</div>
       <div>🟡 <strong>Media</strong> = puede rebotar</div>
@@ -1368,6 +1422,61 @@ async function cargarSentimiento() {
   }
 }
 
+// ==== RESUMEN ====
+async function cargarInfoResumen() {
+  const fechaSpan = document.getElementById('resumen-fecha');
+  const proximaSpan = document.getElementById('resumen-proxima');
+  try {
+    const response = await fetch('resumen.txt?t=' + Date.now());
+    const texto = await response.text();
+    // Extraer fecha del header: "📅 08/10/2026 — 21:55 (ARG)"
+    const match = texto.match(/📅 (\d{2}\/\d{2}\/\d{4}) — (\d{2}:\d{2}) \(ARG\)/);
+    if (match) {
+      fechaSpan.textContent = `${match[1]} ${match[2]} (ARG)`;
+
+      // Calcular próxima actualización (+1h)
+      const [dia, mes, anio] = match[1].split('/');
+      const [hora, min] = match[2].split(':');
+      const ultima = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia), parseInt(hora), parseInt(min));
+      const proxima = new Date(ultima.getTime() + 60 * 60 * 1000);
+      const ahora = new Date();
+      const minutos = Math.max(0, Math.round((proxima - ahora) / 1000 / 60));
+      if (minutos > 60) {
+        proximaSpan.textContent = 'menos de 1 min';
+      } else {
+        proximaSpan.textContent = `${minutos} min`;
+      }
+    } else {
+      fechaSpan.textContent = '—';
+      proximaSpan.textContent = '—';
+    }
+  } catch (error) {
+    fechaSpan.textContent = '—';
+    proximaSpan.textContent = '—';
+    console.log('Error leyendo resumen.txt:', error);
+  }
+}
+
+async function copiarResumen() {
+  try {
+    const response = await fetch('resumen.txt?t=' + Date.now());
+    const texto = await response.text();
+    await navigator.clipboard.writeText(texto);
+    // Feedback visual
+    const btn = event.target;
+    const original = btn.textContent;
+    btn.textContent = '✅ ¡Copiado!';
+    btn.style.background = '#3fb950';
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.style.background = '';
+    }, 2000);
+  } catch (error) {
+    alert('❌ Error al copiar. Probá de nuevo.\n' + error.message);
+  }
+}
+
+// ==== INICIALIZACIÓN ====
 cambiarModo();
 cargarRSI();
 cargarFVG();
@@ -1376,6 +1485,8 @@ cargarGP();
 cargarLiq();
 cargarEventos();
 cargarSentimiento();
+cargarInfoResumen();
+
 setInterval(cargarRSI, 600000);
 setInterval(cargarFVG, 600000);
 setInterval(cargarSR, 600000);
@@ -1383,6 +1494,7 @@ setInterval(cargarGP, 600000);
 setInterval(cargarLiq, 600000);
 setInterval(cargarEventos, 600000);
 setInterval(cargarSentimiento, 300000);
+setInterval(cargarInfoResumen, 60000);  // Cada 1 min
 </script>
 </body>
 </html>
