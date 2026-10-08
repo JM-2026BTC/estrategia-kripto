@@ -26,7 +26,7 @@ SR_PIVOT_LENGTH = 10
 SR_ATR_LEN = 14
 SR_ATR_MULT = 0.5
 SR_MIN_PIVOTS = 1
-SR_TOP_ZONES = 3
+SR_TOP_ZONES = 5
 
 # Pesos (weights) del score
 SR_PIVOT_WEIGHT = 20
@@ -41,11 +41,11 @@ SR_REACTION_RETRACE_FRAC = 0.6
 # Merge de zonas
 SR_MERGE_ATR_FRAC = 0.8
 
-# Umbrales RELATIVOS — % del score máximo del TF
+# Umbrales RELATIVOS
 SR_UMBRAL_MUY_FUERTE_PCT = 0.7
 SR_UMBRAL_MEDIA_PCT = 0.4
 
-# Umbrales ABSOLUTOS — para cuando hay 1 sola zona o todas iguales
+# Umbrales ABSOLUTOS
 SR_SCORE_ABS_MUY_FUERTE = 100
 SR_SCORE_ABS_MEDIA = 40
 
@@ -64,7 +64,6 @@ LIQ_TOLERANCIA_PCT = 1.0
 
 
 def redondear(valor, precio_actual):
-    """Redondeo adaptativo según el precio (v2.5)"""
     if precio_actual >= 1000:
         return round(valor, 2)
     elif precio_actual >= 1:
@@ -296,7 +295,6 @@ def agrupar_pivotes_juniorq(pivotes, atr_promedio, df, precio_actual):
 
 
 def crear_zona(pivotes, zona_width, df, precio_actual):
-    """Crea una zona con score calculado (v2.5 — sin redondeo prematuro)"""
     precios = [p['precio'] for p in pivotes]
     precio_prom = np.mean(precios)
     zona_desde = precio_prom - zona_width
@@ -313,7 +311,7 @@ def crear_zona(pivotes, zona_width, df, precio_actual):
     score = pivot_score + reaction_score - penalty
 
     return {
-        'precio': precio_prom,  # ← SIN redondear (se redondea después)
+        'precio': precio_prom,
         'toques': len(pivotes),
         'score': round(score, 2),
         'texto': None,
