@@ -17,12 +17,37 @@ FVG_TEMPORALIDADES = ['1h', '4h', '1d']
 FVG_MAX_DISTANCIA_PCT = {'1h': 5.0, '4h': 5.0, '1d': 15.0, '1w': 25.0}
 FVG_MIN_TAMANO_PCT = 0.15
 
-# S/R
-SR_VELAS = {'1h': 100, '4h': 100, '1d': 300, '1w': 200}
+# ===== S/R — LÓGICA JUNIORQTRADER =====
+# Parámetros basados en Auto Support Resistance Channels
+SR_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 300}
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
-SR_STRENGTH = {'1h': 3, '4h': 3, '1d': 4, '1w': 5}
-SR_MIN_TOQUES = {'BTCUSDT': 2, 'HYPEUSDT': 2, 'DOGEUSDT': 2, 'PEPEUSDT': 2}
-SR_MAX_ZONAS = 4
+
+# Parámetros del indicador
+SR_PIVOT_LENGTH = 10
+SR_ATR_LEN = 14
+SR_ATR_MULT = 0.5
+SR_MIN_PIVOTS = 1
+SR_TOP_ZONES = 2  # 2 niveles por TF
+
+# Pesos (weights) del score
+SR_PIVOT_WEIGHT = 5
+SR_BREAK_WEIGHT = 3
+SR_DWELL_WEIGHT = 2
+SR_CLOSE_INSIDE_WEIGHT = 3
+SR_REACTION_WEIGHT = 4
+SR_REACTION_BARS = 12
+SR_REACTION_ATR = 1.2
+SR_REACTION_RETRACE_FRAC = 0.5
+
+# Merge de zonas
+SR_MERGE_ATR_FRAC = 0.8
+
+# Umbrales de clasificación (texto)
+# Score >= 15 → "Muy fuerte"
+# Score 5-14 → "Media"
+# Score < 5  → "Débil"
+SR_SCORE_MUY_FUERTE = 15
+SR_SCORE_MEDIA = 5
 
 # Golden Pocket
 GP_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 200}
@@ -51,14 +76,17 @@ def redondear(valor, precio_actual):
         return round(valor, 10)
 
 
-def calcular_cluster_pct(df):
-    try:
-        rango = (df['high'] - df['low']).tail(14).mean()
-        precio = df['close'].iloc[-1]
-        atr_pct = (rango / precio) * 100
-        return max(atr_pct * 0.4, 0.3)
-    except:
-        return 0.5
+def calcular_atr(df, periodo=14):
+    """ATR (Average True Range) — versión simple"""
+    high = df['high']
+    low = df['low']
+    close = df['close']
+    tr1 = high - low
+    tr2 = (high - close.shift()).abs()
+    tr3 = (low - close.shift()).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    atr = tr.rolling(window=periodo).mean()
+    return atr
 
 
 def calcular_rsi(close, periodo=14):
@@ -135,7 +163,245 @@ def filtrar_fvgs(fvgs, precio_actual, timeframe):
     return filtrados
 
 
+def detectar_pivotes_juniorq(df, pivot_length=10):
+    """Detecta pivotes al estilo JuniorQTrader"""
+    pivotes = []
+    highs = df['high'].values
+    lows = df['low'].values
+    n = len(df)
+
+    for i in range(pivot_length, n - pivot_length):
+        # Pivote alto
+        es_alto = True
+        for j in range(1, pivot_length + 1):
+            if highs[i] <= highs[i - j] or highs[i] <= highs[i + j]:
+                es_alto = False
+                break
+        if es_alto:
+            pivotes.append({'precio': float(highs[i]), 'indice': i, 'tipo': +1})
+
+        # Pivote bajo
+        es_bajo = True
+        for j in range(1, pivot_length + 1):
+            if lows[i] >= lows[i - j] or lows[i] >= lows[i + j]:
+                es_bajo = False
+                break
+        if es_bajo:
+            pivotes.append({'precio': float(lows[i]), 'indice': i, 'tipo': -1})
+
+    return pivotes
+
+
+def calcular_reaction_score(df, pivot, atr_series, config):
+    """Calcula el reaction score de un pivote"""
+    idx = pivot['indice']
+    tipo = pivot['tipo']
+    precio = pivot['precio']
+    n = len(df)
+
+    bars_available = n - 1 - idx
+    n_bars = min(SR_REACTION_BARS, bars_available)
+
+    if n_bars < 2:
+        return 0.0
+
+    atr_at_pivot = atr_series.iloc[idx]
+    if pd.isna(atr_at_pivot) or atr_at_pivot == 0:
+        return 0.0
+
+    if tipo == -1:
+        # Pivote bajo → queremos que suba
+        best_high = df['high'].iloc[idx+1:idx+1+n_bars].max()
+        worst_low_after = df['low'].iloc[idx+1:idx+1+n_bars].min()
+        excursion = best_high - precio
+        bad_retrace = max(0.0, precio - worst_low_after)
+    else:
+        # Pivote alto → queremos que baje
+        best_low = df['low'].iloc[idx+1:idx+1+n_bars].min()
+        worst_high_after = df['high'].iloc[idx+1:idx+1+n_bars].max()
+        excursion = precio - best_low
+        bad_retrace = max(0.0, worst_high_after - precio)
+
+    enough_impulse = excursion >= atr_at_pivot * SR_REACTION_ATR
+    retrace_ok = bad_retrace <= excursion * SR_REACTION_RETRACE_FRAC
+
+    if enough_impulse and retrace_ok:
+        return (excursion / atr_at_pivot) * SR_REACTION_WEIGHT
+    return 0.0
+
+
+def calcular_penalizaciones(df, zona_desde, zona_hasta, idx_inicio):
+    """Calcula breaks, dwell, close inside para una zona"""
+    breaks = 0
+    dwell = 0
+    close_inside = 0
+
+    en_zona = False
+    for i in range(idx_inicio, len(df)):
+        high = df['high'].iloc[i]
+        low = df['low'].iloc[i]
+        close = df['close'].iloc[i]
+
+        # Close inside
+        if zona_desde <= close <= zona_hasta:
+            close_inside += 1
+
+        # Dwell (vela dentro de la zona)
+        if zona_desde <= low and high <= zona_hasta:
+            dwell += 1
+
+        # Break (atraviesa la zona)
+        if not en_zona:
+            if high > zona_hasta and close > zona_hasta:
+                breaks += 1
+                en_zona = True
+            elif low < zona_desde and close < zona_desde:
+                breaks += 1
+                en_zona = True
+        else:
+            if close < zona_desde or close > zona_hasta:
+                en_zona = False
+
+    return breaks, dwell, close_inside
+
+
+def agrupar_pivotes_juniorq(pivotes, atr_promedio, df):
+    """Agrupa pivotes en zonas por ATR × factor"""
+    if not pivotes:
+        return []
+
+    zona_width = atr_promedio * SR_ATR_MULT
+    merge_threshold = atr_promedio * SR_MERGE_ATR_FRAC
+
+    # Ordenar por precio
+    pivotes_ord = sorted(pivotes, key=lambda x: x['precio'])
+
+    zonas = []
+    grupo_actual = [pivotes_ord[0]]
+
+    for i in range(1, len(pivotes_ord)):
+        precio_actual_pivote = pivotes_ord[i]['precio']
+        precio_prom_grupo = np.mean([p['precio'] for p in grupo_actual])
+
+        if abs(precio_actual_pivote - precio_prom_grupo) <= merge_threshold:
+            grupo_actual.append(pivotes_ord[i])
+        else:
+            if len(grupo_actual) >= SR_MIN_PIVOTS:
+                zonas.append(crear_zona(grupo_actual, zona_width, df))
+            grupo_actual = [pivotes_ord[i]]
+
+    if len(grupo_actual) >= SR_MIN_PIVOTS:
+        zonas.append(crear_zona(grupo_actual, zona_width, df))
+
+    return zonas
+
+
+def crear_zona(pivotes, zona_width, df):
+    """Crea una zona con score calculado"""
+    precios = [p['precio'] for p in pivotes]
+    precio_prom = np.mean(precios)
+    zona_desde = precio_prom - zona_width
+    zona_hasta = precio_prom + zona_width
+
+    # Índice del pivote más antiguo del grupo
+    idx_min = min(p['indice'] for p in pivotes)
+
+    # Calcular penalizaciones
+    breaks, dwell, close_inside = calcular_penalizaciones(df, zona_desde, zona_hasta, idx_min)
+
+    # Calcular score
+    pivot_score = len(pivotes) * SR_PIVOT_WEIGHT
+    reaction_score = sum(p.get('reaction', 0) for p in pivotes)
+    penalty = (breaks * SR_BREAK_WEIGHT) + (dwell * SR_DWELL_WEIGHT) + (close_inside * SR_CLOSE_INSIDE_WEIGHT)
+
+    score = pivot_score + reaction_score - penalty
+
+    # Clasificar
+    if score >= SR_SCORE_MUY_FUERTE:
+        texto = 'Muy fuerte'
+        emoji = '🔴'
+    elif score >= SR_SCORE_MEDIA:
+        texto = 'Media'
+        emoji = '🟡'
+    else:
+        texto = 'Débil'
+        emoji = '🟢'
+
+    return {
+        'precio': round(precio_prom, 2),
+        'toques': len(pivotes),
+        'score': round(score, 2),
+        'texto': texto,
+        'emoji': emoji,
+        'breaks': breaks,
+        'dwell': dwell,
+        'close_inside': close_inside
+    }
+
+
+def calcular_sr_par(exchange, symbol, timeframe):
+    """Nueva lógica S/R basada en JuniorQTrader"""
+    try:
+        limit = SR_VELAS.get(timeframe, 300)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        df['high'] = df['high'].astype(float)
+        df['low'] = df['low'].astype(float)
+
+        precio_actual = float(df['close'].iloc[-1])
+
+        # ATR
+        atr_series = calcular_atr(df, SR_ATR_LEN)
+        atr_promedio = float(atr_series.iloc[-1]) if not pd.isna(atr_series.iloc[-1]) else precio_actual * 0.01
+
+        # Detectar pivotes
+        pivotes = detectar_pivotes_juniorq(df, SR_PIVOT_LENGTH)
+
+        # Calcular reaction score de cada pivote
+        for piv in pivotes:
+            piv['reaction'] = calcular_reaction_score(df, piv, atr_series, {})
+
+        # Separar por tipo
+        pivotes_altos = [p for p in pivotes if p['tipo'] == +1]
+        pivotes_bajos = [p for p in pivotes if p['tipo'] == -1]
+
+        # Agrupar en zonas
+        zonas_altas = agrupar_pivotes_juniorq(pivotes_altos, atr_promedio, df)
+        zonas_bajas = agrupar_pivotes_juniorq(pivotes_bajos, atr_promedio, df)
+
+        # Filtrar arriba/abajo del precio
+        resistencias = [z for z in zonas_altas if z['precio'] > precio_actual]
+        soportes = [z for z in zonas_bajas if z['precio'] < precio_actual]
+
+        # Ordenar por score (mayor primero) y tomar top N
+        resistencias = sorted(resistencias, key=lambda x: -x['score'])[:SR_TOP_ZONES]
+        soportes = sorted(soportes, key=lambda x: -x['score'])[:SR_TOP_ZONES]
+
+        # Ordenar por cercanía al precio para mostrar
+        resistencias = sorted(resistencias, key=lambda x: abs(x['precio'] - precio_actual))
+        soportes = sorted(soportes, key=lambda x: abs(x['precio'] - precio_actual))
+
+        # Redondear
+        for z in resistencias:
+            z['precio'] = redondear(z['precio'], precio_actual)
+        for z in soportes:
+            z['precio'] = redondear(z['precio'], precio_actual)
+
+        return {
+            'precio_actual': redondear(precio_actual, precio_actual),
+            'atr': round(atr_promedio, 4),
+            'resistencias': resistencias,
+            'soportes': soportes
+        }
+
+    except Exception as e:
+        print(f"Error S/R {symbol} {timeframe}: {e}")
+        return {'precio_actual': None, 'resistencias': [], 'soportes': []}
+
+
 def detectar_pivotes(df, strength):
+    """Pivotes genéricos (para GP)"""
     pivotes_altos = []
     pivotes_bajos = []
     highs = df['high'].values
@@ -174,102 +440,6 @@ def encontrar_ultimo_impulso(pivotes_altos, pivotes_bajos):
         if actual['tipo'] != anterior['tipo']:
             return anterior, actual
     return None, None
-
-
-def agrupar_pivotes(pivotes, precio_actual, cluster_pct, min_toques):
-    if not pivotes:
-        return []
-    pivotes_ord = sorted(pivotes, key=lambda x: x['precio'])
-    zonas = []
-    grupo_actual = [pivotes_ord[0]]
-    for i in range(1, len(pivotes_ord)):
-        precio_actual_pivote = pivotes_ord[i]['precio']
-        precio_ultimo_grupo = grupo_actual[-1]['precio']
-        distancia_pct = abs(precio_actual_pivote - precio_ultimo_grupo) / precio_ultimo_grupo * 100
-        if distancia_pct <= cluster_pct:
-            grupo_actual.append(pivotes_ord[i])
-        else:
-            if len(grupo_actual) >= min_toques:
-                precios = [p['precio'] for p in grupo_actual]
-                zonas.append({
-                    'precio': redondear(sum(precios) / len(precios), precio_actual),
-                    'toques': len(grupo_actual)
-                })
-            grupo_actual = [pivotes_ord[i]]
-    if len(grupo_actual) >= min_toques:
-        precios = [p['precio'] for p in grupo_actual]
-        zonas.append({
-            'precio': redondear(sum(precios) / len(precios), precio_actual),
-            'toques': len(grupo_actual)
-        })
-    return zonas
-
-
-def calcular_rsi_par(exchange, symbol, timeframe):
-    try:
-        limit = RSI_VELAS.get(timeframe, 100)
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['close'] = df['close'].astype(float)
-        rsi = calcular_rsi(df['close'], RSI_PERIODO)
-        return round(float(rsi.iloc[-1]), 2)
-    except Exception as e:
-        print(f"Error RSI {symbol} {timeframe}: {e}")
-        return None
-
-
-def calcular_fvgs_par(exchange, symbol, timeframe):
-    try:
-        limit = FVG_VELAS.get(timeframe, 100)
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['close'] = df['close'].astype(float)
-        df['high'] = df['high'].astype(float)
-        df['low'] = df['low'].astype(float)
-        precio_actual = float(df['close'].iloc[-1])
-        fvgs = detectar_fvg(df)
-        return filtrar_fvgs(fvgs, precio_actual, timeframe)
-    except Exception as e:
-        print(f"Error FVG {symbol} {timeframe}: {e}")
-        return []
-
-
-def calcular_sr_par(exchange, symbol, timeframe):
-    try:
-        limit = SR_VELAS.get(timeframe, 100)
-        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-        df['close'] = df['close'].astype(float)
-        df['high'] = df['high'].astype(float)
-        df['low'] = df['low'].astype(float)
-
-        precio_actual = float(df['close'].iloc[-1])
-        symbol_limpio = symbol.replace('/', '')
-        strength = SR_STRENGTH.get(timeframe, 3)
-        cluster_pct = calcular_cluster_pct(df)
-        min_toques = SR_MIN_TOQUES.get(symbol_limpio, 2)
-
-        pivotes_altos, pivotes_bajos = detectar_pivotes(df, strength)
-
-        altos_arriba = [p for p in pivotes_altos if p['precio'] > precio_actual]
-        resistencias = agrupar_pivotes(altos_arriba, precio_actual, cluster_pct, min_toques)
-        resistencias = sorted(resistencias, key=lambda x: x['precio'])[:SR_MAX_ZONAS]
-
-        bajos_abajo = [p for p in pivotes_bajos if p['precio'] < precio_actual]
-        soportes = agrupar_pivotes(bajos_abajo, precio_actual, cluster_pct, min_toques)
-        soportes = sorted(soportes, key=lambda x: x['precio'], reverse=True)[:SR_MAX_ZONAS]
-
-        return {
-            'precio_actual': redondear(precio_actual, precio_actual),
-            'cluster_usado': round(cluster_pct, 2),
-            'strength_usado': strength,
-            'min_toques_usado': min_toques,
-            'resistencias': resistencias,
-            'soportes': soportes
-        }
-    except Exception as e:
-        print(f"Error S/R {symbol} {timeframe}: {e}")
-        return {'precio_actual': None, 'resistencias': [], 'soportes': []}
 
 
 def calcular_golden_pocket_par(exchange, symbol, timeframe):
@@ -433,6 +603,35 @@ def calcular_liquidaciones_par(exchange, symbol):
     except Exception as e:
         print(f"Error Liquidaciones {symbol}: {e}")
         return {'precio_actual': None, 'long_zones': [], 'short_zones': []}
+
+
+def calcular_rsi_par(exchange, symbol, timeframe):
+    try:
+        limit = RSI_VELAS.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        rsi = calcular_rsi(df['close'], RSI_PERIODO)
+        return round(float(rsi.iloc[-1]), 2)
+    except Exception as e:
+        print(f"Error RSI {symbol} {timeframe}: {e}")
+        return None
+
+
+def calcular_fvgs_par(exchange, symbol, timeframe):
+    try:
+        limit = FVG_VELAS.get(timeframe, 100)
+        ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+        df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        df['close'] = df['close'].astype(float)
+        df['high'] = df['high'].astype(float)
+        df['low'] = df['low'].astype(float)
+        precio_actual = float(df['close'].iloc[-1])
+        fvgs = detectar_fvg(df)
+        return filtrar_fvgs(fvgs, precio_actual, timeframe)
+    except Exception as e:
+        print(f"Error FVG {symbol} {timeframe}: {e}")
+        return []
 
 
 def main():
