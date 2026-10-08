@@ -64,7 +64,7 @@ LIQ_TOLERANCIA_PCT = 1.0
 
 
 def redondear(valor, precio_actual):
-    """Redondeo adaptativo según el precio (v2.4)"""
+    """Redondeo adaptativo según el precio (v2.5)"""
     if precio_actual >= 1000:
         return round(valor, 2)
     elif precio_actual >= 1:
@@ -266,7 +266,7 @@ def calcular_penalizaciones(df, zona_desde, zona_hasta, idx_inicio):
     return breaks, dwell, close_inside
 
 
-def agrupar_pivotes_juniorq(pivotes, atr_promedio, df):
+def agrupar_pivotes_juniorq(pivotes, atr_promedio, df, precio_actual):
     if not pivotes:
         return []
 
@@ -286,16 +286,17 @@ def agrupar_pivotes_juniorq(pivotes, atr_promedio, df):
             grupo_actual.append(pivotes_ord[i])
         else:
             if len(grupo_actual) >= SR_MIN_PIVOTS:
-                zonas.append(crear_zona(grupo_actual, zona_width, df))
+                zonas.append(crear_zona(grupo_actual, zona_width, df, precio_actual))
             grupo_actual = [pivotes_ord[i]]
 
     if len(grupo_actual) >= SR_MIN_PIVOTS:
-        zonas.append(crear_zona(grupo_actual, zona_width, df))
+        zonas.append(crear_zona(grupo_actual, zona_width, df, precio_actual))
 
     return zonas
 
 
-def crear_zona(pivotes, zona_width, df):
+def crear_zona(pivotes, zona_width, df, precio_actual):
+    """Crea una zona con score calculado (v2.5 — sin redondeo prematuro)"""
     precios = [p['precio'] for p in pivotes]
     precio_prom = np.mean(precios)
     zona_desde = precio_prom - zona_width
@@ -312,7 +313,7 @@ def crear_zona(pivotes, zona_width, df):
     score = pivot_score + reaction_score - penalty
 
     return {
-        'precio': round(precio_prom, 2),
+        'precio': precio_prom,  # ← SIN redondear (se redondea después)
         'toques': len(pivotes),
         'score': round(score, 2),
         'texto': None,
@@ -375,7 +376,6 @@ def calcular_sr_par(exchange, symbol, timeframe):
         atr_series = calcular_atr(df, SR_ATR_LEN)
         atr_promedio = float(atr_series.iloc[-1]) if not pd.isna(atr_series.iloc[-1]) else precio_actual * 0.01
 
-        # ATR mínimo adaptativo (v2.4)
         if precio_actual < 0.0001:
             atr_promedio = max(atr_promedio, precio_actual * 0.05)
         else:
@@ -389,8 +389,8 @@ def calcular_sr_par(exchange, symbol, timeframe):
         pivotes_altos = [p for p in pivotes if p['tipo'] == +1]
         pivotes_bajos = [p for p in pivotes if p['tipo'] == -1]
 
-        zonas_altas = agrupar_pivotes_juniorq(pivotes_altos, atr_promedio, df)
-        zonas_bajas = agrupar_pivotes_juniorq(pivotes_bajos, atr_promedio, df)
+        zonas_altas = agrupar_pivotes_juniorq(pivotes_altos, atr_promedio, df, precio_actual)
+        zonas_bajas = agrupar_pivotes_juniorq(pivotes_bajos, atr_promedio, df, precio_actual)
 
         resistencias = [z for z in zonas_altas if z['precio'] > precio_actual]
         soportes = [z for z in zonas_bajas if z['precio'] < precio_actual]
