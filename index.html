@@ -214,18 +214,69 @@
     .liq-card { display: block; }
   }
 
-  /* S/R */
+  /* S/R — NUEVO v6.5 */
+  .sr-precio-actual {
+    font-size: 13px;
+    color: #58a6ff;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #21262d;
+  }
+  .sr-tf-seccion {
+    margin-top: 14px;
+    margin-bottom: 8px;
+  }
+  .sr-tf-titulo {
+    color: #58a6ff;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+    padding: 4px 0;
+    border-top: 1px solid #21262d;
+    border-bottom: 1px solid #21262d;
+    margin-bottom: 8px;
+  }
+  .sr-subtitulo {
+    color: #8b949e;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    margin-top: 6px;
+  }
+  .sr-subtitulo.resistencia { color: #f85149; }
+  .sr-subtitulo.soporte { color: #3fb950; }
+  .sr-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid #21262d;
+  }
+  .sr-fila:last-child { border-bottom: none; }
+  .sr-precio { color: #c9d1d9; font-weight: 600; }
+  .sr-score { font-size: 11px; }
+  .sr-score.muy-fuerte { color: #f85149; font-weight: 600; }
+  .sr-score.media { color: #d29922; font-weight: 600; }
+  .sr-score.debil { color: #3fb950; font-weight: 600; }
+  .sr-dist { color: #8b949e; font-size: 11px; }
+  .sr-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
+  .sr-leyenda div { margin-bottom: 3px; }
+
+  /* S/R viejo (mantener por compatibilidad) */
   .sr-header { color: #58a6ff; font-size: 12px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; }
   .sr-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
   .sr-table th { color: #8b949e; font-weight: 500; font-size: 11px; padding: 4px 6px; text-align: left; border-bottom: 1px solid #21262d; }
   .sr-table td { padding: 5px 6px; border-bottom: 1px solid #21262d; font-size: 12px; }
   .sr-table tr:last-child td { border-bottom: none; }
-  .sr-precio { font-weight: 600; color: #c9d1d9; font-variant-numeric: tabular-nums; }
-  .sr-dist { color: #8b949e; font-size: 11px; font-variant-numeric: tabular-nums; }
   .sr-toques { color: #8b949e; font-size: 11px; text-align: center; }
   .sr-tf { background: #21262d; color: #8b949e; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
-  .sr-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.5; }
-  .sr-leyenda div { margin-bottom: 2px; }
+  .sr-leyenda-viejo { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.5; }
+  .sr-leyenda-viejo div { margin-bottom: 2px; }
   .fvg-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
   .fvg-leyenda div { margin-bottom: 3px; }
   .fvg-leyenda .verde { color: #3fb950; font-weight: 600; }
@@ -236,7 +287,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.4</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.5</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -378,14 +429,14 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.4 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.5 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
 const LIQ = { 10: 9.5, 12: 7.9, 15: 6.25, 20: 4.5, 30: 2.8 };
 const ESC_SUGERIDO = { 10: 2.5, 12: 2.0, 15: 1.5, 20: 1.0, 30: 0.6 };
 const NOMBRES = { BTCUSDT: 'BTC', HYPEUSDT: 'HYPE', DOGEUSDT: 'DOGE', PEPEUSDT: 'PEPE' };
-const DECIMALES = { BTCUSDT: 2, HYPEUSDT: 3, DOGEUSDT: 5, PEPEUSDT: 10 };
+const DECIMALES = { BTCUSDT: 2, HYPEUSDT: 3, DOGEUSDT: 6, PEPEUSDT: 12 };
 
 let rsiDataGlobal = null;
 let fvgDataGlobal = null;
@@ -971,66 +1022,75 @@ async function cargarSR() {
       return;
     }
 
+    // Precio actual (viene de cualquier TF)
     const precioActual = data['1h']?.precio_actual || data['4h']?.precio_actual || 0;
-    const resistencias = [];
-    const soportes = [];
-    ['1h', '4h', '1d', '1w'].forEach(tf => {
-      const tfData = data[tf] || {};
-      (tfData.resistencias || []).forEach(r => {
-        resistencias.push({ ...r, tf: tf, distancia: (r.precio - precioActual) / precioActual * 100 });
-      });
-      (tfData.soportes || []).forEach(s => {
-        soportes.push({ ...s, tf: tf, distancia: (s.precio - precioActual) / precioActual * 100 });
-      });
+
+    let html = '';
+    html += `<div class="sr-precio-actual">💰 Precio actual: ${fmtPrecio(precioActual, cripto)}</div>`;
+
+    const tfs = ['1h', '4h', '1d', '1w'];
+    const nombresTF = { '1h': '1H', '4h': '4H', '1d': '1D', '1w': '1W' };
+    let hayDatos = false;
+
+    tfs.forEach(tf => {
+      const tfData = data[tf];
+      if (!tfData) return;
+
+      const resistencias = tfData.resistencias || [];
+      const soportes = tfData.soportes || [];
+
+      if (resistencias.length === 0 && soportes.length === 0) return;
+
+      hayDatos = true;
+
+      // Sección de TF
+      html += `<div class="sr-tf-seccion">`;
+      html += `<div class="sr-tf-titulo">──── ${nombresTF[tf]} ────</div>`;
+
+      // Resistencias
+      if (resistencias.length > 0) {
+        html += `<div class="sr-subtitulo resistencia">🔴 RESISTENCIAS</div>`;
+        resistencias.forEach(r => {
+          const dist = (r.precio - precioActual) / precioActual * 100;
+          const signo = dist >= 0 ? '+' : '';
+          const claseScore = r.texto === 'Muy fuerte' ? 'muy-fuerte' : (r.texto === 'Media' ? 'media' : 'debil');
+          html += `<div class="sr-fila">
+            <span class="sr-precio">${r.emoji || ''} ${fmtPrecio(r.precio, cripto)}</span>
+            <span class="sr-score ${claseScore}">${r.texto}</span>
+            <span class="sr-dist">${signo}${dist.toFixed(2)}%</span>
+          </div>`;
+        });
+      }
+
+      // Soportes
+      if (soportes.length > 0) {
+        html += `<div class="sr-subtitulo soporte" style="margin-top:8px;">🟢 SOPORTES</div>`;
+        soportes.forEach(s => {
+          const dist = (s.precio - precioActual) / precioActual * 100;
+          const signo = dist >= 0 ? '+' : '';
+          const claseScore = s.texto === 'Muy fuerte' ? 'muy-fuerte' : (s.texto === 'Media' ? 'media' : 'debil');
+          html += `<div class="sr-fila">
+            <span class="sr-precio">${s.emoji || ''} ${fmtPrecio(s.precio, cripto)}</span>
+            <span class="sr-score ${claseScore}">${s.texto}</span>
+            <span class="sr-dist">${signo}${dist.toFixed(2)}%</span>
+          </div>`;
+        });
+      }
+
+      html += `</div>`;
     });
 
-    resistencias.sort((a, b) => Math.abs(a.distancia) - Math.abs(b.distancia));
-    soportes.sort((a, b) => Math.abs(a.distancia) - Math.abs(b.distancia));
-
-    if (resistencias.length === 0 && soportes.length === 0) {
+    if (!hayDatos) {
       content.innerHTML = '<div class="info">No hay S/R activos para esta cripto.</div>';
       panel.style.display = 'block';
       return;
     }
 
-    let html = '';
-
-    if (resistencias.length > 0) {
-      html += `<div class="sr-header">🔴 RESISTENCIAS (arriba del precio)</div>`;
-      html += `<table class="sr-table">
-        <tr><th>TF</th><th>Precio</th><th style="text-align:center;">Toques</th><th style="text-align:right;">Dist.</th></tr>`;
-      resistencias.slice(0, 4).forEach(r => {
-        const signo = r.distancia >= 0 ? '+' : '';
-        html += `<tr>
-          <td><span class="sr-tf">${r.tf.toUpperCase()}</span></td>
-          <td class="sr-precio">${fmtPrecio(r.precio, cripto)}</td>
-          <td class="sr-toques">${r.toques}</td>
-          <td class="sr-dist" style="text-align:right;">${signo}${r.distancia.toFixed(2)}%</td>
-        </tr>`;
-      });
-      html += `</table>`;
-    }
-
-    if (soportes.length > 0) {
-      html += `<div class="sr-header" style="margin-top:14px;">🟢 SOPORTES (abajo del precio)</div>`;
-      html += `<table class="sr-table">
-        <tr><th>TF</th><th>Precio</th><th style="text-align:center;">Toques</th><th style="text-align:right;">Dist.</th></tr>`;
-      soportes.slice(0, 4).forEach(s => {
-        const signo = s.distancia >= 0 ? '+' : '';
-        html += `<tr>
-          <td><span class="sr-tf">${s.tf.toUpperCase()}</span></td>
-          <td class="sr-precio">${fmtPrecio(s.precio, cripto)}</td>
-          <td class="sr-toques">${s.toques}</td>
-          <td class="sr-dist" style="text-align:right;">${signo}${s.distancia.toFixed(2)}%</td>
-        </tr>`;
-      });
-      html += `</table>`;
-    }
-
+    // Leyenda
     html += `<div class="sr-leyenda">
-      <div><strong>Precio</strong> = Punto medio de la zona (E1 sugerido)</div>
-      <div><strong>Toques</strong> = Veces que el precio respetó la zona</div>
-      <div><strong>Dist.</strong> = Distancia al precio actual</div>
+      <div>🔴 <strong>Muy fuerte</strong> = probable rebote</div>
+      <div>🟡 <strong>Media</strong> = puede rebotar</div>
+      <div>🟢 <strong>Débil</strong> = probable ruptura</div>
     </div>`;
 
     const fecha = srDataGlobal.last_update ? new Date(srDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
