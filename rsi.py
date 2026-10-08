@@ -64,16 +64,19 @@ LIQ_TOLERANCIA_PCT = 1.0
 
 
 def redondear(valor, precio_actual):
+    """Redondeo adaptativo según el precio (v2.4)"""
     if precio_actual >= 1000:
         return round(valor, 2)
     elif precio_actual >= 1:
-        return round(valor, 3)
+        return round(valor, 4)
     elif precio_actual >= 0.01:
-        return round(valor, 5)
+        return round(valor, 6)
     elif precio_actual >= 0.0001:
-        return round(valor, 8)
+        return round(valor, 9)
+    elif precio_actual >= 0.000001:
+        return round(valor, 12)
     else:
-        return round(valor, 10)
+        return round(valor, 15)
 
 
 def calcular_atr(df, periodo=14):
@@ -321,7 +324,6 @@ def crear_zona(pivotes, zona_width, df):
 
 
 def clasificar_zonas_relativo(zonas):
-    """Clasifica zonas con umbrales relativos (v2.3)"""
     if not zonas:
         return zonas
 
@@ -329,8 +331,6 @@ def clasificar_zonas_relativo(zonas):
     score_max = max(scores)
     score_min = min(scores)
 
-    # Caso especial: 1 sola zona o todas con el mismo score
-    # → usar umbrales ABSOLUTOS
     if len(zonas) == 1 or score_max == score_min:
         for z in zonas:
             if z['score'] >= SR_SCORE_ABS_MUY_FUERTE:
@@ -344,7 +344,6 @@ def clasificar_zonas_relativo(zonas):
                 z['emoji'] = '🟢'
         return zonas
 
-    # Umbrales relativos al máximo
     umbral_muy_fuerte = score_max * SR_UMBRAL_MUY_FUERTE_PCT
     umbral_media = score_max * SR_UMBRAL_MEDIA_PCT
 
@@ -375,7 +374,12 @@ def calcular_sr_par(exchange, symbol, timeframe):
 
         atr_series = calcular_atr(df, SR_ATR_LEN)
         atr_promedio = float(atr_series.iloc[-1]) if not pd.isna(atr_series.iloc[-1]) else precio_actual * 0.01
-        atr_promedio = max(atr_promedio, precio_actual * 0.005)
+
+        # ATR mínimo adaptativo (v2.4)
+        if precio_actual < 0.0001:
+            atr_promedio = max(atr_promedio, precio_actual * 0.05)
+        else:
+            atr_promedio = max(atr_promedio, precio_actual * 0.005)
 
         pivotes = detectar_pivotes_juniorq(df, SR_PIVOT_LENGTH)
 
