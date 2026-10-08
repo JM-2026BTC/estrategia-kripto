@@ -2,6 +2,7 @@ import json
 import ccxt
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
 # ===== CONFIGURACIÓN =====
 CRIPTOS = ['BTC/USDT', 'HYPE/USDT', 'DOGE/USDT', 'PEPE/USDT']
@@ -21,7 +22,7 @@ FVG_MIN_TAMANO_PCT = 0.15
 SR_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 300}
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 
-# Parámetros del indicador (v2.6)
+# Parámetros del indicador
 SR_PIVOT_LENGTH = 7
 SR_ATR_LEN = 14
 SR_ATR_MULT = 0.5
@@ -38,7 +39,7 @@ SR_REACTION_BARS = 6
 SR_REACTION_ATR = 0.8
 SR_REACTION_RETRACE_FRAC = 0.6
 
-# Merge de zonas (v2.6)
+# Merge de zonas
 SR_MERGE_ATR_FRAC = 0.5
 
 # Umbrales RELATIVOS
@@ -62,6 +63,9 @@ LIQ_LOOKBACK = 100
 LIQ_SENSIBILIDAD = 2.0
 LIQ_TOLERANCIA_PCT = 1.0
 
+# Nombres legibles
+NOMBRES = {'BTCUSDT': 'BTC', 'HYPEUSDT': 'HYPE', 'DOGEUSDT': 'DOGE', 'PEPEUSDT': 'PEPE'}
+
 
 def redondear(valor, precio_actual):
     if precio_actual >= 1000:
@@ -76,6 +80,22 @@ def redondear(valor, precio_actual):
         return round(valor, 12)
     else:
         return round(valor, 15)
+
+
+def fmt_numero(valor, precio_actual):
+    """Formatea un número según el precio para el resumen"""
+    if precio_actual >= 1000:
+        return f"{valor:,.2f}".replace(",", ".")
+    elif precio_actual >= 1:
+        return f"{valor:,.4f}".replace(",", ".")
+    elif precio_actual >= 0.01:
+        return f"{valor:.6f}"
+    elif precio_actual >= 0.0001:
+        return f"{valor:.9f}"
+    elif precio_actual >= 0.000001:
+        return f"{valor:.12f}"
+    else:
+        return f"{valor:.15f}"
 
 
 def calcular_atr(df, periodo=14):
@@ -652,6 +672,151 @@ def calcular_fvgs_par(exchange, symbol, timeframe):
         return []
 
 
+def detectar_confluencias_fvg(fvgs_por_tf, cripto):
+    """Detecta confluencias FVG entre TFs"""
+    todos = []
+    for tf in ['1h', '4h', '1d']:
+        for fvg in fvgs_por_tf.get(tf, []):
+            todos.append({**fvg, 'tf': tf})
+
+    confluencias = []
+    for i in range(len(todos)):
+        for j in range(i + 1, len(todos)):
+            a = todos[i]
+            b = todos[j]
+            if a['tf'] == b['tf']:
+                continue
+            if a['tipo'] != b['tipo']:
+                continue
+            desde = max(a['desde'], b['desde'])
+            hasta = min(a['hasta'], b['hasta'])
+            if desde < hasta:
+                confluencias.append({
+                    'tipo': a['tipo'],
+                    'desde': desde,
+                    'hasta': hasta,
+                    'precio': (desde + hasta) / 2,
+                    'tfs': sorted([a['tf'], b['tf']])
+                })
+    return confluencias
+
+
+def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado):
+    """Genera el resumen.txt con todos los datos (v2.7)"""
+    lineas = []
+
+    ahora_arg = datetime.now()
+    fecha_str = ahora_arg.strftime('%d/%m/%Y')
+    hora_str = ahora_arg.strftime('%H:%M')
+
+    lineas.append("═" * 56)
+    lineas.append(f"📊 RESUMEN GENISYS")
+    lineas.append(f"📅 {fecha_str} — {hora_str} (ARG)")
+    lineas.append("═" * 56)
+
+    for cripto in CRIPTOS:
+        symbol = cripto.replace('/', '')
+        nombre = NOMBRES.get(symbol, symbol)
+
+        # Precio actual
+        sr_data = sr_resultado['data'].get(symbol, {})
+        precio_actual = sr_data.get('1h', {}).get('precio_actual') or sr_data.get('4h', {}).get('precio_actual') or 0
+
+        lineas.append("")
+        lineas.append("─" * 56)
+        lineas.append(f"🪙 {nombre} — Precio actual: {fmt_numero(precio_actual, precio_actual)}")
+        lineas.append("─" * 56)
+
+        # ── S/R ──
+        lineas.append("")
+        lineas.append("📐 S/R")
+        for tf in ['1h', '4h', '1d', '1w']:
+            tf_data = sr_data.get(tf, {})
+            res = tf_data.get('resistencias', [])
+            sop = tf_data.get('soportes', [])
+            if not res and not sop:
+                continue
+            lineas.append(f"  ── {tf.upper()} ──")
+            for r in res:
+                dist = (r['precio'] - precio_actual) / precio_actual * 100 if precio_actual else 0
+                lineas.append(f"  🔴 {fmt_numero(r['precio'], precio_actual)} ({r.get('texto', '—')})  {dist:+.2f}%")
+            for s in sop:
+                dist = (s['precio'] - precio_actual) / precio_actual * 100 if precio_actual else 0
+                lineas.append(f"  🟢 {fmt_numero(s['precio'], precio_actual)} ({s.get('texto', '—')})  {dist:+.2f}%")
+
+        # ── Golden Pocket ──
+        lineas.append("")
+        lineas.append("📐 GOLDEN POCKET")
+        gp_data = gp_resultado['data'].get(symbol, {})
+        hay_gp = False
+        for tf in ['1h', '4h', '1d', '1w']:
+            gp = gp_data.get(tf)
+            if not gp:
+                continue
+            hay_gp = True
+            lineas.append(f"  ── {tf.upper()} ──")
+            lineas.append(f"  {gp['tipo'].upper()} | {gp['accion']}")
+            lineas.append(f"  Swing: {fmt_numero(gp['swing_low'], precio_actual)} → {fmt_numero(gp['swing_high'], precio_actual)}")
+            lineas.append(f"  Zona: {fmt_numero(gp['zona_desde'], precio_actual)} – {fmt_numero(gp['zona_hasta'], precio_actual)}")
+            lineas.append(f"  → {fmt_numero(gp['precio_sugerido'], precio_actual)}")
+        if not hay_gp:
+            lineas.append("  (sin datos)")
+
+        # ── Liquidaciones ──
+        lineas.append("")
+        lineas.append("📊 LIQUIDACIONES")
+        liq_data = liq_resultado['data'].get(symbol, {})
+        short_zones = liq_data.get('short_zones', [])
+        long_zones = liq_data.get('long_zones', [])
+        if short_zones:
+            lineas.append("  SHORT (arriba):")
+            for z in short_zones:
+                apals = 'x' + ', x'.join(str(a) for a in z['apalancamientos'])
+                lineas.append(f"    🔴 {fmt_numero(z['precio'], precio_actual)}  [{apals}]  {z['distancia_pct']:+.2f}%")
+        if long_zones:
+            lineas.append("  LONG (abajo):")
+            for z in long_zones:
+                apals = 'x' + ', x'.join(str(a) for a in z['apalancamientos'])
+                lineas.append(f"    🟢 {fmt_numero(z['precio'], precio_actual)}  [{apals}]  {z['distancia_pct']:+.2f}%")
+        if not short_zones and not long_zones:
+            lineas.append("  (sin datos)")
+
+        # ── FVG confluencias ──
+        lineas.append("")
+        lineas.append("📊 FVG (CONFLUENCIAS)")
+        fvg_data = fvg_resultado['data'].get(symbol, {})
+        confluencias = detectar_confluencias_fvg(fvg_data, symbol)
+        if confluencias:
+            for c in confluencias[:8]:
+                tfs = '+'.join(t.upper() for t in c['tfs'])
+                lineas.append(f"  {'🔴' if c['tipo'] == 'bajista' else '🟢'} {fmt_numero(c['desde'], precio_actual)} – {fmt_numero(c['hasta'], precio_actual)} ({tfs}) → {fmt_numero(c['precio'], precio_actual)}")
+        else:
+            lineas.append("  (sin confluencias)")
+
+        # ── RSI ──
+        lineas.append("")
+        lineas.append("📈 RSI")
+        rsi_data = rsi_resultado['data'].get(symbol, {})
+        for tf in ['1h', '4h', '1d', '1w']:
+            v = rsi_data.get(tf)
+            if v is None:
+                lineas.append(f"  {tf.upper()}: —")
+                continue
+            etiqueta = ''
+            if v >= 70:
+                etiqueta = ' (Sobrecompra)'
+            elif v <= 30:
+                etiqueta = ' (Sobreventa)'
+            lineas.append(f"  {tf.upper()}: {v:.2f}{etiqueta}")
+
+    lineas.append("")
+    lineas.append("═" * 56)
+    lineas.append(f"Última actualización: {fecha_str} — {hora_str} (ARG)")
+    lineas.append("═" * 56)
+
+    return "\n".join(lineas)
+
+
 def main():
     exchange = ccxt.okx()
 
@@ -694,6 +859,7 @@ def main():
         liq_resultado['data'][symbol] = liq
         print(f"{symbol}: {len(liq['short_zones'])} short / {len(liq['long_zones'])} long")
 
+    # Guardar JSONs
     with open('rsi_data.json', 'w') as f:
         json.dump(rsi_resultado, f, indent=2)
     with open('fvg_data.json', 'w') as f:
@@ -705,7 +871,12 @@ def main():
     with open('liq_data.json', 'w') as f:
         json.dump(liq_resultado, f, indent=2)
 
-    print("\n✅ Datos guardados")
+    # Guardar resumen.txt
+    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado)
+    with open('resumen.txt', 'w', encoding='utf-8') as f:
+        f.write(resumen)
+
+    print("\n✅ Datos guardados (JSONs + resumen.txt)")
 
 
 if __name__ == '__main__':
