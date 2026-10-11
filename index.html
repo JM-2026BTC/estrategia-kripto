@@ -267,6 +267,85 @@
   .sr-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
   .sr-leyenda div { margin-bottom: 3px; }
 
+  /* SuperTrend */
+  .st-panel {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .st-panel h2 { font-size: 16px; color: #58a6ff; margin-bottom: 12px; }
+  .st-precio {
+    font-size: 15px;
+    color: #58a6ff;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #21262d;
+  }
+  .st-params {
+    font-size: 11px;
+    color: #8b949e;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #21262d;
+    font-variant-numeric: tabular-nums;
+  }
+  .st-tf-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #21262d;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .st-tf-row:last-of-type { border-bottom: none; }
+  .st-tf-label { color: #8b949e; font-weight: 600; }
+  .st-tf-tendencia { font-weight: 600; }
+  .st-tf-tendencia.alcista { color: #3fb950; }
+  .st-tf-tendencia.bajista { color: #f85149; }
+  .st-tf-tendencia.desconocida { color: #8b949e; }
+  .st-tf-linea { color: #c9d1d9; font-size: 12px; }
+  .st-estructura {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #21262d;
+  }
+  .st-estructura-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .st-estructura-titulo.bajista { color: #f85149; }
+  .st-estructura-titulo.alcista { color: #3fb950; }
+  .st-estructura-titulo.neutral { color: #d29922; }
+  .st-estructura-pct {
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .st-interpretacion {
+    font-size: 12px;
+    color: #c9d1d9;
+    line-height: 1.6;
+    padding-top: 8px;
+    border-top: 1px solid #21262d;
+  }
+  .st-interpretacion div { margin-bottom: 3px; }
+
+  @media (max-width: 600px) {
+    .st-tf-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .st-tf-linea { font-size: 11px; }
+  }
+
   /* Resumen */
   .resumen-panel {
     background: #161b22;
@@ -327,11 +406,17 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.7</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.8</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
-  <!-- PANEL DE RESUMEN (arriba) -->
+  <!-- PANEL DE SUPERTREND BTC -->
+  <div class="st-panel" id="supertrend-panel" style="display:none;">
+    <h2>📈 SuperTrend BTC</h2>
+    <div id="supertrend-content"></div>
+  </div>
+
+  <!-- PANEL DE RESUMEN -->
   <div class="resumen-panel" id="resumen-panel">
     <h2>📄 Resumen</h2>
     <div class="resumen-info">
@@ -488,7 +573,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.7 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.8 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -1279,7 +1364,7 @@ async function cargarEventos() {
 
     // Calcular semana lunes-viernes según calendario real
     const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
-    const diaSemana = ahora.getDay(); // 0=dom, 1=lun, ..., 6=sáb
+    const diaSemana = ahora.getDay();
     const esFinde = (diaSemana === 0 || diaSemana === 6);
 
     let lunesRef;
@@ -1303,7 +1388,6 @@ async function cargarEventos() {
     const prefijo = esFinde ? 'Próxima semana del' : 'Semana del';
     const rangoSemana = `${prefijo} ${formatoFecha(lunesRef)} al ${formatoFecha(viernesRef)}`;
 
-    // Filtrar eventos de la semana
     const eventosSemana = eventos.filter(ev => {
       const fechaRaw = ev.date || ev.time || ev.datetime;
       if (!fechaRaw) return false;
@@ -1452,6 +1536,124 @@ async function cargarSentimiento() {
   }
 }
 
+// ==== SUPERTREND ====
+async function cargarSuperTrend() {
+  const panel = document.getElementById('supertrend-panel');
+  const content = document.getElementById('supertrend-content');
+  try {
+    const response = await fetch('resumen.txt?t=' + Date.now());
+    const texto = await response.text();
+
+    const match = texto.match(/📈 SUPERTREND BTC([\s\S]*?)(?=────────────────────────────────────────────────────────|════════════════════════════════════════════════════════)/);
+    if (!match) {
+      panel.style.display = 'none';
+      return;
+    }
+
+    const seccion = match[1];
+
+    const paramsMatch = seccion.match(/⚙️ Parámetros: Factor ([\d.]+) · ATR (\d+) · RMS (\d+) · RSI TP (\d+)/);
+    const params = paramsMatch ? {
+      factor: paramsMatch[1],
+      atr: paramsMatch[2],
+      rms: paramsMatch[3],
+      rsi_tp: paramsMatch[4]
+    } : null;
+
+    const precioMatch = seccion.match(/Precio actual: ([\d.,]+)/);
+    const precio = precioMatch ? precioMatch[1] : '—';
+
+    const tfs = [];
+    ['1H', '4H', '1D', '1W'].forEach(tf => {
+      const regex = new RegExp(`${tf}: ([🔴🟢⚪]) (\\w+) - Línea SuperTrend: ([\\d.,]+) - Dist: ([+-]?[\\d.,]+%)`);
+      const tfMatch = seccion.match(regex);
+      if (tfMatch) {
+        tfs.push({
+          tf: tf,
+          emoji: tfMatch[1],
+          tendencia: tfMatch[2].toLowerCase(),
+          linea: tfMatch[3],
+          distancia: tfMatch[4]
+        });
+      } else {
+        const regexSimple = new RegExp(`${tf}: ([🔴🟢⚪]) (\\w+)`);
+        const tfMatchSimple = seccion.match(regexSimple);
+        if (tfMatchSimple) {
+          tfs.push({
+            tf: tf,
+            emoji: tfMatchSimple[1],
+            tendencia: tfMatchSimple[2].toLowerCase(),
+            linea: '—',
+            distancia: '—'
+          });
+        }
+      }
+    });
+
+    const estructuraMatch = seccion.match(/Estructura general: (\w+) \((\d)\/4 TFs bajistas\)/);
+    const estructura = estructuraMatch ? estructuraMatch[1].toLowerCase() : 'neutral';
+    const tfsBajistas = estructuraMatch ? parseInt(estructuraMatch[2]) : 0;
+
+    const pctMatch = seccion.match(/(\d+)% bajista · (\d+)% alcista/);
+    const pctBajista = pctMatch ? pctMatch[1] : '0';
+    const pctAlcista = pctMatch ? pctMatch[2] : '0';
+
+    let html = '';
+
+    if (params) {
+      html += `<div class="st-params">⚙️ Factor: ${params.factor} · ATR: ${params.atr} · RMS: ${params.rms} · RSI TP: ${params.rsi_tp}</div>`;
+    }
+
+    html += `<div class="st-precio">💰 Precio actual: ${precio}</div>`;
+
+    tfs.forEach(t => {
+      const claseTendencia = t.tendencia === 'alcista' ? 'alcista' : (t.tendencia === 'bajista' ? 'bajista' : 'desconocida');
+      let lineaTexto = `Línea SuperTrend: ${t.linea}`;
+      if (t.distancia && t.distancia !== '—') {
+        lineaTexto += ` · Dist: ${t.distancia}`;
+      }
+      html += `<div class="st-tf-row">
+        <span class="st-tf-label">${t.tf}:</span>
+        <span class="st-tf-tendencia ${claseTendencia}">${t.emoji} ${t.tendencia.charAt(0).toUpperCase() + t.tendencia.slice(1)}</span>
+        <span class="st-tf-linea">${lineaTexto}</span>
+      </div>`;
+    });
+
+    const claseEstructura = estructura === 'bajista' ? 'bajista' : (estructura === 'alcista' ? 'alcista' : 'neutral');
+    html += `<div class="st-estructura">
+      <div class="st-estructura-titulo ${claseEstructura}">💡 Estructura general: ${estructura.toUpperCase()} (${tfsBajistas}/4 TFs bajistas)</div>
+      <div class="st-estructura-pct">${pctBajista}% bajista · ${pctAlcista}% alcista</div>`;
+
+    if (estructura === 'bajista') {
+      html += `<div class="st-interpretacion">
+        <div>🎯 Tendencia de fondo: BAJISTA</div>
+        <div>⚠️ Cuidado con LONG</div>
+        <div>🎯 Buscar SHORT en resistencias</div>
+      </div>`;
+    } else if (estructura === 'alcista') {
+      html += `<div class="st-interpretacion">
+        <div>🎯 Tendencia de fondo: ALCISTA</div>
+        <div>⚠️ Cuidado con SHORT</div>
+        <div>🎯 Buscar LONG en soportes</div>
+      </div>`;
+    } else {
+      html += `<div class="st-interpretacion">
+        <div>🎯 Tendencia de fondo: NEUTRAL</div>
+        <div>⚠️ Mercado indeciso</div>
+        <div>🎯 Esperar confirmación</div>
+      </div>`;
+    }
+
+    html += `</div>`;
+
+    content.innerHTML = html;
+    panel.style.display = 'block';
+  } catch (error) {
+    console.log('Error cargando SuperTrend:', error);
+    panel.style.display = 'none';
+  }
+}
+
 // ==== RESUMEN ====
 async function cargarInfoResumen() {
   const fechaSpan = document.getElementById('resumen-fecha');
@@ -1512,6 +1714,7 @@ cargarLiq();
 cargarEventos();
 cargarSentimiento();
 cargarInfoResumen();
+cargarSuperTrend();
 
 setInterval(cargarRSI, 600000);
 setInterval(cargarFVG, 600000);
@@ -1521,6 +1724,7 @@ setInterval(cargarLiq, 600000);
 setInterval(cargarEventos, 600000);
 setInterval(cargarSentimiento, 300000);
 setInterval(cargarInfoResumen, 60000);
+setInterval(cargarSuperTrend, 300000);
 </script>
 </body>
 </html>
