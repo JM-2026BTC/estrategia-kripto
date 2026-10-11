@@ -22,14 +22,12 @@ FVG_MIN_TAMANO_PCT = 0.15
 SR_VELAS = {'1h': 300, '4h': 300, '1d': 300, '1w': 300}
 SR_TEMPORALIDADES = ['1h', '4h', '1d', '1w']
 
-# Parámetros del indicador
 SR_PIVOT_LENGTH = 7
 SR_ATR_LEN = 14
 SR_ATR_MULT = 0.5
 SR_MIN_PIVOTS = 1
 SR_TOP_ZONES = 5
 
-# Pesos (weights) del score
 SR_PIVOT_WEIGHT = 20
 SR_BREAK_WEIGHT = 2
 SR_DWELL_WEIGHT = 1
@@ -39,14 +37,11 @@ SR_REACTION_BARS = 6
 SR_REACTION_ATR = 0.8
 SR_REACTION_RETRACE_FRAC = 0.6
 
-# Merge de zonas
 SR_MERGE_ATR_FRAC = 0.5
 
-# Umbrales RELATIVOS
 SR_UMBRAL_MUY_FUERTE_PCT = 0.7
 SR_UMBRAL_MEDIA_PCT = 0.4
 
-# Umbrales ABSOLUTOS
 SR_SCORE_ABS_MUY_FUERTE = 100
 SR_SCORE_ABS_MEDIA = 40
 
@@ -66,6 +61,16 @@ LIQ_TOLERANCIA_PCT = 1.0
 # Nombres legibles
 NOMBRES = {'BTCUSDT': 'BTC', 'HYPEUSDT': 'HYPE', 'DOGEUSDT': 'DOGE', 'PEPEUSDT': 'PEPE'}
 
+# ===== SUPERTREND (solo BTC) =====
+SUPERTREND_ACTIVO = 'BTCUSDT'
+SUPERTREND_FACTOR = 4.5
+SUPERTREND_ATR_LEN = 12
+SUPERTREND_RMS_LEN = 3
+SUPERTREND_RSI_TP_LEN = 14
+
+# Zona horaria Argentina (UTC-3)
+ARG_TZ = timezone(timedelta(hours=-3))
+
 
 def redondear(valor, precio_actual):
     if precio_actual >= 1000:
@@ -83,7 +88,6 @@ def redondear(valor, precio_actual):
 
 
 def fmt_numero(valor, precio_actual):
-    """Formatea un número según el precio para el resumen"""
     if precio_actual >= 1000:
         return f"{valor:,.2f}".replace(",", ".")
     elif precio_actual >= 1:
@@ -119,6 +123,61 @@ def calcular_rsi(close, periodo=14):
     rs = avg_ganancia / avg_perdida
     rsi = 100 - (100 / (1 + rs))
     return rsi
+
+
+def calcular_supertrend(df, factor=4.5, atr_len=12, rms_len=3):
+    """Calcula el SuperTrend (traducción de Power Root SuperTrend de AlgoAlpha)"""
+    try:
+        atr = calcular_atr(df, atr_len)
+        rms = df['close'].rolling(window=rms_len).apply(lambda x: np.sqrt((x ** 2).mean()))
+        upper = rms + factor * atr
+        lower = rms - factor * atr
+
+        supertrend = pd.Series(index=df.index, dtype=float)
+        direccion = pd.Series(index=df.index, dtype=int)
+
+        for i in range(len(df)):
+            if i == 0:
+                direccion.iloc[i] = 1
+                supertrend.iloc[i] = upper.iloc[i]
+                continue
+
+            prev_supertrend = supertrend.iloc[i-1]
+            prev_upper = upper.iloc[i-1]
+            prev_lower = lower.iloc[i-1]
+            prev_close = df['close'].iloc[i-1]
+
+            lower_actual = lower.iloc[i] if (lower.iloc[i] > prev_lower or prev_close < prev_lower) else prev_lower
+            upper_actual = upper.iloc[i] if (upper.iloc[i] < prev_upper or prev_close > prev_upper) else prev_upper
+
+            if pd.isna(prev_supertrend):
+                direccion.iloc[i] = 1
+            elif prev_supertrend == prev_upper:
+                direccion.iloc[i] = -1 if df['close'].iloc[i] > upper_actual else 1
+            else:
+                direccion.iloc[i] = 1 if df['close'].iloc[i] < lower_actual else -1
+
+            supertrend.iloc[i] = lower_actual if direccion.iloc[i] == -1 else upper_actual
+
+        tendencia = 'alcista' if direccion.iloc[-1] == -1 else 'bajista'
+        valor = float(supertrend.iloc[-1])
+
+        return {'tendencia': tendencia, 'valor': valor}
+    except Exception as e:
+        print(f"Error SuperTrend: {e}")
+        return {'tendencia': 'desconocida', 'valor': 0}
+
+
+def calcular_supertrend_todos_tfs(dfs_por_tf):
+    """Calcula el SuperTrend para todos los TFs de BTC"""
+    resultado = {}
+    for tf in ['1h', '4h', '1d', '1w']:
+        df = dfs_por_tf.get(tf)
+        if df is not None and len(df) > 0:
+            resultado[tf] = calcular_supertrend(df)
+        else:
+            resultado[tf] = {'tendencia': 'desconocida', 'valor': 0}
+    return resultado
 
 
 def detectar_fvg(df):
@@ -673,7 +732,6 @@ def calcular_fvgs_par(exchange, symbol, timeframe):
 
 
 def detectar_confluencias_fvg(fvgs_por_tf, cripto):
-    """Detecta confluencias FVG entre TFs"""
     todos = []
     for tf in ['1h', '4h', '1d']:
         for fvg in fvgs_por_tf.get(tf, []):
@@ -701,11 +759,9 @@ def detectar_confluencias_fvg(fvgs_por_tf, cripto):
     return confluencias
 
 
-def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado):
-    """Genera el resumen.txt con todos los datos (v2.7)"""
+def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, supertrend_resultado=None):
     lineas = []
 
-    ARG_TZ = timezone(timedelta(hours=-3))     
     ahora_arg = datetime.now(ARG_TZ)
     fecha_str = ahora_arg.strftime('%d/%m/%Y')
     hora_str = ahora_arg.strftime('%H:%M')
@@ -719,7 +775,6 @@ def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rs
         symbol = cripto.replace('/', '')
         nombre = NOMBRES.get(symbol, symbol)
 
-        # Precio actual
         sr_data = sr_resultado['data'].get(symbol, {})
         precio_actual = sr_data.get('1h', {}).get('precio_actual') or sr_data.get('4h', {}).get('precio_actual') or 0
 
@@ -794,6 +849,80 @@ def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rs
         else:
             lineas.append("  (sin confluencias)")
 
+        # ── SuperTrend BTC ──
+        if supertrend_resultado:
+            st = supertrend_resultado.get(symbol, {})
+            if st:
+                lineas.append("")
+                lineas.append("📈 SUPERTREND BTC")
+                lineas.append(f"  ⚙️ Parámetros: Factor {SUPERTREND_FACTOR} · ATR {SUPERTREND_ATR_LEN} · RMS {SUPERTREND_RMS_LEN} · RSI TP {SUPERTREND_RSI_TP_LEN}")
+                lineas.append("")
+                lineas.append(f"  Precio actual: {fmt_numero(precio_actual, precio_actual)}")
+                lineas.append("")
+
+                tfs_alcistas = 0
+                tfs_bajistas = 0
+
+                for tf in ['1h', '4h', '1d', '1w']:
+                    st_tf = st.get(tf, {})
+                    tendencia = st_tf.get('tendencia', 'desconocida')
+                    valor = st_tf.get('valor', 0)
+
+                    if tendencia == 'alcista':
+                        emoji = '🟢'
+                        tfs_alcistas += 1
+                    elif tendencia == 'bajista':
+                        emoji = '🔴'
+                        tfs_bajistas += 1
+                    else:
+                        emoji = '⚪'
+
+                    nombre_tf = tf.upper()
+                    if valor > 0 and precio_actual > 0:
+                        distancia_pct = (valor - precio_actual) / precio_actual * 100
+                        signo = '+' if distancia_pct >= 0 else ''
+                        lineas.append(f"  {nombre_tf}: {emoji} {tendencia.capitalize()} - Línea SuperTrend: {fmt_numero(valor, precio_actual)} - Dist: {signo}{distancia_pct:.2f}%")
+                    elif valor > 0:
+                        lineas.append(f"  {nombre_tf}: {emoji} {tendencia.capitalize()} - Línea SuperTrend: {fmt_numero(valor, precio_actual)}")
+                    else:
+                        lineas.append(f"  {nombre_tf}: {emoji} {tendencia.capitalize()}")
+
+                lineas.append("")
+
+                total = tfs_alcistas + tfs_bajistas
+                if total > 0:
+                    pct_bajista = round(tfs_bajistas / total * 100)
+                    pct_alcista = round(tfs_alcistas / total * 100)
+
+                    if tfs_bajistas >= 3:
+                        estructura = 'BAJISTA'
+                    elif tfs_alcistas >= 3:
+                        estructura = 'ALCISTA'
+                    elif tfs_bajistas == 2 and tfs_alcistas == 2:
+                        estructura = 'NEUTRAL'
+                    else:
+                        estructura = 'BAJISTA' if tfs_bajistas > tfs_alcistas else 'ALCISTA'
+
+                    lineas.append(f"  💡 Estructura general: {estructura} ({tfs_bajistas}/4 TFs bajistas)")
+                    lineas.append(f"     {pct_bajista}% bajista · {pct_alcista}% alcista")
+                    lineas.append("")
+
+                    if estructura == 'BAJISTA':
+                        lineas.append("  🎯 Interpretación:")
+                        lineas.append("     - Tendencia de fondo: BAJISTA")
+                        lineas.append("     - Cuidado con LONG")
+                        lineas.append("     - Buscar SHORT en resistencias")
+                    elif estructura == 'ALCISTA':
+                        lineas.append("  🎯 Interpretación:")
+                        lineas.append("     - Tendencia de fondo: ALCISTA")
+                        lineas.append("     - Cuidado con SHORT")
+                        lineas.append("     - Buscar LONG en soportes")
+                    else:
+                        lineas.append("  🎯 Interpretación:")
+                        lineas.append("     - Tendencia de fondo: NEUTRAL")
+                        lineas.append("     - Mercado indeciso")
+                        lineas.append("     - Esperar confirmación")
+
         # ── RSI ──
         lineas.append("")
         lineas.append("📈 RSI")
@@ -826,6 +955,25 @@ def main():
     sr_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     gp_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     liq_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
+
+    # Calcular SuperTrend solo para BTC
+    supertrend_resultado = {}
+    df_btc_por_tf = {}
+    for tf in ['1h', '4h', '1d', '1w']:
+        try:
+            limit = 300
+            ohlcv = exchange.fetch_ohlcv(SUPERTREND_ACTIVO, timeframe=tf, limit=limit)
+            df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            df['close'] = df['close'].astype(float)
+            df['high'] = df['high'].astype(float)
+            df['low'] = df['low'].astype(float)
+            df_btc_por_tf[tf] = df
+        except Exception as e:
+            print(f"Error descargando BTC {tf} para SuperTrend: {e}")
+            df_btc_por_tf[tf] = None
+
+    supertrend_resultado[SUPERTREND_ACTIVO] = calcular_supertrend_todos_tfs(df_btc_por_tf)
+    print(f"SuperTrend BTC calculado")
 
     for cripto in CRIPTOS:
         symbol = cripto.replace('/', '')
@@ -873,7 +1021,7 @@ def main():
         json.dump(liq_resultado, f, indent=2)
 
     # Guardar resumen.txt
-    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado)
+    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, supertrend_resultado)
     with open('resumen.txt', 'w', encoding='utf-8') as f:
         f.write(resumen)
 
