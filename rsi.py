@@ -130,7 +130,7 @@ def calcular_supertrend(df, factor=4.5, atr_len=12, rms_len=3):
     """Calcula el SuperTrend (traducción de Power Root SuperTrend de AlgoAlpha)"""
     try:
         atr = calcular_atr(df, atr_len)
-        rms = df['close'].rolling(window=rms_len).apply(lambda x: np.sqrt((x ** 2).mean()))
+        rms = df['close'].rolling(window=rms_len).apply(lambda x: np.sqrt(np.nanmean(x ** 2)))
         upper = rms + factor * atr
         lower = rms - factor * atr
 
