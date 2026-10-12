@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-12T00:22:26.156415+00:00",
+  "last_update": "2026-10-12T00:28:05.759448+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [
@@ -325,6 +325,13 @@
         },
         {
           "tipo": "alcista",
+          "desde": 3.968e-06,
+          "hasta": 4.01e-06,
+          "mitigado": false,
+          "timestamp": 88
+        },
+        {
+          "tipo": "alcista",
           "desde": 4.033e-06,
           "hasta": 4.123e-06,
           "mitigado": false,
@@ -356,7 +363,7 @@
         {
           "tipo": "alcista",
           "desde": 4.077e-06,
-          "hasta": 4.215e-06,
+          "hasta": 4.214e-06,
           "mitigado": false,
           "timestamp": 299
         }
