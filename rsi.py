@@ -130,55 +130,65 @@ def calcular_rsi(close, periodo=14):
 
 def calcular_supertrend(df, factor=4.5, atr_len=12, rms_len=3):
     """
-    Traducción EXACTA del Power Root SuperTrend [AlgoAlpha] de TradingView.
+    Traducción EXACTA de Power Root SuperTrend [AlgoAlpha] de TradingView.
     Basado en Pine Script v5.
 
-    Lógica:
-        src = hl2
-        atr = ta.atr(atrLen)          → Wilder (RMA)
-        rms = math.sqrt(ta.sma(src*src, rmsLen))
-        upper = rms + factor * atr
-        lower = rms - factor * atr
+    Pine Script original:
+        superTrendCalc(multiplier, atrLength, source) =>
+            atrValue1 = ta.atr(atrLength)
+            upperLevel = source + multiplier * atrValue1
+            lowerLevel = source - multiplier * atrValue1
+            previousLowerLevel = nz(lowerLevel[1])
+            previousUpperLevel = nz(upperLevel[1])
+            lowerLevel := lowerLevel > previousLowerLevel or source[1] < previousLowerLevel ? lowerLevel : previousLowerLevel
+            upperLevel := upperLevel < previousUpperLevel or source[1] > previousUpperLevel ? upperLevel : previousUpperLevel
+            int trendDirection = na
+            float trendValue = na
+            previousTrend = trendValue[1]
+            if na(atrValue1[1])
+                trendDirection := 1
+            else if previousTrend == previousUpperLevel
+                trendDirection := source > upperLevel ? -1 : 1
+            else
+                trendDirection := source < lowerLevel ? 1 : -1
+            trendValue := trendDirection == -1 ? lowerLevel : upperLevel
+            [trendValue, trendDirection]
 
-        lowerBand = (lower > lower[1] or close[1] < lower[1]) ? lower : lower[1]
-        upperBand = (upper < upper[1] or close[1] > upper[1]) ? upper : upper[1]
+        [superTrendValue, trendDirection] = superTrendCalc(atrMult, atrlen, ta.rms(close, rsmlen))
 
-        if dir == 1:
-            if close < lowerBand: dir = -1; st = upperBand
-            else: st = lowerBand
-        else:
-            if close > upperBand: dir = 1; st = lowerBand
-            else: st = upperBand
+    IMPORTANTE (Pine):
+        - source = ta.rms(close, rsmlen) → RMS del CLOSE, no de hl2
+        - trendDirection = 1  → BAJISTA (ST = upperLevel, arriba del precio)
+        - trendDirection = -1 → ALCISTA (ST = lowerLevel, abajo del precio)
     """
     try:
-        # Fuente: hl2
-        src = (df['high'] + df['low']) / 2
-
-        # ATR Wilder (RMA) — inline, igual que ta.atr()
+        close_serie = df['close']
         high = df['high']
         low = df['low']
-        close = df['close']
+
+        # source = ta.rms(close, rsmlen) → RMS del CLOSE
+        # ta.rms() en Pine = sqrt(sma(close^2, len))
+        rms = np.sqrt(close_serie.pow(2).rolling(window=rms_len).mean())
+        source = rms
+
+        # ATR Wilder (RMA) = ta.atr(atr_len)
         tr1 = high - low
-        tr2 = (high - close.shift()).abs()
-        tr3 = (low - close.shift()).abs()
+        tr2 = (high - close_serie.shift()).abs()
+        tr3 = (low - close_serie.shift()).abs()
         tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         atr = tr.ewm(alpha=1/atr_len, min_periods=atr_len, adjust=False).mean()
 
-        # RMS sobre hl2
-        rms = np.sqrt(src.pow(2).rolling(window=rms_len).mean())
-
         # Bandas iniciales
-        upper = rms + factor * atr
-        lower = rms - factor * atr
+        upper = source + factor * atr
+        lower = source - factor * atr
 
         n = len(df)
-        close_arr = df['close'].values
+        source_arr = source.values
         upper_arr = upper.values
         lower_arr = lower.values
 
-        # Arrays de salida
         st = np.full(n, np.nan)
-        direction = np.zeros(n, dtype=int)
+        direction = np.zeros(n, dtype=int)  # 1 = bajista, -1 = alcista (Pine)
 
         # Encontrar primer índice válido
         inicio = None
@@ -190,47 +200,55 @@ def calcular_supertrend(df, factor=4.5, atr_len=12, rms_len=3):
         if inicio is None:
             return {'tendencia': 'desconocida', 'valor': 0}
 
-        # Inicialización
-        st[inicio] = lower_arr[inicio]
+        # Inicialización (Pine: if na(atrValue1[1]) → trendDirection := 1)
+        # trendDirection = 1 → BAJISTA → ST = upperLevel
         direction[inicio] = 1
+        st[inicio] = upper_arr[inicio]
 
-        # Iteración
         for i in range(inicio + 1, n):
-            prev_close = close_arr[i - 1]
+            prev_source = source_arr[i - 1]
             prev_lower = lower_arr[i - 1]
             prev_upper = upper_arr[i - 1]
+            prev_st = st[i - 1]
             cur_lower = lower_arr[i]
             cur_upper = upper_arr[i]
-            cur_close = close_arr[i]
+            cur_source = source_arr[i]
 
             # Bandas recursivas (Pine)
-            if cur_lower > prev_lower or prev_close < prev_lower:
+            # lowerLevel := lowerLevel > previousLowerLevel or source[1] < previousLowerLevel ? lowerLevel : previousLowerLevel
+            if cur_lower > prev_lower or prev_source < prev_lower:
                 lower_band = cur_lower
             else:
                 lower_band = prev_lower
 
-            if cur_upper < prev_upper or prev_close > prev_upper:
+            # upperLevel := upperLevel < previousUpperLevel or source[1] > previousUpperLevel ? upperLevel : previousUpperLevel
+            if cur_upper < prev_upper or prev_source > prev_upper:
                 upper_band = cur_upper
             else:
                 upper_band = prev_upper
 
-            # Lógica de dirección
-            if direction[i - 1] == 1:
-                if cur_close < lower_band:
-                    direction[i] = -1
-                    st[i] = upper_band
-                else:
-                    direction[i] = 1
-                    st[i] = lower_band
+            # Lógica de dirección (Pine):
+            # previousTrend = trendValue[1]
+            # if previousTrend == previousUpperLevel:
+            #     trendDirection := source > upperLevel ? -1 : 1
+            # else:
+            #     trendDirection := source < lowerLevel ? 1 : -1
+            #
+            # OJO: comparar floats con tolerancia
+            if abs(prev_st - prev_upper) < 1e-6:
+                # Estábamos bajistas (ST = upper)
+                direction[i] = -1 if cur_source > upper_band else 1
             else:
-                if cur_close > upper_band:
-                    direction[i] = 1
-                    st[i] = lower_band
-                else:
-                    direction[i] = -1
-                    st[i] = upper_band
+                # Estábamos alcistas (ST = lower)
+                direction[i] = 1 if cur_source < lower_band else -1
 
-        tendencia = 'alcista' if direction[-1] == 1 else 'bajista'
+            # trendValue := trendDirection == -1 ? lowerLevel : upperLevel
+            # - direction == -1 (alcista) → ST = lowerLevel
+            # - direction == 1 (bajista)  → ST = upperLevel
+            st[i] = lower_band if direction[i] == -1 else upper_band
+
+        # En Pine: direction = -1 → ALCISTA (ST abajo); direction = 1 → BAJISTA (ST arriba)
+        tendencia = 'alcista' if direction[-1] == -1 else 'bajista'
         valor = float(st[-1])
 
         return {'tendencia': tendencia, 'valor': valor}
