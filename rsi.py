@@ -760,7 +760,7 @@ def detectar_confluencias_fvg(fvgs_por_tf, cripto):
     return confluencias
 
 
-def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, supertrend_resultado=None):
+def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, supertrend_data=None):
     lineas = []
 
     ahora_arg = datetime.now(ARG_TZ)
@@ -851,8 +851,8 @@ def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rs
             lineas.append("  (sin confluencias)")
 
         # ── SuperTrend BTC ──
-        if supertrend_resultado:
-            st = supertrend_resultado.get(symbol, {})
+        if supertrend_data:
+            st = supertrend_data.get(symbol, {})
             if st:
                 lineas.append("")
                 lineas.append("📈 SUPERTREND BTC")
@@ -956,9 +956,9 @@ def main():
     sr_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     gp_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     liq_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
+    supertrend_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
 
     # Calcular SuperTrend solo para BTC
-    supertrend_resultado = {}
     df_btc_por_tf = {}
     for tf in ['1h', '4h', '1d', '1w']:
         try:
@@ -973,7 +973,7 @@ def main():
             print(f"Error descargando BTC {tf} para SuperTrend: {e}")
             df_btc_por_tf[tf] = None
 
-    supertrend_resultado[SUPERTREND_ACTIVO_SYMBOL] = calcular_supertrend_todos_tfs(df_btc_por_tf)
+    supertrend_resultado['data'][SUPERTREND_ACTIVO_SYMBOL] = calcular_supertrend_todos_tfs(df_btc_por_tf)
     print(f"SuperTrend BTC calculado")
 
     for cripto in CRIPTOS:
@@ -1020,9 +1020,11 @@ def main():
         json.dump(gp_resultado, f, indent=2)
     with open('liq_data.json', 'w') as f:
         json.dump(liq_resultado, f, indent=2)
+    with open('supertrend_data.json', 'w') as f:
+        json.dump(supertrend_resultado, f, indent=2)
 
     # Guardar resumen.txt
-    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, supertrend_resultado)
+    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, supertrend_resultado['data'])
     with open('resumen.txt', 'w', encoding='utf-8') as f:
         f.write(resumen)
 
