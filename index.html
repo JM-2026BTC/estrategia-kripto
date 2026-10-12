@@ -390,7 +390,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.9</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.9.1</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -556,7 +556,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.9 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.9.1 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -904,7 +904,6 @@ async function cargarSuperTrend() {
       return;
     }
 
-    // Precio actual de BTC (del liq_data)
     let precioActualBTC = 0;
     if (liqDataGlobal && liqDataGlobal.data && liqDataGlobal.data['BTCUSDT']) {
       precioActualBTC = liqDataGlobal.data['BTCUSDT'].precio_actual || 0;
@@ -992,6 +991,12 @@ async function cargarSuperTrend() {
       }
 
       html += `</div>`;
+    }
+
+    // Agregar fecha de actualización (del JSON)
+    if (supertrendDataGlobal.last_update) {
+      const fecha = new Date(supertrendDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+      html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
     }
 
     content.innerHTML = html;
