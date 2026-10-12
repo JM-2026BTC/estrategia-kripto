@@ -267,69 +267,6 @@
   .sr-leyenda { margin-top: 12px; padding-top: 10px; border-top: 1px solid #21262d; font-size: 10px; color: #484f58; line-height: 1.6; }
   .sr-leyenda div { margin-bottom: 3px; }
 
-  /* SuperTrend */
-  .st-precio {
-    font-size: 14px;
-    color: #58a6ff;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #21262d;
-  }
-  .st-params {
-    font-size: 10px;
-    color: #8b949e;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #21262d;
-    font-variant-numeric: tabular-nums;
-  }
-  .st-tf-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 5px 0;
-    border-bottom: 1px solid #21262d;
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-  }
-  .st-tf-row:last-of-type { border-bottom: none; }
-  .st-tf-label { color: #8b949e; font-weight: 600; min-width: 30px; }
-  .st-tf-datos { text-align: right; flex: 1; }
-  .st-tf-tendencia { font-weight: 600; display: block; font-size: 12px; }
-  .st-tf-tendencia.alcista { color: #3fb950; }
-  .st-tf-tendencia.bajista { color: #f85149; }
-  .st-tf-tendencia.desconocida { color: #8b949e; }
-  .st-tf-linea { color: #c9d1d9; font-size: 11px; display: block; }
-  .st-estructura {
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid #21262d;
-  }
-  .st-estructura-titulo {
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  .st-estructura-titulo.bajista { color: #f85149; }
-  .st-estructura-titulo.alcista { color: #3fb950; }
-  .st-estructura-titulo.neutral { color: #d29922; }
-  .st-estructura-pct {
-    font-size: 11px;
-    color: #8b949e;
-    margin-bottom: 6px;
-    font-variant-numeric: tabular-nums;
-  }
-  .st-interpretacion {
-    font-size: 11px;
-    color: #c9d1d9;
-    line-height: 1.6;
-    padding-top: 6px;
-    border-top: 1px solid #21262d;
-  }
-  .st-interpretacion div { margin-bottom: 2px; }
-
   /* Resumen */
   .resumen-panel {
     background: #161b22;
@@ -390,11 +327,11 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.9.2</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.7</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
-  <!-- PANEL DE RESUMEN -->
+  <!-- PANEL DE RESUMEN (arriba) -->
   <div class="resumen-panel" id="resumen-panel">
     <h2>📄 Resumen</h2>
     <div class="resumen-info">
@@ -512,11 +449,6 @@
 
     <div class="col-paneles">
 
-      <div class="card" id="supertrend-panel" style="display:none;">
-        <h2>📈 SuperTrend — BTC</h2>
-        <div id="supertrend-content"></div>
-      </div>
-
       <div class="card" id="liq-panel" style="display:none;">
         <h2>📊 Liquidaciones — <span id="liq-cripto-nombre">BTC</span></h2>
         <div id="liq-content"></div>
@@ -556,7 +488,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.9.2 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.7 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -570,7 +502,6 @@ let fvgDataGlobal = null;
 let srDataGlobal = null;
 let gpDataGlobal = null;
 let liqDataGlobal = null;
-let supertrendDataGlobal = null;
 
 function fmt(n, dec = 2) {
   if (isNaN(n) || n === null || n === undefined) return '—';
@@ -889,124 +820,6 @@ function calcular() {
   res.scrollIntoView({ behavior: 'smooth' });
 }
 
-async function cargarSuperTrend() {
-  const panel = document.getElementById('supertrend-panel');
-  const content = document.getElementById('supertrend-content');
-  try {
-    if (!supertrendDataGlobal) {
-      const response = await fetch('supertrend_data.json?t=' + Date.now());
-      supertrendDataGlobal = await response.json();
-    }
-    const data = supertrendDataGlobal.data['BTCUSDT'];
-    if (!data) {
-      content.innerHTML = '<div class="info">No hay datos de SuperTrend para BTC.</div>';
-      panel.style.display = 'block';
-      return;
-    }
-
-    let precioActualBTC = 0;
-    if (liqDataGlobal && liqDataGlobal.data && liqDataGlobal.data['BTCUSDT']) {
-      precioActualBTC = liqDataGlobal.data['BTCUSDT'].precio_actual || 0;
-    }
-    if (precioActualBTC === 0) {
-      const respLiq = await fetch('liq_data.json?t=' + Date.now());
-      const liqData = await respLiq.json();
-      precioActualBTC = liqData.data['BTCUSDT']?.precio_actual || 0;
-    }
-
-    let html = '';
-    html += `<div class="st-params">⚙️ Factor: 4.5 · ATR: 12 · RMS: 3 · RSI TP: 14</div>`;
-    html += `<div class="st-precio">💰 Precio actual: ${precioActualBTC.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
-
-    let tfsAlcistas = 0;
-    let tfsBajistas = 0;
-
-    ['1h', '4h', '1d', '1w'].forEach(tf => {
-      const st = data[tf];
-      if (!st) return;
-
-      const tendencia = st.tendencia || 'desconocida';
-      const valor = st.valor || 0;
-      const nombreTF = tf.toUpperCase();
-
-      let emoji = '⚪';
-      if (tendencia === 'alcista') {
-        emoji = '🟢';
-        tfsAlcistas++;
-      } else if (tendencia === 'bajista') {
-        emoji = '🔴';
-        tfsBajistas++;
-      }
-
-      let distanciaPct = 0;
-      if (valor > 0 && precioActualBTC > 0) {
-        distanciaPct = (valor - precioActualBTC) / precioActualBTC * 100;
-      }
-      const signo = distanciaPct >= 0 ? '+' : '';
-
-      html += `<div class="st-tf-row">
-        <span class="st-tf-label">${nombreTF}:</span>
-        <div class="st-tf-datos">
-          <span class="st-tf-tendencia ${tendencia}">${emoji} ${tendencia.charAt(0).toUpperCase() + tendencia.slice(1)}</span>
-          <span class="st-tf-linea">Línea: ${valor.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Dist: ${signo}${distanciaPct.toFixed(2)}%</span>
-        </div>
-      </div>`;
-    });
-
-    const total = tfsAlcistas + tfsBajistas;
-    if (total > 0) {
-      const pctAlcista = Math.round(tfsAlcistas / total * 100);
-      const pctBajista = Math.round(tfsBajistas / total * 100);
-
-      let estructura = 'NEUTRAL';
-      if (tfsAlcistas >= 3) {
-        estructura = 'ALCISTA';
-      } else if (tfsBajistas >= 3) {
-        estructura = 'BAJISTA';
-      }
-
-      const claseEstructura = estructura.toLowerCase();
-      html += `<div class="st-estructura">
-        <div class="st-estructura-titulo ${claseEstructura}">💡 Estructura general: ${estructura} (${tfsAlcistas}/4 TFs alcistas)</div>
-        <div class="st-estructura-pct">${pctAlcista}% alcista · ${pctBajista}% bajista</div>`;
-
-      if (estructura === 'ALCISTA') {
-        html += `<div class="st-interpretacion">
-          <div>🎯 Tendencia de fondo: ALCISTA</div>
-          <div>⚠️ Cuidado con SHORT</div>
-          <div>🎯 Buscar LONG en soportes</div>
-        </div>`;
-      } else if (estructura === 'BAJISTA') {
-        html += `<div class="st-interpretacion">
-          <div>🎯 Tendencia de fondo: BAJISTA</div>
-          <div>⚠️ Cuidado con LONG</div>
-          <div>🎯 Buscar SHORT en resistencias</div>
-        </div>`;
-      } else {
-        html += `<div class="st-interpretacion">
-          <div>🎯 Tendencia de fondo: NEUTRAL</div>
-          <div>⚠️ Mercado indeciso</div>
-          <div>🎯 Esperar confirmación</div>
-        </div>`;
-      }
-
-      html += `</div>`;
-    }
-
-    // Agregar fecha de actualización (del JSON)
-    if (supertrendDataGlobal.last_update) {
-      const fecha = new Date(supertrendDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false });
-      html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
-    }
-
-    content.innerHTML = html;
-    panel.style.display = 'block';
-  } catch (error) {
-    console.log('Error cargando SuperTrend:', error);
-    panel.style.display = 'none';
-  }
-}
-
 async function cargarLiq() {
   const cripto = document.getElementById('cripto').value;
   const panel = document.getElementById('liq-panel');
@@ -1111,7 +924,7 @@ async function cargarLiq() {
       <div><strong>DIST.</strong> = Distancia al precio actual</div>
     </div>`;
 
-    const fecha = liqDataGlobal.last_update ? new Date(liqDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
+    const fecha = liqDataGlobal.last_update ? new Date(liqDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
 
     content.innerHTML = html;
@@ -1151,7 +964,7 @@ async function cargarRSI() {
       const valorStr = (valor === null || valor === undefined) ? '—' : fmt(valor);
       html += `<div class="rsi-row"><span class="rsi-tf">${tf.toUpperCase()}</span><span class="rsi-val" style="color:${color};">${valorStr} <span style="font-size:11px;font-weight:400;">${etiqueta}</span></span></div>`;
     });
-    const fecha = rsiDataGlobal.last_update ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
+    const fecha = rsiDataGlobal.last_update ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
     html += `<div style="margin-top:12px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
@@ -1238,7 +1051,7 @@ async function cargarFVG() {
       <div><strong>→</strong> = Precio sugerido (E1)</div>
     </div>`;
 
-    const fecha = fvgDataGlobal.last_update ? new Date(fvgDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
+    const fecha = fvgDataGlobal.last_update ? new Date(fvgDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
@@ -1334,7 +1147,7 @@ async function cargarSR() {
       <div>🟢 <strong>Débil</strong> = probable ruptura</div>
     </div>`;
 
-    const fecha = srDataGlobal.last_update ? new Date(srDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
+    const fecha = srDataGlobal.last_update ? new Date(srDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
 
     content.innerHTML = html;
@@ -1404,7 +1217,7 @@ async function cargarGP() {
       <div><strong>→</strong> = Precio sugerido (E1)</div>
     </div>`;
 
-    const fecha = gpDataGlobal.last_update ? new Date(gpDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
+    const fecha = gpDataGlobal.last_update ? new Date(gpDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
@@ -1464,8 +1277,9 @@ async function cargarEventos() {
       return fechaA - fechaB;
     });
 
+    // Calcular semana lunes-viernes según calendario real
     const formatoFecha = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
-    const diaSemana = ahora.getDay();
+    const diaSemana = ahora.getDay(); // 0=dom, 1=lun, ..., 6=sáb
     const esFinde = (diaSemana === 0 || diaSemana === 6);
 
     let lunesRef;
@@ -1489,6 +1303,7 @@ async function cargarEventos() {
     const prefijo = esFinde ? 'Próxima semana del' : 'Semana del';
     const rangoSemana = `${prefijo} ${formatoFecha(lunesRef)} al ${formatoFecha(viernesRef)}`;
 
+    // Filtrar eventos de la semana
     const eventosSemana = eventos.filter(ev => {
       const fechaRaw = ev.date || ev.time || ev.datetime;
       if (!fechaRaw) return false;
@@ -1637,6 +1452,7 @@ async function cargarSentimiento() {
   }
 }
 
+// ==== RESUMEN ====
 async function cargarInfoResumen() {
   const fechaSpan = document.getElementById('resumen-fecha');
   const proximaSpan = document.getElementById('resumen-proxima');
@@ -1686,6 +1502,7 @@ async function copiarResumen(btn) {
   }
 }
 
+// ==== INICIALIZACIÓN ====
 cambiarModo();
 cargarRSI();
 cargarFVG();
@@ -1695,7 +1512,6 @@ cargarLiq();
 cargarEventos();
 cargarSentimiento();
 cargarInfoResumen();
-cargarSuperTrend();
 
 setInterval(cargarRSI, 600000);
 setInterval(cargarFVG, 600000);
@@ -1705,7 +1521,6 @@ setInterval(cargarLiq, 600000);
 setInterval(cargarEventos, 600000);
 setInterval(cargarSentimiento, 300000);
 setInterval(cargarInfoResumen, 60000);
-setInterval(cargarSuperTrend, 300000);
 </script>
 </body>
 </html>
