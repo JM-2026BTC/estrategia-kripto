@@ -63,6 +63,7 @@ NOMBRES = {'BTCUSDT': 'BTC', 'HYPEUSDT': 'HYPE', 'DOGEUSDT': 'DOGE', 'PEPEUSDT':
 
 # ===== SUPERTREND (solo BTC) =====
 SUPERTREND_ACTIVO = 'BTC/USDT'
+SUPERTREND_ACTIVO_SYMBOL = 'BTCUSDT'
 SUPERTREND_FACTOR = 4.5
 SUPERTREND_ATR_LEN = 12
 SUPERTREND_RMS_LEN = 3
@@ -972,7 +973,7 @@ def main():
             print(f"Error descargando BTC {tf} para SuperTrend: {e}")
             df_btc_por_tf[tf] = None
 
-    supertrend_resultado[SUPERTREND_ACTIVO] = calcular_supertrend_todos_tfs(df_btc_por_tf)
+    supertrend_resultado[SUPERTREND_ACTIVO_SYMBOL] = calcular_supertrend_todos_tfs(df_btc_por_tf)
     print(f"SuperTrend BTC calculado")
 
     for cripto in CRIPTOS:
