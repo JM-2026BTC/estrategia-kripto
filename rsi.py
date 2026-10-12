@@ -68,6 +68,7 @@ SUPERTREND_FACTOR = 4.5
 SUPERTREND_ATR_LEN = 12
 SUPERTREND_RMS_LEN = 3
 SUPERTREND_RSI_TP_LEN = 14
+SUPERTREND_VELAS = 500
 
 # Zona horaria Argentina (UTC-3)
 ARG_TZ = timezone(timedelta(hours=-3))
@@ -104,6 +105,7 @@ def fmt_numero(valor, precio_actual):
 
 
 def calcular_atr(df, periodo=14):
+    """ATR clásico con SMA (usado por S/R y otras lógicas)"""
     high = df['high']
     low = df['low']
     close = df['close']
@@ -112,6 +114,19 @@ def calcular_atr(df, periodo=14):
     tr3 = (low - close.shift()).abs()
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
     atr = tr.rolling(window=periodo).mean()
+    return atr
+
+
+def calcular_atr_wilder(df, periodo=14):
+    """ATR estilo Wilder (RMA) — igual que ta.atr() de Pine Script"""
+    high = df['high']
+    low = df['low']
+    close = df['close']
+    tr1 = high - low
+    tr2 = (high - close.shift()).abs()
+    tr3 = (low - close.shift()).abs()
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    atr = tr.ewm(alpha=1/periodo, min_periods=periodo, adjust=False).mean()
     return atr
 
 
@@ -127,45 +142,96 @@ def calcular_rsi(close, periodo=14):
 
 
 def calcular_supertrend(df, factor=4.5, atr_len=12, rms_len=3):
-    """Calcula el SuperTrend (traducción de Power Root SuperTrend de AlgoAlpha)"""
+    """
+    Traducción fiel del Power Root SuperTrend [AlgoAlpha] de TradingView.
+
+    Pine Script original:
+        src = hl2
+        atr = ta.atr(atrLen)          → Wilder (RMA)
+        rms = math.sqrt(ta.sma(src*src, rmsLen))
+        upper = rms + factor * atr
+        lower = rms - factor * atr
+        ... lógica de bandas recursivas y dirección con close
+    """
     try:
-        atr = calcular_atr(df, atr_len)
-        rms = df['close'].rolling(window=rms_len).apply(lambda x: np.sqrt(np.nanmean(x ** 2)))
+        # Fuente: hl2 (igual que AlgoAlpha)
+        src = (df['high'] + df['low']) / 2
+
+        # ATR Wilder
+        atr = calcular_atr_wilder(df, atr_len)
+
+        # RMS sobre la fuente (hl2)
+        rms = np.sqrt(src.pow(2).rolling(window=rms_len).mean())
+
         upper = rms + factor * atr
         lower = rms - factor * atr
 
-        supertrend = pd.Series(index=df.index, dtype=float)
-        direccion = pd.Series(index=df.index, dtype=int)
+        n = len(df)
+        supertrend = np.full(n, np.nan)
+        direction = np.ones(n, dtype=int)  # 1 = alcista, -1 = bajista
 
-        for i in range(len(df)):
-            if i == 0:
-                direccion.iloc[i] = 1
-                supertrend.iloc[i] = upper.iloc[i]
-                continue
+        close = df['close'].values
 
-            prev_supertrend = supertrend.iloc[i-1]
+        # Inicialización: primera vela válida
+        inicio = None
+        for i in range(n):
+            if pd.notna(upper.iloc[i]) and pd.notna(lower.iloc[i]):
+                direction[i] = 1
+                supertrend[i] = lower.iloc[i]
+                inicio = i
+                break
+
+        if inicio is None:
+            return {'tendencia': 'desconocida', 'valor': 0}
+
+        # Iteración desde la primera vela válida
+        for i in range(inicio + 1, n):
+            prev_st = supertrend[i-1]
             prev_upper = upper.iloc[i-1]
             prev_lower = lower.iloc[i-1]
-            prev_close = df['close'].iloc[i-1]
+            prev_close = close[i-1]
+            cur_upper = upper.iloc[i]
+            cur_lower = lower.iloc[i]
 
-            lower_actual = lower.iloc[i] if (lower.iloc[i] > prev_lower or prev_close < prev_lower) else prev_lower
-            upper_actual = upper.iloc[i] if (upper.iloc[i] < prev_upper or prev_close > prev_upper) else prev_upper
+            if pd.isna(cur_upper) or pd.isna(cur_lower):
+                supertrend[i] = prev_st
+                direction[i] = direction[i-1]
+                continue
 
-            if pd.isna(prev_supertrend):
-                direccion.iloc[i] = 1
-            elif prev_supertrend == prev_upper:
-                direccion.iloc[i] = -1 if df['close'].iloc[i] > upper_actual else 1
+            # Bandas recursivas (como en Pine)
+            if cur_lower > prev_lower or prev_close < prev_lower:
+                lower_actual = cur_lower
             else:
-                direccion.iloc[i] = 1 if df['close'].iloc[i] < lower_actual else -1
+                lower_actual = prev_lower
 
-            supertrend.iloc[i] = lower_actual if direccion.iloc[i] == -1 else upper_actual
+            if cur_upper < prev_upper or prev_close > prev_upper:
+                upper_actual = cur_upper
+            else:
+                upper_actual = prev_upper
 
-        tendencia = 'alcista' if direccion.iloc[-1] == -1 else 'bajista'
-        valor = float(supertrend.iloc[-1])
+            # Lógica de dirección (AlgoAlpha)
+            # Si estábamos en bajista (prev_st == prev_upper):
+            #   - si close > upper_actual → pasa a alcista (1)
+            #   - si no → sigue bajista (-1)
+            # Si estábamos en alcista (prev_st == prev_lower):
+            #   - si close < lower_actual → pasa a bajista (-1)
+            #   - si no → sigue alcista (1)
+            if prev_st == prev_upper:
+                direction[i] = 1 if close[i] > upper_actual else -1
+            else:
+                direction[i] = -1 if close[i] < lower_actual else 1
+
+            # SuperTrend: si direction == 1 (alcista) → lower; si -1 (bajista) → upper
+            supertrend[i] = lower_actual if direction[i] == 1 else upper_actual
+
+        tendencia = 'alcista' if direction[-1] == 1 else 'bajista'
+        valor = float(supertrend[-1])
 
         return {'tendencia': tendencia, 'valor': valor}
     except Exception as e:
         print(f"Error SuperTrend: {e}")
+        import traceback
+        traceback.print_exc()
         return {'tendencia': 'desconocida', 'valor': 0}
 
 
@@ -895,29 +961,29 @@ def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rs
                     pct_bajista = round(tfs_bajistas / total * 100)
                     pct_alcista = round(tfs_alcistas / total * 100)
 
-                    if tfs_bajistas >= 3:
-                        estructura = 'BAJISTA'
-                    elif tfs_alcistas >= 3:
+                    if tfs_alcistas >= 3:
                         estructura = 'ALCISTA'
+                    elif tfs_bajistas >= 3:
+                        estructura = 'BAJISTA'
                     elif tfs_bajistas == 2 and tfs_alcistas == 2:
                         estructura = 'NEUTRAL'
                     else:
                         estructura = 'BAJISTA' if tfs_bajistas > tfs_alcistas else 'ALCISTA'
 
-                    lineas.append(f"  💡 Estructura general: {estructura} ({tfs_bajistas}/4 TFs bajistas)")
-                    lineas.append(f"     {pct_bajista}% bajista · {pct_alcista}% alcista")
+                    lineas.append(f"  💡 Estructura general: {estructura} ({tfs_alcistas}/4 TFs alcistas)")
+                    lineas.append(f"     {pct_alcista}% alcista · {pct_bajista}% bajista")
                     lineas.append("")
 
-                    if estructura == 'BAJISTA':
-                        lineas.append("  🎯 Interpretación:")
-                        lineas.append("     - Tendencia de fondo: BAJISTA")
-                        lineas.append("     - Cuidado con LONG")
-                        lineas.append("     - Buscar SHORT en resistencias")
-                    elif estructura == 'ALCISTA':
+                    if estructura == 'ALCISTA':
                         lineas.append("  🎯 Interpretación:")
                         lineas.append("     - Tendencia de fondo: ALCISTA")
                         lineas.append("     - Cuidado con SHORT")
                         lineas.append("     - Buscar LONG en soportes")
+                    elif estructura == 'BAJISTA':
+                        lineas.append("  🎯 Interpretación:")
+                        lineas.append("     - Tendencia de fondo: BAJISTA")
+                        lineas.append("     - Cuidado con LONG")
+                        lineas.append("     - Buscar SHORT en resistencias")
                     else:
                         lineas.append("  🎯 Interpretación:")
                         lineas.append("     - Tendencia de fondo: NEUTRAL")
@@ -962,19 +1028,21 @@ def main():
     df_btc_por_tf = {}
     for tf in ['1h', '4h', '1d', '1w']:
         try:
-            limit = 300
-            ohlcv = exchange.fetch_ohlcv(SUPERTREND_ACTIVO, timeframe=tf, limit=limit)
+            ohlcv = exchange.fetch_ohlcv(SUPERTREND_ACTIVO, timeframe=tf, limit=SUPERTREND_VELAS)
             df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             df['close'] = df['close'].astype(float)
             df['high'] = df['high'].astype(float)
             df['low'] = df['low'].astype(float)
             df_btc_por_tf[tf] = df
+            print(f"SuperTrend BTC {tf}: {len(df)} velas descargadas")
         except Exception as e:
             print(f"Error descargando BTC {tf} para SuperTrend: {e}")
             df_btc_por_tf[tf] = None
 
     supertrend_resultado['data'][SUPERTREND_ACTIVO_SYMBOL] = calcular_supertrend_todos_tfs(df_btc_por_tf)
     print(f"SuperTrend BTC calculado")
+    for tf, st in supertrend_resultado['data'][SUPERTREND_ACTIVO_SYMBOL].items():
+        print(f"  {tf}: {st['tendencia']} - {st['valor']}")
 
     for cripto in CRIPTOS:
         symbol = cripto.replace('/', '')
