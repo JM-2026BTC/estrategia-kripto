@@ -2,6 +2,7 @@ import json
 import ccxt
 import pandas as pd
 import numpy as np
+import urllib.request
 from datetime import datetime, timezone, timedelta
 
 # ===== CONFIGURACIÓN =====
@@ -63,6 +64,9 @@ LIQ_LOOKBACK = 100
 LIQ_SENSIBILIDAD = 2.0
 LIQ_TOLERANCIA_PCT = 1.0
 
+# Sentimiento (NUEVO v2.10)
+SENTIMIENTO_API = 'https://api.alternative.me/fng/?limit=1'
+
 # Nombres legibles
 NOMBRES = {'BTCUSDT': 'BTC', 'HYPEUSDT': 'HYPE', 'DOGEUSDT': 'DOGE', 'PEPEUSDT': 'PEPE'}
 
@@ -119,6 +123,54 @@ def calcular_rsi(close, periodo=14):
     rs = avg_ganancia / avg_perdida
     rsi = 100 - (100 / (1 + rs))
     return rsi
+
+
+def obtener_sentimiento():
+    """
+    Obtiene el Fear & Greed Index de Alternative.me (NUEVO v2.10)
+    Devuelve dict con: valor, clasificacion, interpretacion
+    """
+    try:
+        req = urllib.request.Request(
+            SENTIMIENTO_API,
+            headers={'User-Agent': 'Mozilla/5.0'}
+        )
+        with urllib.request.urlopen(req, timeout=15) as response:
+            data = json.loads(response.read().decode('utf-8'))
+
+        if data and data.get('data') and len(data['data']) > 0:
+            fng = data['data'][0]
+            valor = int(fng['value'])
+            clasificacion = fng['value_classification']
+
+            # Traducir clasificación al español
+            traducciones = {
+                'Extreme Fear': 'Miedo extremo',
+                'Fear': 'Miedo',
+                'Neutral': 'Neutral',
+                'Greed': 'Codicia',
+                'Extreme Greed': 'Codicia extrema'
+            }
+            clasificacion_es = traducciones.get(clasificacion, clasificacion)
+
+            # Interpretación
+            if valor <= 24:
+                interpretacion = 'Miedo extremo — posible oportunidad'
+            elif valor <= 49:
+                interpretacion = 'Miedo — cautela en el mercado'
+            elif valor <= 74:
+                interpretacion = 'Codicia — confianza en aumento'
+            else:
+                interpretacion = 'Codicia extrema — posible corrección'
+
+            return {
+                'valor': valor,
+                'clasificacion': clasificacion_es,
+                'interpretacion': interpretacion
+            }
+    except Exception as e:
+        print(f"Error obteniendo sentimiento: {e}")
+    return None
 
 
 def detectar_fvg(df):
@@ -701,11 +753,11 @@ def detectar_confluencias_fvg(fvgs_por_tf, cripto):
     return confluencias
 
 
-def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado):
-    """Genera el resumen.txt con todos los datos (v2.7)"""
+def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, sentimiento=None):
+    """Genera el resumen.txt con todos los datos (v2.10)"""
     lineas = []
 
-    ARG_TZ = timezone(timedelta(hours=-3))     
+    ARG_TZ = timezone(timedelta(hours=-3))
     ahora_arg = datetime.now(ARG_TZ)
     fecha_str = ahora_arg.strftime('%d/%m/%Y')
     hora_str = ahora_arg.strftime('%H:%M')
@@ -714,6 +766,17 @@ def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rs
     lineas.append(f"📊 RESUMEN GENISYS")
     lineas.append(f"📅 {fecha_str} — {hora_str} (ARG)")
     lineas.append("═" * 56)
+
+    # ── SENTIMIENTO (PRIMERO, ES CONTEXTO MACRO) ──
+    if sentimiento:
+        lineas.append("")
+        lineas.append("─" * 56)
+        lineas.append("📊 SENTIMIENTO DEL MERCADO (Fear & Greed)")
+        lineas.append("─" * 56)
+        lineas.append(f"  Valor: {sentimiento['valor']}/100")
+        lineas.append(f"  Clasificación: {sentimiento['clasificacion']}")
+        lineas.append(f"  Interpretación: {sentimiento['interpretacion']}")
+        lineas.append("")
 
     for cripto in CRIPTOS:
         symbol = cripto.replace('/', '')
@@ -827,6 +890,14 @@ def main():
     gp_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     liq_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
 
+    # Obtener sentimiento (NUEVO v2.10)
+    print("Obteniendo sentimiento del mercado...")
+    sentimiento = obtener_sentimiento()
+    if sentimiento:
+        print(f"  Sentimiento: {sentimiento['valor']} ({sentimiento['clasificacion']})")
+    else:
+        print("  ⚠️ No se pudo obtener el sentimiento")
+
     for cripto in CRIPTOS:
         symbol = cripto.replace('/', '')
         rsi_resultado['data'][symbol] = {}
@@ -873,7 +944,7 @@ def main():
         json.dump(liq_resultado, f, indent=2)
 
     # Guardar resumen.txt
-    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado)
+    resumen = generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, sentimiento)
     with open('resumen.txt', 'w', encoding='utf-8') as f:
         f.write(resumen)
 
