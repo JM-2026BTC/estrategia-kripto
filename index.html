@@ -390,7 +390,7 @@
 <div class="container">
 
   <h1>⚡ GENISYS</h1>
-  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.9.1</p>
+  <p class="sub">Sistema de cálculo para la Estrategia Kripto — v6.9.2</p>
 
   <div id="banner-semana" class="banner-semana"></div>
 
@@ -556,7 +556,7 @@
 
   </div>
 
-  <p class="footer">GENISYS v6.9.1 — Herramienta educativa. No es recomendación financiera.</p>
+  <p class="footer">GENISYS v6.9.2 — Herramienta educativa. No es recomendación financiera.</p>
 </div>
 
 <script>
@@ -995,7 +995,7 @@ async function cargarSuperTrend() {
 
     // Agregar fecha de actualización (del JSON)
     if (supertrendDataGlobal.last_update) {
-      const fecha = new Date(supertrendDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+      const fecha = new Date(supertrendDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false });
       html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
     }
 
@@ -1111,7 +1111,7 @@ async function cargarLiq() {
       <div><strong>DIST.</strong> = Distancia al precio actual</div>
     </div>`;
 
-    const fecha = liqDataGlobal.last_update ? new Date(liqDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    const fecha = liqDataGlobal.last_update ? new Date(liqDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
 
     content.innerHTML = html;
@@ -1151,7 +1151,7 @@ async function cargarRSI() {
       const valorStr = (valor === null || valor === undefined) ? '—' : fmt(valor);
       html += `<div class="rsi-row"><span class="rsi-tf">${tf.toUpperCase()}</span><span class="rsi-val" style="color:${color};">${valorStr} <span style="font-size:11px;font-weight:400;">${etiqueta}</span></span></div>`;
     });
-    const fecha = rsiDataGlobal.last_update ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    const fecha = rsiDataGlobal.last_update ? new Date(rsiDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
     html += `<div style="margin-top:12px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
@@ -1238,7 +1238,7 @@ async function cargarFVG() {
       <div><strong>→</strong> = Precio sugerido (E1)</div>
     </div>`;
 
-    const fecha = fvgDataGlobal.last_update ? new Date(fvgDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    const fecha = fvgDataGlobal.last_update ? new Date(fvgDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
@@ -1334,7 +1334,7 @@ async function cargarSR() {
       <div>🟢 <strong>Débil</strong> = probable ruptura</div>
     </div>`;
 
-    const fecha = srDataGlobal.last_update ? new Date(srDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    const fecha = srDataGlobal.last_update ? new Date(srDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Actualizado: ${fecha}</div>`;
 
     content.innerHTML = html;
@@ -1404,7 +1404,7 @@ async function cargarGP() {
       <div><strong>→</strong> = Precio sugerido (E1)</div>
     </div>`;
 
-    const fecha = gpDataGlobal.last_update ? new Date(gpDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'Desconocida';
+    const fecha = gpDataGlobal.last_update ? new Date(gpDataGlobal.last_update).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour12: false }) : 'Desconocida';
     html += `<div style="margin-top:10px; font-size:11px; color:#484f58;">Última actualización: ${fecha}</div>`;
     content.innerHTML = html;
     panel.style.display = 'block';
