@@ -1,28 +1,28 @@
 {
-  "last_update": "2026-10-16T07:33:45.777295+00:00",
+  "last_update": "2026-10-16T08:26:49.836467+00:00",
   "data": {
     "BTCUSDT": {
       "1h": {
-        "tipo": "alcista",
-        "accion": "SOPORTE",
+        "tipo": "bajista",
+        "accion": "RESISTENCIA",
+        "swing_low": 81690.6,
+        "swing_high": 82642.8,
+        "nivel_05": 82166.7,
+        "nivel_0618": 82054.34,
+        "zona_desde": 82054.34,
+        "zona_hasta": 82166.7,
+        "precio_sugerido": 82110.52
+      },
+      "4h": {
+        "tipo": "bajista",
+        "accion": "RESISTENCIA",
         "swing_low": 79775.1,
         "swing_high": 82642.8,
         "nivel_05": 81208.95,
-        "nivel_0618": 81547.34,
-        "zona_desde": 81208.95,
-        "zona_hasta": 81547.34,
-        "precio_sugerido": 81378.14
-      },
-      "4h": {
-        "tipo": "alcista",
-        "accion": "SOPORTE",
-        "swing_low": 81032.8,
-        "swing_high": 84166.3,
-        "nivel_05": 82599.55,
-        "nivel_0618": 82969.3,
-        "zona_desde": 82599.55,
-        "zona_hasta": 82969.3,
-        "precio_sugerido": 82784.43
+        "nivel_0618": 80870.56,
+        "zona_desde": 80870.56,
+        "zona_hasta": 81208.95,
+        "precio_sugerido": 81039.76
       },
       "1d": {
         "tipo": "bajista",
@@ -49,15 +49,15 @@
     },
     "HYPEUSDT": {
       "1h": {
-        "tipo": "alcista",
-        "accion": "SOPORTE",
-        "swing_low": 77.562,
+        "tipo": "bajista",
+        "accion": "RESISTENCIA",
+        "swing_low": 80.372,
         "swing_high": 82.631,
-        "nivel_05": 80.0965,
-        "nivel_0618": 80.6946,
-        "zona_desde": 80.0965,
-        "zona_hasta": 80.6946,
-        "precio_sugerido": 80.3956
+        "nivel_05": 81.5015,
+        "nivel_0618": 81.2349,
+        "zona_desde": 81.2349,
+        "zona_hasta": 81.5015,
+        "precio_sugerido": 81.3682
       },
       "4h": {
         "tipo": "bajista",
