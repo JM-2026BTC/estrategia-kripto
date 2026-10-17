@@ -1,0 +1,77 @@
+{
+  "titulo": "PLANTILLA DE ANÁLISIS MULTI-TF — GENISYS",
+  "version": "1.0",
+  "fecha_creacion": "17/10/2026",
+  "como_pedirlo": "Analizá multi-TF: [activo] long y short, con confluencias, R:R y probabilidad. Ejemplo: \"Analizá multi-TF: BTC y DOGE, long y short\"",
+  "estructura": [
+    "1. Contexto general (sentimiento + RSI + tendencia multi-TF)",
+    "2. Estructura multi-TF (1W resumen, 1D resumen, 4H detallado, 1H timing)",
+    "3. Entrada LONG (zona, stop, TPs, R:R, confirmación multi-TF, veredicto)",
+    "4. Entrada SHORT (zona, stop, TPs, R:R, confirmación multi-TF, veredicto)",
+    "5. Comparativa LONG vs SHORT (tabla con score multi-TF)",
+    "6. Plan de trading sugerido (con TF de gestión)",
+    "7. Advertencias finales (divergencias multi-TF)"
+  ],
+  "detalle_secciones": {
+    "contexto_general": [
+      "Sentimiento (Fear & Greed) + clasificación",
+      "RSI por TF (1H, 4H, 1D, 1W)",
+      "Tendencia por TF: 1W alcista/bajista/lateral (según precio vs S/R 1W); 1D alcista/bajista/lateral (según precio vs GP 1D); 4H alcista/bajista/lateral (según GP 4H); 1H alcista/bajista/lateral (según GP 1H)",
+      "Alineación multi-TF: todos bajistas / todos alcistas / mixto",
+      "Veredicto de contexto (1-2 líneas)"
+    ],
+    "estructura_multitf": [
+      "1W (resumen): GP 1W alcista/bajista en [zona]; S/R 1W clave: [más cercano arriba] / [más cercano abajo]",
+      "1D (resumen): GP 1D alcista/bajista en [zona]; S/R 1D clave: [más cercano arriba] / [más cercano abajo]; FVG 1D: [si hay confluencia]",
+      "4H (detallado): S/R 4H completos (arriba y abajo, con fuerza); GP 4H (zona + tipo); FVG 4H (confluencias); Liq (arriba y abajo)",
+      "1H (timing): GP 1H alcista/bajista en [zona]; S/R 1H inmediato: [arriba] / [abajo]"
+    ],
+    "entrada_long": [
+      "Zona de entrada (confluencias que la justifican)",
+      "Entrada óptima (punto medio)",
+      "Stop Loss (con justificación)",
+      "Take Profits (TP1 a TPn, con % y R:R de cada uno)",
+      "Confirmación multi-TF: 1W a favor/en contra/neutral; 1D a favor/en contra/neutral; 4H a favor/en contra/neutral; 1H a favor/en contra/neutral; Score: X/4 TFs a favor",
+      "Timing 1H: zona de entrada fina + tipo de confirmación (vela de rechazo, ruptura, etc.)",
+      "Veredicto: válido / no válido / rebote táctico"
+    ],
+    "entrada_short": "Misma estructura que LONG",
+    "comparativa": [
+      "Tabla con columnas: Criterio | LONG | SHORT",
+      "Filas: Alineación 1W, Alineación 1D, Alineación 4H, Alineación 1H, Score multi-TF, Confluencias, R:R hasta TP4, R:R hasta TP6, Sentimiento, Riesgo, Probabilidad"
+    ],
+    "plan_trading": [
+      "Escenario principal (con TF de gestión: 4H para swing, 1H para intradía)",
+      "Escenario alternativo",
+      "Escenario de ruptura (invalidación)",
+      "Invalidación multi-TF: qué TF tiene que romper para invalidar la tesis"
+    ],
+    "advertencias_finales": [
+      "Divergencias multi-TF (1H vs 4H, 4H vs 1D, etc.)",
+      "Zonas de conflicto (niveles donde varios TF se superponen)",
+      "Riesgos específicos del activo",
+      "Contexto de sentimiento"
+    ]
+  },
+  "reglas_generales": [
+    "GP 4H BAJISTA = resistencia → favorece SHORT",
+    "GP 4H ALCISTA = soporte → favorece LONG",
+    "Precio DENTRO del GP = zona de decisión, esperar confirmación",
+    "FVG confluencia (2+ TF) = zona fuerte",
+    "Liq cercana = imán de precio",
+    "RSI <30 sobreventa, >70 sobrecompra, 30-50 bajista, 50-70 alcista",
+    "Sentimiento >75 = extremo codicia (cuidado LONG), <25 = extremo miedo (cuidado SHORT)",
+    "R:R mínimo aceptable = 1:2 hasta TP principal",
+    "Probabilidad = alineación tendencia (40%) + confluencias (30%) + R:R (30%)"
+  ],
+  "reglas_multitf": [
+    "TF mayor manda: si 1D es bajista, el 1H alcista es solo rebote táctico",
+    "Alineación perfecta (4/4 TFs) = probabilidad +15%",
+    "Alineación mixta (2/4) = reducir tamaño de posición 50%",
+    "Divergencia 1H vs 4H = señal de posible reversión de corto plazo",
+    "GP 1W es el nivel más fuerte → respetarlo siempre",
+    "Si precio entre GP 1D y GP 4H opuestos = zona de conflicto, no operar",
+    "RSI 1W >70 o <30 = contexto extremo, reducir exposición"
+  ],
+  "regla_de_oro": "1W y 1D = contexto (solo resumen). 4H = operativa (detalle completo). 1H = timing (solo zona de entrada)."
+}
