@@ -64,8 +64,11 @@ LIQ_LOOKBACK = 100
 LIQ_SENSIBILIDAD = 2.0
 LIQ_TOLERANCIA_PCT = 1.0
 
-# Sentimiento (NUEVO v2.10)
+# Sentimiento (v2.10)
 SENTIMIENTO_API = 'https://api.alternative.me/fng/?limit=1'
+
+# Plantilla de análisis (NUEVO v2.11)
+PLANTILLA_JSON = 'PLANTILLA-ANALISIS-MULTI-TF.json'
 
 # Nombres legibles
 NOMBRES = {'BTCUSDT': 'BTC', 'HYPEUSDT': 'HYPE', 'DOGEUSDT': 'DOGE', 'PEPEUSDT': 'PEPE'}
@@ -127,7 +130,7 @@ def calcular_rsi(close, periodo=14):
 
 def obtener_sentimiento():
     """
-    Obtiene el Fear & Greed Index de Alternative.me (NUEVO v2.10)
+    Obtiene el Fear & Greed Index de Alternative.me (v2.10)
     Devuelve dict con: valor, clasificacion, interpretacion
     """
     try:
@@ -143,7 +146,6 @@ def obtener_sentimiento():
             valor = int(fng['value'])
             clasificacion = fng['value_classification']
 
-            # Traducir clasificación al español
             traducciones = {
                 'Extreme Fear': 'Miedo extremo',
                 'Fear': 'Miedo',
@@ -153,7 +155,6 @@ def obtener_sentimiento():
             }
             clasificacion_es = traducciones.get(clasificacion, clasificacion)
 
-            # Interpretación
             if valor <= 24:
                 interpretacion = 'Miedo extremo — posible oportunidad'
             elif valor <= 49:
@@ -171,6 +172,66 @@ def obtener_sentimiento():
     except Exception as e:
         print(f"Error obteniendo sentimiento: {e}")
     return None
+
+
+def cargar_plantilla_analisis():
+    """
+    Lee PLANTILLA-ANALISIS-MULTI-TF.json y devuelve un string
+    formateado para agregar al final del resumen.txt (NUEVO v2.11)
+    """
+    try:
+        with open(PLANTILLA_JSON, 'r', encoding='utf-8') as f:
+            p = json.load(f)
+    except FileNotFoundError:
+        print(f"⚠️  {PLANTILLA_JSON} no encontrado, se omite la plantilla")
+        return ""
+    except Exception as e:
+        print(f"⚠️  Error leyendo plantilla: {e}")
+        return ""
+
+    lineas = []
+    lineas.append("")
+    lineas.append("═" * 56)
+    lineas.append("📐 " + p.get('titulo', 'PLANTILLA DE ANÁLISIS MULTI-TF'))
+    lineas.append("═" * 56)
+    lineas.append("")
+
+    como = p.get('como_pedirlo', '')
+    if como:
+        lineas.append("📌 Cómo pedirlo:")
+        lineas.append("  " + como)
+        lineas.append("")
+
+    estructura = p.get('estructura', [])
+    if estructura:
+        lineas.append("📋 Estructura del análisis:")
+        for item in estructura:
+            lineas.append("  " + item)
+        lineas.append("")
+
+    reglas_gen = p.get('reglas_generales', [])
+    if reglas_gen:
+        lineas.append("📏 Reglas generales:")
+        for r in reglas_gen:
+            lineas.append("  - " + r)
+        lineas.append("")
+
+    reglas_mtf = p.get('reglas_multitf', [])
+    if reglas_mtf:
+        lineas.append("🔀 Reglas multi-TF:")
+        for r in reglas_mtf:
+            lineas.append("  - " + r)
+        lineas.append("")
+
+    regla_oro = p.get('regla_de_oro', '')
+    if regla_oro:
+        lineas.append("⭐ Regla de oro:")
+        lineas.append("  " + regla_oro)
+        lineas.append("")
+
+    lineas.append("═" * 56)
+
+    return "\n".join(lineas)
 
 
 def detectar_fvg(df):
@@ -754,7 +815,7 @@ def detectar_confluencias_fvg(fvgs_por_tf, cripto):
 
 
 def generar_resumen(sr_resultado, gp_resultado, liq_resultado, fvg_resultado, rsi_resultado, sentimiento=None):
-    """Genera el resumen.txt con todos los datos (v2.10)"""
+    """Genera el resumen.txt con todos los datos (v2.11)"""
     lineas = []
 
     ARG_TZ = timezone(timedelta(hours=-3))
@@ -890,7 +951,7 @@ def main():
     gp_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
     liq_resultado = {'last_update': pd.Timestamp.now(tz='UTC').isoformat(), 'data': {}}
 
-    # Obtener sentimiento (NUEVO v2.10)
+    # Obtener sentimiento (v2.10)
     print("Obteniendo sentimiento del mercado...")
     sentimiento = obtener_sentimiento()
     if sentimiento:
@@ -948,7 +1009,14 @@ def main():
     with open('resumen.txt', 'w', encoding='utf-8') as f:
         f.write(resumen)
 
-    print("\n✅ Datos guardados (JSONs + resumen.txt)")
+    # ── Agregar plantilla de análisis (NUEVO v2.11) ──
+    plantilla = cargar_plantilla_analisis()
+    if plantilla:
+        with open('resumen.txt', 'a', encoding='utf-8') as f:
+            f.write(plantilla)
+        print("✅ Plantilla de análisis agregada al resumen.txt")
+
+    print("\n✅ Datos guardados (JSONs + resumen.txt + plantilla)")
 
 
 if __name__ == '__main__':
