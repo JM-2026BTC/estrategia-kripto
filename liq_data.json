@@ -1,11 +1,11 @@
 {
-  "last_update": "2026-10-18T05:21:50.402239+00:00",
+  "last_update": "2026-10-18T06:25:19.910097+00:00",
   "data": {
     "BTCUSDT": {
-      "precio_actual": 81832.6,
+      "precio_actual": 81729.2,
       "long_zones": [
         {
-          "precio": 77286.81,
+          "precio": 77288.53,
           "peso": 44781.93,
           "apalancamientos": [
             10,
@@ -14,7 +14,7 @@
             20,
             30
           ],
-          "distancia_pct": -5.55
+          "distancia_pct": -5.43
         },
         {
           "precio": 72589.69,
@@ -22,7 +22,7 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": -11.29
+          "distancia_pct": -11.18
         }
       ],
       "short_zones": [
@@ -32,10 +32,10 @@
           "apalancamientos": [
             30
           ],
-          "distancia_pct": 0.76
+          "distancia_pct": 0.89
         },
         {
-          "precio": 87483.89,
+          "precio": 87482.83,
           "peso": 44781.93,
           "apalancamientos": [
             10,
@@ -44,29 +44,39 @@
             20,
             30
           ],
-          "distancia_pct": 6.91
+          "distancia_pct": 7.04
         }
       ]
     },
     "HYPEUSDT": {
-      "precio_actual": 78.879,
+      "precio_actual": 78.568,
       "long_zones": [
         {
-          "precio": 75.7458,
-          "peso": 1250460.6075,
+          "precio": 77.8979,
+          "peso": 509731.3382,
+          "apalancamientos": [
+            10,
+            12,
+            20,
+            30
+          ],
+          "distancia_pct": -0.85
+        },
+        {
+          "precio": 74.2643,
+          "peso": 740729.2693,
           "apalancamientos": [
             10,
             12,
             15,
-            20,
-            30
+            20
           ],
-          "distancia_pct": -3.97
+          "distancia_pct": -5.48
         }
       ],
       "short_zones": [
         {
-          "precio": 85.609,
+          "precio": 85.6093,
           "peso": 1210284.052,
           "apalancamientos": [
             10,
@@ -75,7 +85,7 @@
             20,
             30
           ],
-          "distancia_pct": 8.53
+          "distancia_pct": 8.96
         },
         {
           "precio": 90.2159,
@@ -83,7 +93,7 @@
           "apalancamientos": [
             20
           ],
-          "distancia_pct": 14.37
+          "distancia_pct": 14.83
         },
         {
           "precio": 91.7267,
@@ -91,7 +101,7 @@
           "apalancamientos": [
             15
           ],
-          "distancia_pct": 16.29
+          "distancia_pct": 16.75
         },
         {
           "precio": 93.1511,
@@ -99,7 +109,7 @@
           "apalancamientos": [
             12
           ],
-          "distancia_pct": 18.09
+          "distancia_pct": 18.56
         },
         {
           "precio": 94.5324,
@@ -107,15 +117,15 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": 19.84
+          "distancia_pct": 20.32
         }
       ]
     },
     "DOGEUSDT": {
-      "precio_actual": 0.0794,
+      "precio_actual": 0.07914,
       "long_zones": [
         {
-          "precio": 0.076517,
+          "precio": 0.076516,
           "peso": 3424971483.555973,
           "apalancamientos": [
             10,
@@ -124,7 +134,7 @@
             20,
             30
           ],
-          "distancia_pct": -3.63
+          "distancia_pct": -3.32
         },
         {
           "precio": 0.072434,
@@ -133,7 +143,7 @@
             10,
             12
           ],
-          "distancia_pct": -8.77
+          "distancia_pct": -8.47
         },
         {
           "precio": 0.070961,
@@ -141,7 +151,7 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": -10.63
+          "distancia_pct": -10.33
         }
       ],
       "short_zones": [
@@ -151,7 +161,7 @@
           "apalancamientos": [
             30
           ],
-          "distancia_pct": 1.52
+          "distancia_pct": 1.85
         },
         {
           "precio": 0.082263,
@@ -160,10 +170,10 @@
             20,
             30
           ],
-          "distancia_pct": 3.61
+          "distancia_pct": 3.95
         },
         {
-          "precio": 0.086577,
+          "precio": 0.086575,
           "peso": 3424971483.555973,
           "apalancamientos": [
             10,
@@ -172,7 +182,7 @@
             20,
             30
           ],
-          "distancia_pct": 9.04
+          "distancia_pct": 9.39
         }
       ]
     },
