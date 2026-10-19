@@ -1,26 +1,26 @@
 {
-  "last_update": "2026-10-18T23:17:05.164895+00:00",
+  "last_update": "2026-10-19T00:28:22.764885+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [
-        {
-          "tipo": "bajista",
-          "desde": 81566.8,
-          "hasta": 81915.1,
-          "mitigado": false,
-          "timestamp": 90
-        },
         {
           "tipo": "alcista",
           "desde": 81002.8,
           "hasta": 81219.3,
           "mitigado": false,
-          "timestamp": 98
+          "timestamp": 97
         },
         {
           "tipo": "alcista",
           "desde": 81250.0,
           "hasta": 81696.1,
+          "mitigado": false,
+          "timestamp": 98
+        },
+        {
+          "tipo": "alcista",
+          "desde": 81830.9,
+          "hasta": 82009.0,
           "mitigado": false,
           "timestamp": 99
         }
@@ -31,14 +31,21 @@
           "desde": 84392.8,
           "hasta": 85355.2,
           "mitigado": false,
-          "timestamp": 29
+          "timestamp": 28
         },
         {
           "tipo": "bajista",
           "desde": 82100.0,
           "hasta": 83031.2,
           "mitigado": false,
-          "timestamp": 74
+          "timestamp": 73
+        },
+        {
+          "tipo": "alcista",
+          "desde": 81280.9,
+          "hasta": 82009.0,
+          "mitigado": false,
+          "timestamp": 99
         }
       ],
       "1d": [
@@ -47,56 +54,63 @@
           "desde": 93674.0,
           "hasta": 95000.0,
           "mitigado": false,
-          "timestamp": 27
+          "timestamp": 26
         },
         {
           "tipo": "bajista",
           "desde": 92870.0,
           "hasta": 93600.0,
           "mitigado": false,
-          "timestamp": 28
+          "timestamp": 27
         },
         {
           "tipo": "bajista",
           "desde": 90592.0,
           "hasta": 91900.0,
           "mitigado": false,
-          "timestamp": 29
+          "timestamp": 28
         },
         {
           "tipo": "bajista",
           "desde": 84735.7,
           "hasta": 88811.0,
           "mitigado": false,
-          "timestamp": 38
+          "timestamp": 37
         },
         {
           "tipo": "alcista",
           "desde": 70064.2,
           "hasta": 73020.2,
           "mitigado": false,
-          "timestamp": 241
+          "timestamp": 240
         },
         {
           "tipo": "alcista",
           "desde": 73405.4,
           "hasta": 76515.0,
           "mitigado": false,
-          "timestamp": 242
+          "timestamp": 241
         },
         {
           "tipo": "alcista",
           "desde": 77167.3,
           "hasta": 80847.5,
           "mitigado": false,
-          "timestamp": 270
+          "timestamp": 269
         },
         {
           "tipo": "bajista",
           "desde": 83520.0,
           "hasta": 85141.5,
           "mitigado": false,
-          "timestamp": 289
+          "timestamp": 288
+        },
+        {
+          "tipo": "alcista",
+          "desde": 81775.0,
+          "hasta": 82009.0,
+          "mitigado": false,
+          "timestamp": 299
         }
       ]
     },
@@ -107,28 +121,28 @@
           "desde": 80.291,
           "hasta": 80.802,
           "mitigado": false,
-          "timestamp": 43
+          "timestamp": 42
         },
         {
           "tipo": "bajista",
           "desde": 79.029,
           "hasta": 79.721,
           "mitigado": false,
-          "timestamp": 64
+          "timestamp": 63
         },
         {
           "tipo": "alcista",
           "desde": 76.754,
           "hasta": 77.617,
           "mitigado": false,
-          "timestamp": 98
+          "timestamp": 97
         },
         {
           "tipo": "alcista",
           "desde": 77.652,
           "hasta": 78.538,
           "mitigado": false,
-          "timestamp": 99
+          "timestamp": 98
         }
       ],
       "4h": [
@@ -137,14 +151,21 @@
           "desde": 79.804,
           "hasta": 80.835,
           "mitigado": false,
-          "timestamp": 86
+          "timestamp": 85
         },
         {
           "tipo": "bajista",
           "desde": 79.25,
           "hasta": 79.666,
           "mitigado": false,
-          "timestamp": 91
+          "timestamp": 90
+        },
+        {
+          "tipo": "alcista",
+          "desde": 77.616,
+          "hasta": 78.666,
+          "mitigado": false,
+          "timestamp": 99
         }
       ],
       "1d": [
@@ -153,21 +174,21 @@
           "desde": 60.497,
           "hasta": 68.394,
           "mitigado": false,
-          "timestamp": 240
+          "timestamp": 239
         },
         {
           "tipo": "bajista",
           "desde": 88.902,
           "hasta": 91.271,
           "mitigado": false,
-          "timestamp": 289
+          "timestamp": 288
         },
         {
           "tipo": "bajista",
           "desde": 83.415,
           "hasta": 84.679,
           "mitigado": false,
-          "timestamp": 294
+          "timestamp": 293
         }
       ]
     },
@@ -178,44 +199,51 @@
           "desde": 0.08182,
           "hasta": 0.08223,
           "mitigado": false,
-          "timestamp": 41
+          "timestamp": 40
         },
         {
           "tipo": "bajista",
           "desde": 0.08109,
           "hasta": 0.08133,
           "mitigado": false,
-          "timestamp": 44
-        },
-        {
-          "tipo": "bajista",
-          "desde": 0.0784,
-          "hasta": 0.07938,
-          "mitigado": false,
-          "timestamp": 90
+          "timestamp": 43
         },
         {
           "tipo": "alcista",
           "desde": 0.07677,
           "hasta": 0.07767,
           "mitigado": false,
-          "timestamp": 98
+          "timestamp": 97
         },
         {
           "tipo": "alcista",
           "desde": 0.07773,
           "hasta": 0.0789,
           "mitigado": false,
-          "timestamp": 99
+          "timestamp": 98
         }
       ],
       "4h": [
         {
           "tipo": "bajista",
+          "desde": 0.08324,
+          "hasta": 0.08388,
+          "mitigado": false,
+          "timestamp": 73
+        },
+        {
+          "tipo": "bajista",
           "desde": 0.08109,
           "hasta": 0.0819,
           "mitigado": false,
-          "timestamp": 86
+          "timestamp": 85
+        },
+        {
+          "tipo": "alcista",
+          "desde": 0.07804,
+          "hasta": 0.07915,
+          "mitigado": false,
+          "timestamp": 99
         }
       ],
       "1d": [
@@ -224,63 +252,64 @@
           "desde": 0.07057,
           "hasta": 0.07443,
           "mitigado": false,
-          "timestamp": 240
+          "timestamp": 239
         },
         {
           "tipo": "bajista",
           "desde": 0.08971,
           "hasta": 0.09319,
           "mitigado": false,
-          "timestamp": 289
+          "timestamp": 288
         }
       ]
     },
     "PEPEUSDT": {
       "1h": [
         {
-          "tipo": "bajista",
-          "desde": 4.016e-06,
-          "hasta": 4.023e-06,
-          "mitigado": false,
-          "timestamp": 59
-        },
-        {
           "tipo": "alcista",
           "desde": 3.812e-06,
           "hasta": 3.888e-06,
           "mitigado": false,
-          "timestamp": 98
+          "timestamp": 97
         },
         {
           "tipo": "alcista",
           "desde": 3.895e-06,
           "hasta": 3.959e-06,
           "mitigado": false,
+          "timestamp": 98
+        }
+      ],
+      "4h": [
+        {
+          "tipo": "alcista",
+          "desde": 3.891e-06,
+          "hasta": 3.99e-06,
+          "mitigado": false,
           "timestamp": 99
         }
       ],
-      "4h": [],
       "1d": [
         {
           "tipo": "alcista",
           "desde": 3.422e-06,
           "hasta": 3.595e-06,
           "mitigado": false,
-          "timestamp": 269
+          "timestamp": 268
         },
         {
           "tipo": "bajista",
           "desde": 4.532e-06,
           "hasta": 4.756e-06,
           "mitigado": false,
-          "timestamp": 275
+          "timestamp": 274
         },
         {
           "tipo": "bajista",
           "desde": 4.285e-06,
           "hasta": 4.35e-06,
           "mitigado": false,
-          "timestamp": 288
+          "timestamp": 287
         }
       ]
     }
