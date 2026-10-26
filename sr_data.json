@@ -1,10 +1,10 @@
 {
-  "last_update": "2026-10-26T11:34:41.629722+00:00",
+  "last_update": "2026-10-26T14:35:58.787322+00:00",
   "data": {
     "BTCUSDT": {
       "1h": {
-        "precio_actual": 80361.8,
-        "atr": 454.7643,
+        "precio_actual": 79869.1,
+        "atr": 479.1429,
         "resistencias": [
           {
             "precio": 81012.8,
@@ -27,16 +27,6 @@
             "close_inside": 4
           },
           {
-            "precio": 82291.1,
-            "toques": 1,
-            "score": 33.92,
-            "texto": "D\u00e9bil",
-            "emoji": "\ud83d\udfe2",
-            "breaks": 7,
-            "dwell": 2,
-            "close_inside": 15
-          },
-          {
             "precio": 82928.5,
             "toques": 1,
             "score": 33.26,
@@ -55,28 +45,28 @@
             "breaks": 3,
             "dwell": 4,
             "close_inside": 7
+          },
+          {
+            "precio": 84899.6,
+            "toques": 1,
+            "score": 28.45,
+            "texto": "D\u00e9bil",
+            "emoji": "\ud83d\udfe2",
+            "breaks": 3,
+            "dwell": 0,
+            "close_inside": 3
           }
         ],
         "soportes": [
           {
-            "precio": 80162.3,
-            "toques": 2,
-            "score": 58.89,
-            "texto": "Media",
-            "emoji": "\ud83d\udfe1",
-            "breaks": 9,
-            "dwell": 4,
-            "close_inside": 17
-          },
-          {
             "precio": 79775.1,
             "toques": 1,
-            "score": 51.55,
+            "score": 49.55,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
             "breaks": 3,
             "dwell": 0,
-            "close_inside": 4
+            "close_inside": 6
           },
           {
             "precio": 79298.9,
@@ -91,8 +81,8 @@
         ]
       },
       "4h": {
-        "precio_actual": 80362.4,
-        "atr": 719.5,
+        "precio_actual": 79862.1,
+        "atr": 769.0929,
         "resistencias": [
           {
             "precio": 83048.35,
@@ -107,32 +97,32 @@
           {
             "precio": 84361.6,
             "toques": 1,
-            "score": 91.64,
+            "score": 90.64,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
             "breaks": 2,
             "dwell": 0,
-            "close_inside": 3
+            "close_inside": 4
           },
           {
             "precio": 85119.4,
             "toques": 3,
-            "score": 143.83,
+            "score": 140.83,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
             "breaks": 8,
-            "dwell": 2,
-            "close_inside": 12
+            "dwell": 3,
+            "close_inside": 14
           },
           {
             "precio": 85650.0,
             "toques": 1,
-            "score": 16.33,
+            "score": 17.33,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
-            "breaks": 8,
+            "breaks": 7,
             "dwell": 2,
-            "close_inside": 11
+            "close_inside": 12
           },
           {
             "precio": 87228.65,
@@ -147,44 +137,44 @@
         ],
         "soportes": [
           {
-            "precio": 79954.25,
-            "toques": 2,
-            "score": 77.69,
-            "texto": "Muy fuerte",
-            "emoji": "\ud83d\udd34",
-            "breaks": 4,
-            "dwell": 0,
-            "close_inside": 5
-          },
-          {
             "precio": 79220.1,
             "toques": 1,
-            "score": 44.05,
+            "score": 41.05,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
-            "breaks": 1,
+            "breaks": 2,
             "dwell": 0,
-            "close_inside": 0
+            "close_inside": 1
+          },
+          {
+            "precio": 77624.6,
+            "toques": 1,
+            "score": -17.0,
+            "texto": "D\u00e9bil",
+            "emoji": "\ud83d\udfe2",
+            "breaks": 9,
+            "dwell": 3,
+            "close_inside": 16
           },
           {
             "precio": 76394.9,
             "toques": 1,
-            "score": 69.74,
+            "score": 67.74,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
             "breaks": 5,
-            "dwell": 2,
+            "dwell": 4,
             "close_inside": 10
           },
           {
             "precio": 76001.0,
             "toques": 1,
-            "score": 26.14,
-            "texto": "D\u00e9bil",
-            "emoji": "\ud83d\udfe2",
-            "breaks": 3,
+            "score": 27.14,
+            "texto": "Media",
+            "emoji": "\ud83d\udfe1",
+            "breaks": 2,
             "dwell": 1,
-            "close_inside": 7
+            "close_inside": 8
           },
           {
             "precio": 74955.5,
@@ -199,7 +189,7 @@
         ]
       },
       "1d": {
-        "precio_actual": 80362.4,
+        "precio_actual": 79862.1,
         "atr": 2051.8571,
         "resistencias": [
           {
@@ -287,18 +277,18 @@
         ]
       },
       "1w": {
-        "precio_actual": 80361.0,
+        "precio_actual": 79846.5,
         "atr": 5562.1857,
         "resistencias": [
           {
             "precio": 82842.0,
             "toques": 1,
-            "score": 38.39,
+            "score": 37.39,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
-            "breaks": 3,
+            "breaks": 4,
             "dwell": 0,
-            "close_inside": 8
+            "close_inside": 7
           },
           {
             "precio": 97925.4,
@@ -387,18 +377,18 @@
     },
     "HYPEUSDT": {
       "1h": {
-        "precio_actual": 77.161,
-        "atr": 0.8809,
+        "precio_actual": 77.369,
+        "atr": 0.9279,
         "resistencias": [
           {
             "precio": 77.6,
             "toques": 1,
-            "score": 35.67,
+            "score": 30.67,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
-            "breaks": 3,
-            "dwell": 1,
-            "close_inside": 5
+            "breaks": 4,
+            "dwell": 2,
+            "close_inside": 7
           },
           {
             "precio": 78.867,
@@ -416,51 +406,51 @@
             "score": 107.34,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
-            "breaks": 15,
-            "dwell": 2,
-            "close_inside": 21
+            "breaks": 13,
+            "dwell": 4,
+            "close_inside": 23
           },
           {
             "precio": 80.463,
             "toques": 2,
-            "score": 64.93,
+            "score": 57.93,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
-            "breaks": 10,
-            "dwell": 1,
-            "close_inside": 14
+            "breaks": 12,
+            "dwell": 2,
+            "close_inside": 16
           },
           {
             "precio": 82.3368,
             "toques": 6,
-            "score": 291.14,
+            "score": 288.14,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
-            "breaks": 4,
+            "breaks": 5,
             "dwell": 1,
-            "close_inside": 6
+            "close_inside": 7
           }
         ],
         "soportes": [
           {
             "precio": 76.64,
             "toques": 1,
-            "score": -19.45,
+            "score": -26.45,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
-            "breaks": 10,
-            "dwell": 9,
-            "close_inside": 30
+            "breaks": 11,
+            "dwell": 13,
+            "close_inside": 31
           },
           {
             "precio": 76.174,
             "toques": 2,
-            "score": 54.35,
+            "score": 49.35,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
-            "breaks": 14,
-            "dwell": 5,
-            "close_inside": 24
+            "breaks": 15,
+            "dwell": 7,
+            "close_inside": 25
           },
           {
             "precio": 75.12,
@@ -485,8 +475,8 @@
         ]
       },
       "4h": {
-        "precio_actual": 77.161,
-        "atr": 1.3012,
+        "precio_actual": 77.367,
+        "atr": 1.2969,
         "resistencias": [
           {
             "precio": 82.5597,
@@ -573,18 +563,18 @@
         ]
       },
       "1d": {
-        "precio_actual": 77.161,
-        "atr": 3.4097,
+        "precio_actual": 77.394,
+        "atr": 3.4286,
         "resistencias": [
           {
             "precio": 89.659,
             "toques": 1,
-            "score": 25.37,
+            "score": 24.37,
             "texto": "Media",
             "emoji": "\ud83d\udfe1",
             "breaks": 6,
             "dwell": 1,
-            "close_inside": 5
+            "close_inside": 6
           },
           {
             "precio": 95.269,
@@ -661,8 +651,8 @@
         ]
       },
       "1w": {
-        "precio_actual": 77.161,
-        "atr": 10.6185,
+        "precio_actual": 77.394,
+        "atr": 10.6374,
         "resistencias": [],
         "soportes": [
           {
@@ -690,7 +680,7 @@
     },
     "DOGEUSDT": {
       "1h": {
-        "precio_actual": 0.07715,
+        "precio_actual": 0.07734,
         "atr": 0.0007,
         "resistencias": [
           {
@@ -748,12 +738,12 @@
           {
             "precio": 0.07702,
             "toques": 1,
-            "score": 11.22,
+            "score": 9.22,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
             "breaks": 9,
-            "dwell": 7,
-            "close_inside": 29
+            "dwell": 6,
+            "close_inside": 32
           },
           {
             "precio": 0.07601,
@@ -778,7 +768,7 @@
         ]
       },
       "4h": {
-        "precio_actual": 0.07715,
+        "precio_actual": 0.07733,
         "atr": 0.0012,
         "resistencias": [
           {
@@ -856,7 +846,7 @@
         ]
       },
       "1d": {
-        "precio_actual": 0.07715,
+        "precio_actual": 0.07734,
         "atr": 0.0035,
         "resistencias": [
           {
@@ -934,7 +924,7 @@
         ]
       },
       "1w": {
-        "precio_actual": 0.07715,
+        "precio_actual": 0.07733,
         "atr": 0.0115,
         "resistencias": [
           {
@@ -1014,28 +1004,28 @@
     },
     "PEPEUSDT": {
       "1h": {
-        "precio_actual": 4.3891e-06,
+        "precio_actual": 4.344e-06,
         "atr": 0.0,
         "resistencias": [
           {
-            "precio": 4.538e-06,
-            "toques": 2,
-            "score": 26.63,
-            "texto": "Media",
-            "emoji": "\ud83d\udfe1",
-            "breaks": 6,
+            "precio": 4.514333e-06,
+            "toques": 3,
+            "score": 57.0,
+            "texto": "Muy fuerte",
+            "emoji": "\ud83d\udd34",
+            "breaks": 10,
             "dwell": 24,
-            "close_inside": 35
+            "close_inside": 42
           },
           {
             "precio": 4.668e-06,
             "toques": 1,
-            "score": -26.16,
+            "score": -27.16,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
-            "breaks": 7,
+            "breaks": 8,
             "dwell": 18,
-            "close_inside": 34
+            "close_inside": 33
           },
           {
             "precio": 4.795e-06,
@@ -1060,16 +1050,6 @@
         ],
         "soportes": [
           {
-            "precio": 4.348667e-06,
-            "toques": 3,
-            "score": 29.19,
-            "texto": "D\u00e9bil",
-            "emoji": "\ud83d\udfe2",
-            "breaks": 4,
-            "dwell": 42,
-            "close_inside": 56
-          },
-          {
             "precio": 4.2215e-06,
             "toques": 2,
             "score": 106.07,
@@ -1082,38 +1062,38 @@
           {
             "precio": 3.994333e-06,
             "toques": 3,
-            "score": -41.79,
+            "score": -59.41,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
             "breaks": 15,
-            "dwell": 58,
-            "close_inside": 84
+            "dwell": 56,
+            "close_inside": 83
           },
           {
             "precio": 3.781667e-06,
             "toques": 3,
-            "score": 137.05,
+            "score": 140.05,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
             "breaks": 8,
-            "dwell": 13,
-            "close_inside": 26
+            "dwell": 12,
+            "close_inside": 24
           }
         ]
       },
       "4h": {
-        "precio_actual": 4.3891e-06,
+        "precio_actual": 4.344e-06,
         "atr": 0.0,
         "resistencias": [
           {
             "precio": 4.54375e-06,
             "toques": 4,
-            "score": 117.13,
+            "score": 116.13,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
-            "breaks": 11,
+            "breaks": 12,
             "dwell": 13,
-            "close_inside": 34
+            "close_inside": 33
           },
           {
             "precio": 4.7735e-06,
@@ -1150,21 +1130,21 @@
           {
             "precio": 4.332e-06,
             "toques": 1,
-            "score": 49.11,
+            "score": 47.11,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
             "breaks": 3,
-            "dwell": 5,
-            "close_inside": 12
+            "dwell": 6,
+            "close_inside": 13
           },
           {
             "precio": 4.0725e-06,
             "toques": 2,
-            "score": -26.35,
+            "score": -25.35,
             "texto": "D\u00e9bil",
             "emoji": "\ud83d\udfe2",
             "breaks": 10,
-            "dwell": 36,
+            "dwell": 35,
             "close_inside": 51
           },
           {
@@ -1200,18 +1180,18 @@
         ]
       },
       "1d": {
-        "precio_actual": 4.391e-06,
+        "precio_actual": 4.344e-06,
         "atr": 0.0,
         "resistencias": [
           {
             "precio": 4.531667e-06,
             "toques": 3,
-            "score": 135.22,
+            "score": 136.22,
             "texto": "Muy fuerte",
             "emoji": "\ud83d\udd34",
             "breaks": 8,
             "dwell": 1,
-            "close_inside": 14
+            "close_inside": 13
           },
           {
             "precio": 4.752e-06,
@@ -1298,7 +1278,7 @@
         ]
       },
       "1w": {
-        "precio_actual": 4.391e-06,
+        "precio_actual": 4.344e-06,
         "atr": 0.0,
         "resistencias": [
           {
