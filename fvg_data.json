@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-27T03:28:35.824915+00:00",
+  "last_update": "2026-10-27T04:28:54.768531+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [
@@ -8,14 +8,7 @@
           "desde": 81198.5,
           "hasta": 81331.0,
           "mitigado": false,
-          "timestamp": 23
-        },
-        {
-          "tipo": "bajista",
-          "desde": 79843.4,
-          "hasta": 80026.7,
-          "mitigado": false,
-          "timestamp": 99
+          "timestamp": 22
         }
       ],
       "4h": [
@@ -24,14 +17,14 @@
           "desde": 82999.9,
           "hasta": 84062.6,
           "mitigado": false,
-          "timestamp": 70
+          "timestamp": 69
         },
         {
           "tipo": "bajista",
           "desde": 82278.4,
           "hasta": 82683.0,
           "mitigado": false,
-          "timestamp": 71
+          "timestamp": 70
         }
       ],
       "1d": [
@@ -100,7 +93,7 @@
           "desde": 77.992,
           "hasta": 78.148,
           "mitigado": false,
-          "timestamp": 99
+          "timestamp": 98
         }
       ],
       "4h": [],
@@ -135,21 +128,21 @@
           "desde": 0.07957,
           "hasta": 0.07979,
           "mitigado": false,
-          "timestamp": 19
+          "timestamp": 18
         },
         {
           "tipo": "bajista",
           "desde": 0.07873,
           "hasta": 0.07914,
           "mitigado": false,
-          "timestamp": 23
+          "timestamp": 22
         },
         {
           "tipo": "bajista",
           "desde": 0.07845,
           "hasta": 0.07874,
           "mitigado": false,
-          "timestamp": 30
+          "timestamp": 29
         }
       ],
       "4h": [
@@ -158,7 +151,7 @@
           "desde": 0.08053,
           "hasta": 0.08177,
           "mitigado": false,
-          "timestamp": 70
+          "timestamp": 69
         }
       ],
       "1d": [
@@ -179,7 +172,15 @@
       ]
     },
     "PEPEUSDT": {
-      "1h": [],
+      "1h": [
+        {
+          "tipo": "bajista",
+          "desde": 4.526e-06,
+          "hasta": 4.55e-06,
+          "mitigado": false,
+          "timestamp": 29
+        }
+      ],
       "4h": [],
       "1d": [
         {
