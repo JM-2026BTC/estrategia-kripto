@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-28T13:52:06.807177+00:00",
+  "last_update": "2026-10-28T14:46:34.760695+00:00",
   "data": {
     "BTCUSDT": {
       "1h": [
@@ -8,7 +8,7 @@
           "desde": 80924.9,
           "hasta": 81302.8,
           "mitigado": false,
-          "timestamp": 99
+          "timestamp": 98
         }
       ],
       "4h": [
@@ -100,19 +100,26 @@
           "desde": 78.157,
           "hasta": 78.48,
           "mitigado": false,
-          "timestamp": 75
+          "timestamp": 74
         },
         {
           "tipo": "bajista",
           "desde": 81.475,
           "hasta": 81.925,
           "mitigado": false,
-          "timestamp": 98
+          "timestamp": 97
         },
         {
           "tipo": "bajista",
           "desde": 80.735,
           "hasta": 81.381,
+          "mitigado": false,
+          "timestamp": 98
+        },
+        {
+          "tipo": "bajista",
+          "desde": 80.312,
+          "hasta": 80.469,
           "mitigado": false,
           "timestamp": 99
         }
@@ -157,7 +164,7 @@
           "desde": 0.07943,
           "hasta": 0.08004,
           "mitigado": false,
-          "timestamp": 99
+          "timestamp": 98
         }
       ],
       "4h": [
@@ -208,7 +215,7 @@
         {
           "tipo": "alcista",
           "desde": 0.07823,
-          "hasta": 0.07863,
+          "hasta": 0.07859,
           "mitigado": false,
           "timestamp": 299
         }
@@ -221,7 +228,7 @@
           "desde": 4.6115e-06,
           "hasta": 4.8312e-06,
           "mitigado": false,
-          "timestamp": 88
+          "timestamp": 87
         }
       ],
       "4h": [
@@ -247,13 +254,6 @@
           "hasta": 5.451e-06,
           "mitigado": false,
           "timestamp": 18
-        },
-        {
-          "tipo": "alcista",
-          "desde": 4.051e-06,
-          "hasta": 4.107e-06,
-          "mitigado": false,
-          "timestamp": 291
         },
         {
           "tipo": "alcista",
