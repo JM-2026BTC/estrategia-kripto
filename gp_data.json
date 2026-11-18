@@ -1,17 +1,17 @@
 {
-  "last_update": "2026-11-18T03:23:36.801186+00:00",
+  "last_update": "2026-11-18T12:44:55.019901+00:00",
   "data": {
     "BTCUSDT": {
       "1h": {
-        "tipo": "bajista",
-        "accion": "RESISTENCIA",
+        "tipo": "alcista",
+        "accion": "SOPORTE",
         "swing_low": 63336.9,
-        "swing_high": 65444.9,
-        "nivel_05": 64390.9,
-        "nivel_0618": 64142.16,
-        "zona_desde": 64142.16,
-        "zona_hasta": 64390.9,
-        "precio_sugerido": 64266.53
+        "swing_high": 65277.9,
+        "nivel_05": 64307.4,
+        "nivel_0618": 64536.44,
+        "zona_desde": 64307.4,
+        "zona_hasta": 64536.44,
+        "precio_sugerido": 64421.92
       },
       "4h": {
         "tipo": "bajista",
@@ -49,15 +49,15 @@
     },
     "HYPEUSDT": {
       "1h": {
-        "tipo": "bajista",
-        "accion": "RESISTENCIA",
+        "tipo": "alcista",
+        "accion": "SOPORTE",
         "swing_low": 67.324,
-        "swing_high": 70.051,
-        "nivel_05": 68.6875,
-        "nivel_0618": 68.3657,
-        "zona_desde": 68.3657,
-        "zona_hasta": 68.6875,
-        "precio_sugerido": 68.5266
+        "swing_high": 70.321,
+        "nivel_05": 68.8225,
+        "nivel_0618": 69.1761,
+        "zona_desde": 68.8225,
+        "zona_hasta": 69.1761,
+        "precio_sugerido": 68.9993
       },
       "4h": {
         "tipo": "alcista",
@@ -95,15 +95,15 @@
     },
     "DOGEUSDT": {
       "1h": {
-        "tipo": "bajista",
-        "accion": "RESISTENCIA",
-        "swing_low": 0.05744,
-        "swing_high": 0.05977,
-        "nivel_05": 0.058605,
-        "nivel_0618": 0.05833,
-        "zona_desde": 0.05833,
-        "zona_hasta": 0.058605,
-        "precio_sugerido": 0.058468
+        "tipo": "alcista",
+        "accion": "SOPORTE",
+        "swing_low": 0.05903,
+        "swing_high": 0.05989,
+        "nivel_05": 0.05946,
+        "nivel_0618": 0.059561,
+        "zona_desde": 0.05946,
+        "zona_hasta": 0.059561,
+        "precio_sugerido": 0.059511
       },
       "4h": {
         "tipo": "bajista",
@@ -141,6 +141,17 @@
     },
     "PEPEUSDT": {
       "1h": {
+        "tipo": "alcista",
+        "accion": "SOPORTE",
+        "swing_low": 3.646e-06,
+        "swing_high": 3.8802e-06,
+        "nivel_05": 3.7631e-06,
+        "nivel_0618": 3.790736e-06,
+        "zona_desde": 3.7631e-06,
+        "zona_hasta": 3.790736e-06,
+        "precio_sugerido": 3.776918e-06
+      },
+      "4h": {
         "tipo": "bajista",
         "accion": "RESISTENCIA",
         "swing_low": 3.646e-06,
@@ -150,17 +161,6 @@
         "zona_desde": 3.773588e-06,
         "zona_hasta": 3.813e-06,
         "precio_sugerido": 3.793294e-06
-      },
-      "4h": {
-        "tipo": "alcista",
-        "accion": "SOPORTE",
-        "swing_low": 3.7094e-06,
-        "swing_high": 3.98e-06,
-        "nivel_05": 3.8447e-06,
-        "nivel_0618": 3.876631e-06,
-        "zona_desde": 3.8447e-06,
-        "zona_hasta": 3.876631e-06,
-        "precio_sugerido": 3.860665e-06
       },
       "1d": {
         "tipo": "alcista",
