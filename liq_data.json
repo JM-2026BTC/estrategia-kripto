@@ -1,13 +1,12 @@
 {
-  "last_update": "2026-11-20T02:04:33.683176+00:00",
+  "last_update": "2026-11-20T11:01:33.459619+00:00",
   "data": {
     "BTCUSDT": {
-      "precio_actual": 61697.0,
-      "long_zones": [],
-      "short_zones": [
+      "precio_actual": 62051.9,
+      "long_zones": [
         {
-          "precio": 70571.09,
-          "peso": 87217.85,
+          "precio": 62039.68,
+          "peso": 93524.91,
           "apalancamientos": [
             10,
             12,
@@ -15,7 +14,21 @@
             20,
             30
           ],
-          "distancia_pct": 14.38
+          "distancia_pct": -0.02
+        }
+      ],
+      "short_zones": [
+        {
+          "precio": 70241.52,
+          "peso": 93524.91,
+          "apalancamientos": [
+            10,
+            12,
+            15,
+            20,
+            30
+          ],
+          "distancia_pct": 13.2
         },
         {
           "precio": 77164.24,
@@ -24,7 +37,7 @@
             10,
             12
           ],
-          "distancia_pct": 25.07
+          "distancia_pct": 24.35
         },
         {
           "precio": 78446.35,
@@ -32,16 +45,16 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": 27.15
+          "distancia_pct": 26.42
         }
       ]
     },
     "HYPEUSDT": {
-      "precio_actual": 65.654,
+      "precio_actual": 65.02,
       "long_zones": [
         {
-          "precio": 62.8932,
-          "peso": 3077142.0498,
+          "precio": 62.8465,
+          "peso": 3540531.0426,
           "apalancamientos": [
             10,
             12,
@@ -49,16 +62,16 @@
             20,
             30
           ],
-          "distancia_pct": -4.21
+          "distancia_pct": -3.34
         },
         {
-          "precio": 59.7731,
-          "peso": 619296.1471,
+          "precio": 59.784,
+          "peso": 735143.3953,
           "apalancamientos": [
             10,
             20
           ],
-          "distancia_pct": -8.96
+          "distancia_pct": -8.05
         },
         {
           "precio": 58.7122,
@@ -66,7 +79,7 @@
           "apalancamientos": [
             15
           ],
-          "distancia_pct": -10.57
+          "distancia_pct": -9.7
         },
         {
           "precio": 57.6789,
@@ -74,7 +87,7 @@
           "apalancamientos": [
             12
           ],
-          "distancia_pct": -12.15
+          "distancia_pct": -11.29
         },
         {
           "precio": 56.6769,
@@ -82,21 +95,29 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": -13.67
+          "distancia_pct": -12.83
         }
       ],
       "short_zones": [
+        {
+          "precio": 65.4446,
+          "peso": 350608.0729,
+          "apalancamientos": [
+            20
+          ],
+          "distancia_pct": 0.65
+        },
         {
           "precio": 66.5405,
           "peso": 350608.0729,
           "apalancamientos": [
             15
           ],
-          "distancia_pct": 1.35
+          "distancia_pct": 2.34
         },
         {
-          "precio": 71.0159,
-          "peso": 4007864.2543,
+          "precio": 70.9068,
+          "peso": 4587100.4953,
           "apalancamientos": [
             10,
             12,
@@ -104,16 +125,16 @@
             20,
             30
           ],
-          "distancia_pct": 8.17
+          "distancia_pct": 9.05
         }
       ]
     },
     "DOGEUSDT": {
-      "precio_actual": 0.05747,
+      "precio_actual": 0.05734,
       "long_zones": [
         {
-          "precio": 0.054824,
-          "peso": 2563576167.955422,
+          "precio": 0.054752,
+          "peso": 2886638642.579452,
           "apalancamientos": [
             10,
             12,
@@ -121,7 +142,7 @@
             20,
             30
           ],
-          "distancia_pct": -4.6
+          "distancia_pct": -4.51
         },
         {
           "precio": 0.051625,
@@ -130,7 +151,7 @@
             10,
             12
           ],
-          "distancia_pct": -10.17
+          "distancia_pct": -9.97
         },
         {
           "precio": 0.050789,
@@ -138,51 +159,51 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": -11.63
+          "distancia_pct": -11.42
         }
       ],
       "short_zones": [
         {
-          "precio": 0.057691,
+          "precio": 0.057705,
           "peso": 178870802.803381,
           "apalancamientos": [
             30
           ],
-          "distancia_pct": 0.38
+          "distancia_pct": 0.64
         },
         {
-          "precio": 0.058599,
+          "precio": 0.058591,
           "peso": 279615275.113464,
           "apalancamientos": [
             20,
             30
           ],
-          "distancia_pct": 1.96
+          "distancia_pct": 2.18
         },
         {
-          "precio": 0.059515,
-          "peso": 387097413.388649,
+          "precio": 0.059492,
+          "peso": 451709908.313455,
           "apalancamientos": [
             15,
             20,
             30
           ],
-          "distancia_pct": 3.56
+          "distancia_pct": 3.75
         },
         {
-          "precio": 0.060448,
-          "peso": 433064759.028655,
+          "precio": 0.060439,
+          "peso": 497677253.953461,
           "apalancamientos": [
             12,
             15,
             20,
             30
           ],
-          "distancia_pct": 5.18
+          "distancia_pct": 5.4
         },
         {
-          "precio": 0.065749,
-          "peso": 3555162339.915676,
+          "precio": 0.06557,
+          "peso": 3748999824.690094,
           "apalancamientos": [
             10,
             12,
@@ -190,12 +211,12 @@
             20,
             30
           ],
-          "distancia_pct": 14.41
+          "distancia_pct": 14.35
         }
       ]
     },
     "PEPEUSDT": {
-      "precio_actual": 3.5992e-06,
+      "precio_actual": 3.623e-06,
       "long_zones": [
         {
           "precio": 3.510791e-06,
@@ -204,7 +225,7 @@
             10,
             15
           ],
-          "distancia_pct": -2.46
+          "distancia_pct": -3.1
         },
         {
           "precio": 3.43883e-06,
@@ -212,7 +233,7 @@
           "apalancamientos": [
             12
           ],
-          "distancia_pct": -4.46
+          "distancia_pct": -5.08
         },
         {
           "precio": 3.379089e-06,
@@ -220,7 +241,7 @@
           "apalancamientos": [
             10
           ],
-          "distancia_pct": -6.12
+          "distancia_pct": -6.73
         }
       ],
       "short_zones": [
@@ -230,7 +251,7 @@
           "apalancamientos": [
             30
           ],
-          "distancia_pct": 6.64
+          "distancia_pct": 5.94
         },
         {
           "precio": 3.901821e-06,
@@ -238,7 +259,7 @@
           "apalancamientos": [
             20
           ],
-          "distancia_pct": 8.41
+          "distancia_pct": 7.7
         },
         {
           "precio": 4.235815e-06,
@@ -250,7 +271,7 @@
             20,
             30
           ],
-          "distancia_pct": 17.69
+          "distancia_pct": 16.91
         },
         {
           "precio": 4.576378e-06,
@@ -259,16 +280,16 @@
             15,
             20
           ],
-          "distancia_pct": 27.15
+          "distancia_pct": 26.31
         },
         {
-          "precio": 4.650669e-06,
+          "precio": 4.650129e-06,
           "peso": 1500832167098.0,
           "apalancamientos": [
             12,
             15
           ],
-          "distancia_pct": 29.21
+          "distancia_pct": 28.35
         }
       ]
     }
